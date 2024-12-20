@@ -70,6 +70,10 @@ pub struct DefinedFunction {
     pub define_type: DefineType,
     arguments: Vec<ClarityName>,
     body: SymbolicExpression,
+    /// Return type of the function
+    /// This field is unused in the interpreter, and set to `None`.
+    /// When using the Wasm runtime, it should contain the return type.
+    return_type: Option<TypeSignature>,
 }
 
 /// This enum handles the actual invocation of the method
@@ -137,6 +141,7 @@ impl DefinedFunction {
         define_type: DefineType,
         name: &ClarityName,
         context_name: &str,
+        return_type: Option<TypeSignature>,
     ) -> DefinedFunction {
         let (argument_names, types) = arguments.into_iter().unzip();
 
@@ -147,6 +152,7 @@ impl DefinedFunction {
             define_type,
             body,
             arg_types: types,
+            return_type,
         }
     }
 
@@ -357,6 +363,10 @@ impl DefinedFunction {
         self.identifier.clone()
     }
 
+    pub fn get_name(&self) -> &ClarityName {
+        &self.name
+    }
+
     pub fn get_arguments(&self) -> &Vec<ClarityName> {
         &self.arguments
     }
@@ -365,10 +375,18 @@ impl DefinedFunction {
         &self.arg_types
     }
 
+    pub fn get_return_type(&self) -> &Option<TypeSignature> {
+        &self.return_type
+    }
+
     pub fn canonicalize_types(&mut self, epoch: &StacksEpochId) {
         for i in 0..self.arguments.len() {
             self.arg_types[i] = self.arg_types[i].canonicalize(epoch);
         }
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.identifier.identifier
     }
 
     #[cfg(feature = "developer-mode")]
@@ -735,6 +753,7 @@ mod test {
             DefineType::Public,
             &"foo".into(),
             "testing",
+            Some(TypeSignature::IntType),
         );
         f.canonicalize_types(&StacksEpochId::Epoch21);
         assert_eq!(
