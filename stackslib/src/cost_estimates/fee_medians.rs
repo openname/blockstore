@@ -21,7 +21,7 @@ use crate::util_lib::db::{
     sql_pragma, sqlite_open, table_exists, tx_begin_immediate_sqlite, u64_to_sql,
 };
 
-const CREATE_TABLE: &'static str = "
+const CREATE_TABLE: &str = "
 CREATE TABLE median_fee_estimator (
     measure_key INTEGER PRIMARY KEY AUTOINCREMENT,
     high NUMBER NOT NULL,
@@ -200,7 +200,7 @@ impl<M: CostMetric> FeeEstimator for WeightedMedianFeeRateEstimator<M> {
         maybe_add_minimum_fee_rate(&mut working_fee_rates, self.full_block_weight);
 
         // If fee rates non-empty, then compute an update.
-        if working_fee_rates.len() > 0 {
+        if !working_fee_rates.is_empty() {
             // Values must be sorted.
             working_fee_rates.sort_by(|a, b| {
                 a.fee_rate
@@ -244,7 +244,7 @@ pub fn fee_rate_estimate_from_sorted_weighted_fees(
     for rate_and_weight in sorted_fee_rates {
         cumulative_weight += rate_and_weight.weight as f64;
         let percentile_n: f64 =
-            (cumulative_weight as f64 - rate_and_weight.weight as f64 / 2f64) / total_weight as f64;
+            (cumulative_weight - rate_and_weight.weight as f64 / 2f64) / total_weight;
         percentiles.push(percentile_n);
     }
     assert_eq!(percentiles.len(), sorted_fee_rates.len());

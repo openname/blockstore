@@ -30,7 +30,7 @@
 //!
 
 use std::hash::Hash;
-use std::{mem, u32};
+use std::mem;
 
 use hashbrown::HashMap;
 

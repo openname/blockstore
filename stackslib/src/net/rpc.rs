@@ -481,7 +481,7 @@ impl ConversationHttp {
         self.pending_response.is_none()
             && self.connection.inbox_len() == 0
             && self.connection.outbox_len() == 0
-            && self.reply_streams.len() == 0
+            && self.reply_streams.is_empty()
     }
 
     /// Is the conversation out of pending data?
@@ -593,7 +593,7 @@ impl ConversationHttp {
 
     /// Remove all timed-out messages, and ding the remote peer as unhealthy
     #[cfg_attr(test, mutants::skip)]
-    pub fn clear_timeouts(&mut self) -> () {
+    pub fn clear_timeouts(&mut self) {
         self.connection.drain_timeouts();
     }
 

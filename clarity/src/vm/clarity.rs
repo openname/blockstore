@@ -113,6 +113,7 @@ pub trait ClarityConnection {
         self.with_clarity_db_readonly_owned(|mut db| (to_do(&mut db), db))
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn with_readonly_clarity_env<F, R>(
         &mut self,
         mainnet: bool,
@@ -151,12 +152,15 @@ pub trait ClarityConnection {
 
 pub trait TransactionConnection: ClarityConnection {
     /// Do something with this connection's Clarity environment that can be aborted
-    ///  with `abort_call_back`.
+    /// with `abort_call_back`.
+    ///
     /// This returns the return value of `to_do`:
-    ///  * the generic term `R`
-    ///  * the asset changes during `to_do` in an `AssetMap`
-    ///  * the Stacks events during the transaction
-    /// and a `bool` value which is `true` if the `abort_call_back` caused the changes to abort
+    /// * the generic term `R`
+    /// * the asset changes during `to_do` in an `AssetMap`
+    /// * the Stacks events during the transaction
+    ///
+    /// and a `bool` value which is `true` if the `abort_call_back` caused the changes to abort.
+    ///
     /// If `to_do` returns an `Err` variant, then the changes are aborted.
     fn with_abort_callback<F, A, R, E>(
         &mut self,
@@ -197,14 +201,14 @@ pub trait TransactionConnection: ClarityConnection {
                 ast_rules,
             );
 
-            let mut contract_ast = match ast_result {
+            let contract_ast = match ast_result {
                 Ok(x) => x,
                 Err(e) => return (cost_track, Err(e.into())),
             };
 
             let result = analysis::run_analysis(
                 identifier,
-                &mut contract_ast.expressions,
+                &contract_ast.expressions,
                 db,
                 false,
                 cost_track,
@@ -272,7 +276,7 @@ pub trait TransactionConnection: ClarityConnection {
             },
             |_, _| false,
         )
-        .and_then(|(value, assets, events, _)| Ok((value, assets, events)))
+        .map(|(value, assets, events, _)| (value, assets, events))
     }
 
     /// Execute a contract call in the current block.

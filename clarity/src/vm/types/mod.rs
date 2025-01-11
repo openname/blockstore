@@ -14,9 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#[allow(clippy::result_large_err)]
 pub mod serialization;
-#[allow(clippy::result_large_err)]
 pub mod signatures;
 
 use std::collections::btree_map::Entry;
@@ -277,6 +275,10 @@ impl SequenceData {
             SequenceData::String(CharType::ASCII(data)) => data.items().len(),
             SequenceData::String(CharType::UTF8(data)) => data.items().len(),
         }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     pub fn element_at(self, index: usize) -> Result<Option<Value>> {
@@ -613,7 +615,7 @@ pub trait SequencedValue<T> {
     fn atom_values(&mut self) -> Result<Vec<SymbolicExpression>> {
         self.drained_items()
             .iter()
-            .map(|item| Ok(SymbolicExpression::atom_value(Self::to_value(&item)?)))
+            .map(|item| Ok(SymbolicExpression::atom_value(Self::to_value(item)?)))
             .collect()
     }
 }
@@ -751,11 +753,11 @@ define_named_enum!(TenureInfoProperty {
 impl OptionalData {
     pub fn type_signature(&self) -> std::result::Result<TypeSignature, CheckErrors> {
         let type_result = match self.data {
-            Some(ref v) => TypeSignature::new_option(TypeSignature::type_of(&v)?),
+            Some(ref v) => TypeSignature::new_option(TypeSignature::type_of(v)?),
             None => TypeSignature::new_option(TypeSignature::NoType),
         };
         type_result.map_err(|_| {
-            CheckErrors::Expects("Should not have constructed too large of a type.".into()).into()
+            CheckErrors::Expects("Should not have constructed too large of a type.".into())
         })
     }
 }
@@ -773,7 +775,7 @@ impl ResponseData {
             ),
         };
         type_result.map_err(|_| {
-            CheckErrors::Expects("Should not have constructed too large of a type.".into()).into()
+            CheckErrors::Expects("Should not have constructed too large of a type.".into())
         })
     }
 }
@@ -1263,6 +1265,10 @@ impl ListData {
             .len()
             .try_into()
             .map_err(|_| InterpreterError::Expect("Data length should be valid".into()).into())
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.data.is_empty()
     }
 
     fn append(&mut self, epoch: &StacksEpochId, other_seq: ListData) -> Result<()> {

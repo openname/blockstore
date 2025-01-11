@@ -342,7 +342,7 @@ impl Transaction {
             let mut script_len_bytes =
                 serialize(&script_len).expect("FATAL: failed to encode varint");
             length_script.append(&mut script_len_bytes);
-            length_script.extend_from_slice(&script_bytes);
+            length_script.extend_from_slice(script_bytes);
             length_script
         }
     }
@@ -361,7 +361,7 @@ impl Transaction {
                 let mut script_len_bytes =
                     serialize(&script_len).expect("FATAL: failed to encode varint");
                 raw_vec.append(&mut script_len_bytes);
-                raw_vec.extend_from_slice(&script_bytes);
+                raw_vec.extend_from_slice(script_bytes);
             }
             Sha256dHash::from_data(&raw_vec)
         } else if sighash_type == SigHashType::Single && input_index < self.output.len() {

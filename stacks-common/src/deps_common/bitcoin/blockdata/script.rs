@@ -648,7 +648,7 @@ impl<'de> serde::Deserialize<'de> for Script {
             where
                 E: serde::de::Error,
             {
-                let v: Vec<u8> = ::hex::decode(v).map_err(E::custom)?;
+                let v: Vec<u8> = crate::util::hash::hex_bytes(v).map_err(E::custom)?;
                 Ok(Script::from(v))
             }
 
@@ -834,15 +834,18 @@ mod test {
     }
 
     #[test]
-    #[cfg(all(feature = "serde", feature = "strason"))]
+    #[cfg(feature = "serde")]
     fn script_json_serialize() {
-        use strason::Json;
+        use serde_json;
 
         let original = hex_script!("827651a0698faaa9a8a7a687");
-        let json = Json::from_serialize(&original).unwrap();
-        assert_eq!(json.to_bytes(), b"\"827651a0698faaa9a8a7a687\"");
-        assert_eq!(json.string(), Some("827651a0698faaa9a8a7a687"));
-        let des = json.into_deserialize().unwrap();
+        let json_value = serde_json::to_value(&original).unwrap();
+        assert_eq!(
+            serde_json::to_vec(&json_value).unwrap(),
+            b"\"827651a0698faaa9a8a7a687\""
+        );
+        assert_eq!(json_value.to_string(), "\"827651a0698faaa9a8a7a687\"");
+        let des = serde_json::from_value(json_value).unwrap();
         assert_eq!(original, des);
     }
 

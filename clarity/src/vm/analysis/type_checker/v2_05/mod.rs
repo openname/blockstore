@@ -239,10 +239,7 @@ impl FunctionType {
                 Ok(TypeSignature::BoolType)
             }
             FunctionType::Binary(_, _, _) => {
-                return Err(CheckErrors::Expects(
-                    "Binary type should not be reached in 2.05".into(),
-                )
-                .into())
+                Err(CheckErrors::Expects("Binary type should not be reached in 2.05".into()).into())
             }
         }
     }
@@ -286,8 +283,8 @@ impl FunctionType {
                     )?;
                 }
                 (expected_type, value) => {
-                    if !expected_type.admits(&StacksEpochId::Epoch2_05, &value)? {
-                        let actual_type = TypeSignature::type_of(&value)?;
+                    if !expected_type.admits(&StacksEpochId::Epoch2_05, value)? {
+                        let actual_type = TypeSignature::type_of(value)?;
                         return Err(
                             CheckErrors::TypeError(expected_type.clone(), actual_type).into()
                         );
@@ -438,41 +435,39 @@ impl<'a, 'b> TypeChecker<'a, 'b> {
         context: &TypingContext,
         expected_type: &TypeSignature,
     ) -> TypeResult {
-        match (&expr.expr, expected_type) {
-            (
-                LiteralValue(Value::Principal(PrincipalData::Contract(ref contract_identifier))),
-                TypeSignature::TraitReferenceType(trait_identifier),
-            ) => {
-                let contract_to_check = self
-                    .db
-                    .load_contract(&contract_identifier, &StacksEpochId::Epoch2_05)?
-                    .ok_or(CheckErrors::NoSuchContract(contract_identifier.to_string()))?;
+        if let (
+            LiteralValue(Value::Principal(PrincipalData::Contract(ref contract_identifier))),
+            TypeSignature::TraitReferenceType(trait_identifier),
+        ) = (&expr.expr, expected_type)
+        {
+            let contract_to_check = self
+                .db
+                .load_contract(contract_identifier, &StacksEpochId::Epoch2_05)?
+                .ok_or(CheckErrors::NoSuchContract(contract_identifier.to_string()))?;
 
-                let contract_defining_trait = self
-                    .db
-                    .load_contract(
-                        &trait_identifier.contract_identifier,
-                        &StacksEpochId::Epoch2_05,
-                    )?
-                    .ok_or(CheckErrors::NoSuchContract(
-                        trait_identifier.contract_identifier.to_string(),
-                    ))?;
-
-                let trait_definition = contract_defining_trait
-                    .get_defined_trait(&trait_identifier.name)
-                    .ok_or(CheckErrors::NoSuchTrait(
-                        trait_identifier.contract_identifier.to_string(),
-                        trait_identifier.name.to_string(),
-                    ))?;
-
-                contract_to_check.check_trait_compliance(
+            let contract_defining_trait = self
+                .db
+                .load_contract(
+                    &trait_identifier.contract_identifier,
                     &StacksEpochId::Epoch2_05,
-                    trait_identifier,
-                    trait_definition,
-                )?;
-                return Ok(expected_type.clone());
-            }
-            (_, _) => {}
+                )?
+                .ok_or(CheckErrors::NoSuchContract(
+                    trait_identifier.contract_identifier.to_string(),
+                ))?;
+
+            let trait_definition = contract_defining_trait
+                .get_defined_trait(&trait_identifier.name)
+                .ok_or(CheckErrors::NoSuchTrait(
+                    trait_identifier.contract_identifier.to_string(),
+                    trait_identifier.name.to_string(),
+                ))?;
+
+            contract_to_check.check_trait_compliance(
+                &StacksEpochId::Epoch2_05,
+                trait_identifier,
+                trait_definition,
+            )?;
+            return Ok(expected_type.clone());
         }
 
         let actual_type = self.type_check(expr, context)?;

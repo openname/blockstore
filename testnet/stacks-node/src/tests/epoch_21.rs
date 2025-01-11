@@ -24,6 +24,7 @@ use stacks::chainstate::stacks::miner::{
 };
 use stacks::chainstate::stacks::StacksBlockHeader;
 use stacks::clarity_cli::vm_execute as execute;
+use stacks::config::{Config, InitialBalance};
 use stacks::core::{self, EpochList, BURNCHAIN_TX_SEARCH_WINDOW};
 use stacks::util_lib::boot::boot_code_id;
 use stacks_common::types::chainstate::{
@@ -35,7 +36,6 @@ use stacks_common::util::secp256k1::{Secp256k1PrivateKey, Secp256k1PublicKey};
 use stacks_common::util::sleep_ms;
 
 use crate::burnchains::bitcoin_regtest_controller::UTXO;
-use crate::config::{Config, InitialBalance};
 use crate::neon::RunLoopCounter;
 use crate::operations::BurnchainOpSigner;
 use crate::stacks_common::address::AddressHashMode;

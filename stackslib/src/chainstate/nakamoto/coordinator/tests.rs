@@ -82,7 +82,7 @@ use crate::util_lib::db::{query_rows, u64_to_sql};
 use crate::util_lib::signed_structured_data::pox4::Pox4SignatureTopic;
 use crate::util_lib::strings::StacksString;
 
-impl<'a> NakamotoStagingBlocksConnRef<'a> {
+impl NakamotoStagingBlocksConnRef<'_> {
     pub fn get_blocks_at_height(&self, height: u64) -> Vec<NakamotoBlock> {
         let sql = "SELECT data FROM nakamoto_staging_blocks WHERE height = ?1";
         let args = rusqlite::params![&u64_to_sql(height).unwrap()];
@@ -568,7 +568,7 @@ fn test_simple_nakamoto_coordinator_1_tenure_10_blocks() {
     peer.check_nakamoto_migration();
 }
 
-impl<'a> TestPeer<'a> {
+impl TestPeer<'_> {
     pub fn mine_single_block_tenure<F, G>(
         &mut self,
         sender_key: &StacksPrivateKey,
@@ -625,7 +625,7 @@ impl<'a> TestPeer<'a> {
             &mut test_signers,
             miner_setup,
             |_miner, chainstate, sortdb, blocks_so_far| {
-                if blocks_so_far.len() < 1 {
+                if blocks_so_far.is_empty() {
                     let stx_transfer = make_token_transfer(
                         chainstate,
                         sortdb,
@@ -1005,7 +1005,7 @@ fn block_info_tests(use_primary_testnet: bool) {
     let (last_2x_block_id, last_2x_block_ht) = get_tip_info(&mut peer);
 
     peer.mine_tenure(|miner, chainstate, sortdb, blocks_so_far| {
-        if blocks_so_far.len() > 0 {
+        if !blocks_so_far.is_empty() {
             return vec![];
         }
         info!("Producing first nakamoto block, publishing our three contracts");
@@ -2318,9 +2318,9 @@ pub fn simple_nakamoto_coordinator_10_tenures_10_sortitions<'a>() -> TestPeer<'a
         debug!("{}: {:?}", i, &matured_reward);
 
         if i < 10 {
-            assert_eq!(matured_reward.parent_miner.coinbase, 3600_000_000);
+            assert_eq!(matured_reward.parent_miner.coinbase, 3_600_000_000);
         } else {
-            assert_eq!(matured_reward.parent_miner.coinbase, 1000_000_000);
+            assert_eq!(matured_reward.parent_miner.coinbase, 1_000_000_000);
         }
 
         if i < 11 {
@@ -2353,9 +2353,9 @@ pub fn simple_nakamoto_coordinator_10_tenures_10_sortitions<'a>() -> TestPeer<'a
         let miner_reward = &matured_reward.latest_miners[0];
 
         if i < 9 {
-            assert_eq!(miner_reward.coinbase, 3600_000_000);
+            assert_eq!(miner_reward.coinbase, 3_600_000_000);
         } else {
-            assert_eq!(miner_reward.coinbase, 1000_000_000);
+            assert_eq!(miner_reward.coinbase, 1_000_000_000);
         }
         if i < 10 {
             // epoch2
@@ -3243,7 +3243,7 @@ fn test_stacks_on_burnchain_ops() {
             until_burn_height: None,
 
             // mocked
-            txid: Txid([i as u8; 32]),
+            txid: Txid([i; 32]),
             vtxindex: 11,
             block_height: block_height + 1,
             burn_header_hash: BurnchainHeaderHash([0x00; 32]),
@@ -3263,7 +3263,7 @@ fn test_stacks_on_burnchain_ops() {
             auth_id: Some(i as u32),
 
             // mocked
-            txid: Txid([(i as u8) | 0x80; 32]),
+            txid: Txid([i | 0x80; 32]),
             vtxindex: 12,
             block_height: block_height + 1,
             burn_header_hash: BurnchainHeaderHash([0x00; 32]),
@@ -3275,7 +3275,7 @@ fn test_stacks_on_burnchain_ops() {
             memo: vec![0x2],
 
             // mocked
-            txid: Txid([(i as u8) | 0x40; 32]),
+            txid: Txid([i | 0x40; 32]),
             vtxindex: 13,
             block_height: block_height + 1,
             burn_header_hash: BurnchainHeaderHash([0x00; 32]),
@@ -3294,7 +3294,7 @@ fn test_stacks_on_burnchain_ops() {
                 )),
 
                 // mocked
-                txid: Txid([(i as u8) | 0xc0; 32]),
+                txid: Txid([i | 0xc0; 32]),
                 vtxindex: 14,
                 block_height: block_height + 1,
                 burn_header_hash: BurnchainHeaderHash([0x00; 32]),
@@ -3307,7 +3307,7 @@ fn test_stacks_on_burnchain_ops() {
         let (_, _, consensus_hash) = peer.next_burnchain_block(burn_ops.clone());
         let vrf_proof = peer.make_nakamoto_vrf_proof(miner_key);
 
-        bitpatterns.insert(consensus_hash.clone(), i as u8);
+        bitpatterns.insert(consensus_hash.clone(), i);
 
         tenure_change.tenure_consensus_hash = consensus_hash.clone();
         tenure_change.burn_view_consensus_hash = consensus_hash.clone();
@@ -3337,11 +3337,11 @@ fn test_stacks_on_burnchain_ops() {
             .unwrap();
 
         let mut expected_burnchain_txids = HashSet::new();
-        for j in (i as u64).saturating_sub(6)..i {
-            expected_burnchain_txids.insert(Txid([j as u8; 32]));
-            expected_burnchain_txids.insert(Txid([(j as u8) | 0x80; 32]));
-            expected_burnchain_txids.insert(Txid([(j as u8) | 0x40; 32]));
-            expected_burnchain_txids.insert(Txid([(j as u8) | 0xc0; 32]));
+        for j in i.saturating_sub(6)..i {
+            expected_burnchain_txids.insert(Txid([j; 32]));
+            expected_burnchain_txids.insert(Txid([j | 0x80; 32]));
+            expected_burnchain_txids.insert(Txid([j | 0x40; 32]));
+            expected_burnchain_txids.insert(Txid([j | 0xc0; 32]));
         }
         assert_eq!(processed_burnchain_txids, expected_burnchain_txids);
 
@@ -3441,7 +3441,7 @@ fn test_stacks_on_burnchain_ops() {
             sort_tip.consensus_hash
         );
         assert!(last_block.header.consensus_hash == sort_tip.consensus_hash);
-        assert_eq!(highest_tenure.coinbase_height, 12 + i);
+        assert_eq!(highest_tenure.coinbase_height, 12 + u64::from(i));
         assert_eq!(highest_tenure.cause, TenureChangeCause::Extended);
         assert_eq!(
             highest_tenure.num_blocks_confirmed,

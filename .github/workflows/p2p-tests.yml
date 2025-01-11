@@ -43,10 +43,10 @@ jobs:
           - net::tests::convergence::test_walk_star_15_org_biased
           - net::tests::convergence::test_walk_inbound_line_15
           - net::api::tests::postblock_proposal::test_try_make_response
-          - net::server::tests::test_http_10_threads_getinfo
-          - net::server::tests::test_http_10_threads_getblock
-          - net::server::tests::test_http_too_many_clients
-          - net::server::tests::test_http_slow_client
+          - net::server::test::test_http_10_threads_getinfo
+          - net::server::test::test_http_10_threads_getblock
+          - net::server::test::test_http_too_many_clients
+          - net::server::test::test_http_slow_client
     steps:
       ## Setup test environment
       - name: Setup Test Environment

@@ -37,7 +37,7 @@ struct Samples {
 }
 
 const SAMPLE_SIZE: usize = 10;
-const CREATE_TABLE: &'static str = "
+const CREATE_TABLE: &str = "
 CREATE TABLE pessimistic_estimator (
     estimate_key TEXT PRIMARY KEY,
     current_value NUMBER NOT NULL,

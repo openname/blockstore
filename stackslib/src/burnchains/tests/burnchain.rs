@@ -99,7 +99,7 @@ fn test_process_block_ops() {
             &hex_bytes("a366b51292bef4edd64063d9145c617fec373bceb0758e98cd72becd84d54c7a").unwrap(),
         )
         .unwrap(),
-        memo: vec![01, 02, 03, 04, 05],
+        memo: vec![1, 2, 3, 4, 5],
 
         txid: Txid::from_bytes(
             &hex_bytes("1bfa831b5fc56c858198acb8e77e5863c1e9d8ac26d49ddb914e24d8d4083562").unwrap(),
@@ -119,7 +119,7 @@ fn test_process_block_ops() {
             &hex_bytes("bb519494643f79f1dea0350e6fb9a1da88dfdb6137117fc2523824a8aa44fe1c").unwrap(),
         )
         .unwrap(),
-        memo: vec![01, 02, 03, 04, 05],
+        memo: vec![1, 2, 3, 4, 5],
 
         txid: Txid::from_bytes(
             &hex_bytes("9410df84e2b440055c33acb075a0687752df63fe8fe84aeec61abe469f0448c7").unwrap(),
@@ -139,7 +139,7 @@ fn test_process_block_ops() {
             &hex_bytes("de8af7037e522e65d2fe2d63fb1b764bfea829df78b84444338379df13144a02").unwrap(),
         )
         .unwrap(),
-        memo: vec![01, 02, 03, 04, 05],
+        memo: vec![1, 2, 3, 4, 5],
 
         txid: Txid::from_bytes(
             &hex_bytes("eb54704f71d4a2d1128d60ffccced547054b52250ada6f3e7356165714f44d4c").unwrap(),
@@ -464,11 +464,8 @@ fn test_process_block_ops() {
         123,
     ));
 
-    let initial_snapshot = BlockSnapshot::initial(
-        first_block_height,
-        &first_burn_hash,
-        first_block_height as u64,
-    );
+    let initial_snapshot =
+        BlockSnapshot::initial(first_block_height, &first_burn_hash, first_block_height);
 
     // process up to 124
     {
@@ -574,7 +571,7 @@ fn test_process_block_ops() {
             acc
         });
 
-        let next_sortition = block_ops_124.len() > 0 && burn_total > 0;
+        let next_sortition = !block_ops_124.is_empty() && burn_total > 0;
 
         let mut block_124_snapshot = BlockSnapshot {
             accumulated_coinbase_ustx: 400_000_000,
@@ -733,11 +730,8 @@ fn test_burn_snapshot_sequence() {
 
     // insert all operations
     let mut db = SortitionDB::connect_test(first_block_height, &first_burn_hash).unwrap();
-    let mut prev_snapshot = BlockSnapshot::initial(
-        first_block_height,
-        &first_burn_hash,
-        first_block_height as u64,
-    );
+    let mut prev_snapshot =
+        BlockSnapshot::initial(first_block_height, &first_burn_hash, first_block_height);
     let mut all_stacks_block_hashes = vec![];
 
     for i in 0..32 {

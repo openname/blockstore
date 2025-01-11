@@ -189,7 +189,7 @@ impl UnconfirmedState {
             unconfirmed_chain_tip: unconfirmed_tip,
             clarity_inst: clarity_instance,
             mined_txs: UnconfirmedTxMap::new(),
-            cost_so_far: cost_so_far,
+            cost_so_far,
             bytes_so_far: 0,
 
             last_mblock: None,
@@ -259,7 +259,7 @@ impl UnconfirmedState {
         let mut num_new_mblocks = 0;
         let mut have_state = self.have_state;
 
-        if mblocks.len() > 0 {
+        if !mblocks.is_empty() {
             let cur_cost = self.cost_so_far.clone();
 
             // NOTE: we *must* commit the clarity_tx now that it's begun.

@@ -3938,7 +3938,7 @@ fn read_write_node256() {
     assert!(wres.is_ok());
 
     let root_ptr = trie_io.root_ptr();
-    let rres = trie_io.read_nodetype(&TriePtr::new(TrieNodeID::Node256 as u8, 0, root_ptr as u32));
+    let rres = trie_io.read_nodetype(&TriePtr::new(TrieNodeID::Node256 as u8, 0, root_ptr));
 
     assert!(rres.is_ok());
     assert_eq!(rres.unwrap(), (node256.as_trie_node_type(), hash));

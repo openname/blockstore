@@ -43,9 +43,9 @@ pub struct DNSRequest {
 impl DNSRequest {
     pub fn new(host: String, port: u16, timeout: u128) -> DNSRequest {
         DNSRequest {
-            host: host,
-            port: port,
-            timeout: timeout,
+            host,
+            port,
+            timeout,
         }
     }
 
@@ -56,7 +56,7 @@ impl DNSRequest {
 }
 
 impl Hash for DNSRequest {
-    fn hash<H: Hasher>(&self, state: &mut H) -> () {
+    fn hash<H: Hasher>(&self, state: &mut H) {
         self.host.hash(state);
         self.port.hash(state);
     }
@@ -76,15 +76,12 @@ pub struct DNSResponse {
 
 impl DNSResponse {
     pub fn new(request: DNSRequest, result: Result<Vec<SocketAddr>, String>) -> DNSResponse {
-        DNSResponse {
-            request: request,
-            result: result,
-        }
+        DNSResponse { request, result }
     }
 
     pub fn error(request: DNSRequest, errstr: String) -> DNSResponse {
         DNSResponse {
-            request: request,
+            request,
             result: Err(errstr),
         }
     }
@@ -122,13 +119,13 @@ impl DNSResolver {
             queries: VecDeque::new(),
             inbound: socket_chan_rx,
             outbound: dns_chan_tx,
-            max_inflight: max_inflight,
+            max_inflight,
             hardcoded: HashMap::new(),
         };
         (resolver, client)
     }
 
-    pub fn add_hardcoded(&mut self, host: &str, port: u16, addrs: Vec<SocketAddr>) -> () {
+    pub fn add_hardcoded(&mut self, host: &str, port: u16, addrs: Vec<SocketAddr>) {
         self.hardcoded.insert((host.to_string(), port), addrs);
     }
 
@@ -153,7 +150,7 @@ impl DNSResolver {
             }
         };
 
-        if addrs.len() == 0 {
+        if addrs.is_empty() {
             return DNSResponse::error(req, "DNS resolve error: got zero addresses".to_string());
         }
         test_debug!("{}:{} resolved to {:?}", &req.host, req.port, &addrs);
@@ -269,7 +266,7 @@ impl DNSClient {
         Ok(())
     }
 
-    fn clear_timeouts(&mut self) -> () {
+    fn clear_timeouts(&mut self) {
         let mut to_remove = vec![];
         for req in self.requests.keys() {
             if req.is_timed_out() {
@@ -277,7 +274,7 @@ impl DNSClient {
                 to_remove.push(req.clone());
             }
         }
-        for req in to_remove.drain(..) {
+        for req in to_remove.into_iter() {
             self.requests.insert(
                 req.clone(),
                 Some(DNSResponse::error(req, "DNS lookup timed out".to_string())),
@@ -350,7 +347,7 @@ impl DNSClient {
         Ok(Some(resp))
     }
 
-    pub fn clear_all_requests(&mut self) -> () {
+    pub fn clear_all_requests(&mut self) {
         self.requests.clear()
     }
 }

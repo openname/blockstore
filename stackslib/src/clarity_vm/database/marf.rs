@@ -262,7 +262,7 @@ impl MarfedKV {
         self.marf.sqlite_conn()
     }
 
-    pub fn index_conn<'a, C>(&'a self, context: C) -> IndexDBConn<'a, C, StacksBlockId> {
+    pub fn index_conn<C>(&self, context: C) -> IndexDBConn<'_, C, StacksBlockId> {
         IndexDBConn {
             index: &self.marf,
             context,
@@ -280,7 +280,7 @@ pub struct ReadOnlyMarfStore<'a> {
     marf: &'a mut MARF<StacksBlockId>,
 }
 
-impl<'a> ReadOnlyMarfStore<'a> {
+impl ReadOnlyMarfStore<'_> {
     pub fn as_clarity_db<'b>(
         &'b mut self,
         headers_db: &'b dyn HeadersDB,
@@ -289,7 +289,7 @@ impl<'a> ReadOnlyMarfStore<'a> {
         ClarityDatabase::new(self, headers_db, burn_state_db)
     }
 
-    pub fn as_analysis_db<'b>(&'b mut self) -> AnalysisDatabase<'b> {
+    pub fn as_analysis_db(&mut self) -> AnalysisDatabase<'_> {
         AnalysisDatabase::new(self)
     }
 
@@ -301,7 +301,7 @@ impl<'a> ReadOnlyMarfStore<'a> {
     }
 }
 
-impl<'a> ClarityBackingStore for ReadOnlyMarfStore<'a> {
+impl ClarityBackingStore for ReadOnlyMarfStore<'_> {
     fn get_side_store(&mut self) -> &Connection {
         self.marf.sqlite_conn()
     }
@@ -546,7 +546,7 @@ impl<'a> ClarityBackingStore for ReadOnlyMarfStore<'a> {
     }
 }
 
-impl<'a> WritableMarfStore<'a> {
+impl WritableMarfStore<'_> {
     pub fn as_clarity_db<'b>(
         &'b mut self,
         headers_db: &'b dyn HeadersDB,
@@ -555,7 +555,7 @@ impl<'a> WritableMarfStore<'a> {
         ClarityDatabase::new(self, headers_db, burn_state_db)
     }
 
-    pub fn as_analysis_db<'b>(&'b mut self) -> AnalysisDatabase<'b> {
+    pub fn as_analysis_db(&mut self) -> AnalysisDatabase<'_> {
         AnalysisDatabase::new(self)
     }
 
@@ -625,7 +625,7 @@ impl<'a> WritableMarfStore<'a> {
     }
 }
 
-impl<'a> ClarityBackingStore for WritableMarfStore<'a> {
+impl ClarityBackingStore for WritableMarfStore<'_> {
     fn set_block_hash(&mut self, bhh: StacksBlockId) -> InterpreterResult<StacksBlockId> {
         self.marf
             .check_ancestor_block_hash(&bhh)

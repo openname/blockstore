@@ -525,7 +525,7 @@ impl StacksAddressExtensions for StacksAddress {
         let version = to_c32_version_byte(btc_version)
             .expect("Failed to decode Bitcoin version byte to Stacks version byte");
         StacksAddress {
-            version: version,
+            version,
             bytes: addr.bytes.clone(),
         }
     }

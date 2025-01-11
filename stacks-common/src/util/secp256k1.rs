@@ -72,10 +72,10 @@ impl MessageSignature {
 
     #[cfg(any(test, feature = "testing"))]
     // test method for generating place-holder data
-    pub fn from_raw(sig: &Vec<u8>) -> MessageSignature {
+    pub fn from_raw(sig: &[u8]) -> MessageSignature {
         let mut buf = [0u8; 65];
         if sig.len() < 65 {
-            buf.copy_from_slice(&sig[..]);
+            buf.copy_from_slice(sig);
         } else {
             buf.copy_from_slice(&sig[..65]);
         }

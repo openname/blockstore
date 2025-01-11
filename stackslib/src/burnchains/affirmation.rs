@@ -378,6 +378,10 @@ impl AffirmationMap {
         self.affirmations.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.affirmations.is_empty()
+    }
+
     pub fn as_slice(&self) -> &[AffirmationMapEntry] {
         &self.affirmations
     }
@@ -876,7 +880,7 @@ fn inner_find_heaviest_block_commit_ptr(
     test_debug!("ancestors = {:?}", &ancestors);
     test_debug!("ancestor_confirmations = {:?}", &ancestor_confirmations);
 
-    if ancestor_confirmations.len() == 0 {
+    if ancestor_confirmations.is_empty() {
         // empty prepare phase
         test_debug!("Prepare-phase has no block-commits");
         return None;

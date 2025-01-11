@@ -102,7 +102,7 @@ impl NakamotoDownloadStateMachine {
     }
 }
 
-impl<'a> NakamotoStagingBlocksConnRef<'a> {
+impl NakamotoStagingBlocksConnRef<'_> {
     pub fn load_nakamoto_tenure(
         &self,
         tip: &StacksBlockId,
@@ -474,8 +474,8 @@ fn test_nakamoto_unconfirmed_tenure_downloader() {
     .unwrap()
     .unwrap();
 
-    assert!(unconfirmed_tenure.len() > 0);
-    assert!(last_confirmed_tenure.len() > 0);
+    assert!(!unconfirmed_tenure.is_empty());
+    assert!(!last_confirmed_tenure.is_empty());
 
     assert_eq!(
         unconfirmed_tenure.first().as_ref().unwrap().block_id(),
@@ -1182,7 +1182,7 @@ fn test_tenure_start_end_from_inventory() {
         for (i, wt) in wanted_tenures.iter().enumerate() {
             if i >= (rc_len - 1).into() {
                 // nothing here
-                assert!(available.get(&wt.tenure_id_consensus_hash).is_none());
+                assert!(!available.contains_key(&wt.tenure_id_consensus_hash));
                 continue;
             }
 

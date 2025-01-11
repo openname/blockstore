@@ -22,9 +22,8 @@ use std::{fs, thread};
 use stacks::burnchains::Burnchain;
 use stacks::chainstate::burn::db::sortdb::SortitionDB;
 use stacks::chainstate::coordinator::comm::CoordinatorChannels;
-use stacks::core::StacksEpochExtension;
 use stacks::net::p2p::PeerNetwork;
-use stacks_common::types::{StacksEpoch, StacksEpochId};
+use stacks_common::types::StacksEpochId;
 
 use crate::event_dispatcher::EventDispatcher;
 use crate::globals::NeonGlobals;
@@ -233,10 +232,7 @@ impl BootRunLoop {
 
     fn reached_epoch_30_transition(config: &Config) -> Result<bool, String> {
         let burn_height = Self::get_burn_height(config)?;
-        let epochs = StacksEpoch::get_epochs(
-            config.burnchain.get_bitcoin_network().1,
-            config.burnchain.epochs.as_ref(),
-        );
+        let epochs = config.burnchain.get_epoch_list();
         let epoch_3 = epochs
             .get(StacksEpochId::Epoch30)
             .ok_or("No Epoch-3.0 defined")?;

@@ -244,18 +244,10 @@ impl BlockInfo {
         }
         match state {
             BlockState::Unprocessed => false,
-            BlockState::LocallyAccepted => {
-                matches!(
-                    prev_state,
-                    BlockState::Unprocessed | BlockState::LocallyAccepted
-                )
-            }
-            BlockState::LocallyRejected => {
-                matches!(
-                    prev_state,
-                    BlockState::Unprocessed | BlockState::LocallyRejected
-                )
-            }
+            BlockState::LocallyAccepted | BlockState::LocallyRejected => !matches!(
+                prev_state,
+                BlockState::GloballyRejected | BlockState::GloballyAccepted
+            ),
             BlockState::GloballyAccepted => !matches!(prev_state, BlockState::GloballyRejected),
             BlockState::GloballyRejected => !matches!(prev_state, BlockState::GloballyAccepted),
         }
@@ -942,12 +934,8 @@ impl SignerDb {
         block_sighash: &Sha512Trunc256Sum,
         ts: u64,
     ) -> Result<(), DBError> {
-        let qry = "UPDATE blocks SET broadcasted = ?1, block_info = json_set(block_info, '$.state', ?2), state = ?2 WHERE signer_signature_hash = ?3";
-        let args = params![
-            u64_to_sql(ts)?,
-            BlockState::GloballyAccepted.to_string(),
-            block_sighash
-        ];
+        let qry = "UPDATE blocks SET broadcasted = ?1 WHERE signer_signature_hash = ?2";
+        let args = params![u64_to_sql(ts)?, block_sighash];
 
         debug!("Marking block {} as broadcasted at {}", block_sighash, ts);
         self.db.execute(qry, args)?;
@@ -970,22 +958,6 @@ impl SignerDb {
             return Ok(None);
         }
         Ok(Some(broadcasted))
-    }
-
-    /// Get the current state of a given block in the database
-    pub fn get_block_state(
-        &self,
-        block_sighash: &Sha512Trunc256Sum,
-    ) -> Result<Option<BlockState>, DBError> {
-        let qry = "SELECT state FROM blocks WHERE signer_signature_hash = ?1 LIMIT 1";
-        let args = params![block_sighash];
-        let state_opt: Option<String> = query_row(&self.db, qry, args)?;
-        let Some(state) = state_opt else {
-            return Ok(None);
-        };
-        Ok(Some(
-            BlockState::try_from(state.as_str()).map_err(|_| DBError::Corruption)?,
-        ))
     }
 
     /// Return the start time (epoch time in seconds) and the processing time in milliseconds of the tenure (idenfitied by consensus_hash).
@@ -1145,13 +1117,6 @@ mod tests {
             .expect("Unable to get block from db");
 
         assert_eq!(BlockInfo::from(block_proposal_2.clone()), block_info);
-        // test getting the block state
-        let block_state = db
-            .get_block_state(&block_proposal_1.block.header.signer_signature_hash())
-            .unwrap()
-            .expect("Unable to get block state from db");
-
-        assert_eq!(block_state, BlockInfo::from(block_proposal_1.clone()).state);
     }
 
     #[test]
@@ -1394,14 +1359,7 @@ mod tests {
                 .expect("Unable to get block from db")
                 .expect("Unable to get block from db")
                 .state,
-            BlockState::GloballyAccepted
-        );
-        assert_eq!(
-            db.get_last_globally_accepted_block(&block_info_1.block.header.consensus_hash)
-                .unwrap()
-                .unwrap()
-                .signer_signature_hash(),
-            block_info_1.block.header.signer_signature_hash()
+            BlockState::Unprocessed
         );
         db.insert_block(&block_info_1)
             .expect("Unable to insert block into db a second time");
@@ -1428,7 +1386,14 @@ mod tests {
         assert_eq!(block.state, BlockState::LocallyAccepted);
         assert!(!block.check_state(BlockState::Unprocessed));
         assert!(block.check_state(BlockState::LocallyAccepted));
-        assert!(!block.check_state(BlockState::LocallyRejected));
+        assert!(block.check_state(BlockState::LocallyRejected));
+        assert!(block.check_state(BlockState::GloballyAccepted));
+        assert!(block.check_state(BlockState::GloballyRejected));
+
+        block.move_to(BlockState::LocallyRejected).unwrap();
+        assert!(!block.check_state(BlockState::Unprocessed));
+        assert!(block.check_state(BlockState::LocallyAccepted));
+        assert!(block.check_state(BlockState::LocallyRejected));
         assert!(block.check_state(BlockState::GloballyAccepted));
         assert!(block.check_state(BlockState::GloballyRejected));
 
@@ -1440,15 +1405,8 @@ mod tests {
         assert!(block.check_state(BlockState::GloballyAccepted));
         assert!(!block.check_state(BlockState::GloballyRejected));
 
-        // Must manually override as will not be able to move from GloballyAccepted to LocallyAccepted
-        block.state = BlockState::LocallyRejected;
-        assert!(!block.check_state(BlockState::Unprocessed));
-        assert!(!block.check_state(BlockState::LocallyAccepted));
-        assert!(block.check_state(BlockState::LocallyRejected));
-        assert!(block.check_state(BlockState::GloballyAccepted));
-        assert!(block.check_state(BlockState::GloballyRejected));
-
-        block.move_to(BlockState::GloballyRejected).unwrap();
+        // Must manually override as will not be able to move from GloballyAccepted to GloballyRejected
+        block.state = BlockState::GloballyRejected;
         assert!(!block.check_state(BlockState::Unprocessed));
         assert!(!block.check_state(BlockState::LocallyAccepted));
         assert!(!block.check_state(BlockState::LocallyRejected));

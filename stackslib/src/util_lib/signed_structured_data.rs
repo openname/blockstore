@@ -216,7 +216,7 @@ pub mod pox4 {
                 );
                 result
                     .expect("FATAL: failed to execute contract call")
-                    .expect_buff(32 as usize)
+                    .expect_buff(32)
                     .expect("FATAL: expected buff result")
             })
         }

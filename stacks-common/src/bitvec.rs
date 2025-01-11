@@ -129,7 +129,7 @@ pub struct BitVecIter<'a, const MAX_SIZE: u16> {
     bitvec: &'a BitVec<MAX_SIZE>,
 }
 
-impl<'a, const MAX_SIZE: u16> Iterator for BitVecIter<'a, MAX_SIZE> {
+impl<const MAX_SIZE: u16> Iterator for BitVecIter<'_, MAX_SIZE> {
     type Item = bool;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -172,7 +172,7 @@ impl<const MAX_SIZE: u16> BitVec<MAX_SIZE> {
     }
 
     pub fn iter(&self) -> BitVecIter<MAX_SIZE> {
-        let byte = self.data.get(0);
+        let byte = self.data.first();
         BitVecIter {
             index: 0,
             bitvec: self,
@@ -182,6 +182,10 @@ impl<const MAX_SIZE: u16> BitVec<MAX_SIZE> {
 
     pub fn len(&self) -> u16 {
         self.len
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
     }
 
     /// Return the number of bytes needed to store `len` bits.

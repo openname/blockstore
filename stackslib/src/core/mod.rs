@@ -219,10 +219,10 @@ pub const BLOCK_LIMIT_MAINNET_21: ExecutionCost = ExecutionCost {
 
 // Block limit for the testnet in Stacks 2.0.
 pub const HELIUM_BLOCK_LIMIT_20: ExecutionCost = ExecutionCost {
-    write_length: 15_0_000_000,
-    write_count: 5_0_000,
+    write_length: 150_000_000,
+    write_count: 50_000,
     read_length: 1_000_000_000,
-    read_count: 5_0_000,
+    read_count: 50_000,
     // allow much more runtime in helium blocks than mainnet
     runtime: 100_000_000_000,
 };

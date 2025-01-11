@@ -17,20 +17,21 @@
 use std::collections::HashMap;
 use std::process::{Command, Stdio};
 
-use stacks::burnchains::bitcoin::address::BitcoinAddress;
-use stacks::burnchains::bitcoin::{BitcoinNetworkType, BitcoinTxOutput};
-use stacks::burnchains::{Burnchain, BurnchainSigner, Error as BurnchainError, Txid};
-use stacks::chainstate::burn::db::sortdb::{SortitionDB, SortitionHandle};
-use stacks::chainstate::burn::distribution::BurnSamplePoint;
-use stacks::chainstate::burn::operations::leader_block_commit::{
-    MissedBlockCommit, BURN_BLOCK_MINED_AT_MODULUS,
-};
-use stacks::chainstate::burn::operations::LeaderBlockCommitOp;
-use stacks::chainstate::stacks::address::PoxAddress;
-use stacks::core::MINING_COMMITMENT_WINDOW;
-use stacks::util_lib::db::Error as DBError;
 use stacks_common::types::chainstate::{BlockHeaderHash, BurnchainHeaderHash, VRFSeed};
 use stacks_common::util::hash::hex_bytes;
+
+use crate::burnchains::bitcoin::address::BitcoinAddress;
+use crate::burnchains::bitcoin::{BitcoinNetworkType, BitcoinTxOutput};
+use crate::burnchains::{Burnchain, BurnchainSigner, Error as BurnchainError, Txid};
+use crate::chainstate::burn::db::sortdb::{SortitionDB, SortitionHandle};
+use crate::chainstate::burn::distribution::BurnSamplePoint;
+use crate::chainstate::burn::operations::leader_block_commit::{
+    MissedBlockCommit, BURN_BLOCK_MINED_AT_MODULUS,
+};
+use crate::chainstate::burn::operations::LeaderBlockCommitOp;
+use crate::chainstate::stacks::address::PoxAddress;
+use crate::core::MINING_COMMITMENT_WINDOW;
+use crate::util_lib::db::Error as DBError;
 
 pub struct MinerStats {
     pub unconfirmed_commits_helper: String,
@@ -526,11 +527,6 @@ pub mod tests {
     use std::fs;
     use std::io::Write;
 
-    use stacks::burnchains::{BurnchainSigner, Txid};
-    use stacks::chainstate::burn::distribution::BurnSamplePoint;
-    use stacks::chainstate::burn::operations::leader_block_commit::BURN_BLOCK_MINED_AT_MODULUS;
-    use stacks::chainstate::burn::operations::LeaderBlockCommitOp;
-    use stacks::chainstate::stacks::address::{PoxAddress, PoxAddressType20};
     use stacks_common::types::chainstate::{
         BlockHeaderHash, BurnchainHeaderHash, StacksAddress, StacksPublicKey, VRFSeed,
     };
@@ -538,6 +534,11 @@ pub mod tests {
     use stacks_common::util::uint::{BitArray, Uint256};
 
     use super::MinerStats;
+    use crate::burnchains::{BurnchainSigner, Txid};
+    use crate::chainstate::burn::distribution::BurnSamplePoint;
+    use crate::chainstate::burn::operations::leader_block_commit::BURN_BLOCK_MINED_AT_MODULUS;
+    use crate::chainstate::burn::operations::LeaderBlockCommitOp;
+    use crate::chainstate::stacks::address::{PoxAddress, PoxAddressType20};
 
     #[test]
     fn test_burn_dist_to_prob_dist() {

@@ -37,6 +37,7 @@ use crate::vm::types::{
 };
 use crate::vm::{eval, Environment, LocalContext, Value};
 
+#[allow(clippy::type_complexity)]
 pub enum CallableType {
     UserFunction(DefinedFunction),
     NativeFunction(&'static str, NativeHandle, ClarityCostFunction),
@@ -244,7 +245,11 @@ impl DefinedFunction {
                             )
                             .into());
                         }
-                        if let Some(_) = context.variables.insert(name.clone(), value.clone()) {
+                        if context
+                            .variables
+                            .insert(name.clone(), value.clone())
+                            .is_some()
+                        {
                             return Err(CheckErrors::NameAlreadyUsed(name.to_string()).into());
                         }
                     }
@@ -286,7 +291,7 @@ impl DefinedFunction {
                     }
                 }
 
-                if let Some(_) = context.variables.insert(name.clone(), cast_value) {
+                if context.variables.insert(name.clone(), cast_value).is_some() {
                     return Err(CheckErrors::NameAlreadyUsed(name.to_string()).into());
                 }
             }
@@ -323,7 +328,7 @@ impl DefinedFunction {
                     self.name.to_string(),
                 ))?;
 
-        let args = self.arg_types.iter().map(|a| a.clone()).collect();
+        let args = self.arg_types.to_vec();
         if !expected_sig.check_args_trait_compliance(epoch, args)? {
             return Err(
                 CheckErrors::BadTraitImplementation(trait_name, self.name.to_string()).into(),
@@ -393,16 +398,12 @@ impl CallableType {
 impl FunctionIdentifier {
     fn new_native_function(name: &str) -> FunctionIdentifier {
         let identifier = format!("_native_:{}", name);
-        FunctionIdentifier {
-            identifier: identifier,
-        }
+        FunctionIdentifier { identifier }
     }
 
     fn new_user_function(name: &str, context: &str) -> FunctionIdentifier {
         let identifier = format!("{}:{}", context, name);
-        FunctionIdentifier {
-            identifier: identifier,
-        }
+        FunctionIdentifier { identifier }
     }
 }
 
@@ -636,12 +637,9 @@ mod test {
         let cast_list = clarity2_implicit_cast(&list_opt_ty, &list_opt_contract).unwrap();
         let items = cast_list.expect_list().unwrap();
         for item in items {
-            match item.expect_optional().unwrap() {
-                Some(cast_opt) => {
-                    let cast_trait = cast_opt.expect_callable().unwrap();
-                    assert_eq!(&cast_trait.trait_identifier.unwrap(), &trait_identifier);
-                }
-                None => (),
+            if let Some(cast_opt) = item.expect_optional().unwrap() {
+                let cast_trait = cast_opt.expect_callable().unwrap();
+                assert_eq!(&cast_trait.trait_identifier.unwrap(), &trait_identifier);
             }
         }
 

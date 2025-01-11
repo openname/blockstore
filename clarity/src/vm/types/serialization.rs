@@ -782,14 +782,12 @@ impl Value {
                                         expected_type.unwrap(),
                                     ));
                                 }
-                            } else {
-                                if len as u64 != tuple_type.len() {
-                                    // unwrap is safe because of the match condition
-                                    #[allow(clippy::unwrap_used)]
-                                    return Err(SerializationError::DeserializeExpected(
-                                        expected_type.unwrap(),
-                                    ));
-                                }
+                            } else if u64::from(len) != tuple_type.len() {
+                                // unwrap is safe because of the match condition
+                                #[allow(clippy::unwrap_used)]
+                                return Err(SerializationError::DeserializeExpected(
+                                    expected_type.unwrap(),
+                                ));
                             }
                             Some(tuple_type)
                         }
@@ -1344,7 +1342,7 @@ impl ClaritySerializable for u32 {
 
 impl ClarityDeserializable<u32> for u32 {
     fn deserialize(input: &str) -> Result<Self, ClarityError> {
-        let bytes = hex_bytes(&input).map_err(|_| {
+        let bytes = hex_bytes(input).map_err(|_| {
             InterpreterError::Expect("u32 deserialization: failed decoding bytes.".into())
         })?;
         assert_eq!(bytes.len(), 4);
@@ -1419,13 +1417,10 @@ pub mod tests {
     }
 
     fn test_bad_expectation(v: Value, e: TypeSignature) {
-        assert!(
-            match Value::try_deserialize_hex(&v.serialize_to_hex().unwrap(), &e, false).unwrap_err()
-            {
-                SerializationError::DeserializeExpected(_) => true,
-                _ => false,
-            }
-        )
+        assert!(matches!(
+            Value::try_deserialize_hex(&v.serialize_to_hex().unwrap(), &e, false).unwrap_err(),
+            SerializationError::DeserializeExpected(_)
+        ));
     }
 
     #[test]
@@ -1704,40 +1699,37 @@ pub mod tests {
         );
 
         // field number not equal to expectations
-        assert!(match Value::try_deserialize_hex(
-            &t_3.serialize_to_hex().unwrap(),
-            &TypeSignature::type_of(&t_1).unwrap(),
-            false
-        )
-        .unwrap_err()
-        {
-            SerializationError::DeserializeExpected(_) => true,
-            _ => false,
-        });
+        assert!(matches!(
+            Value::try_deserialize_hex(
+                &t_3.serialize_to_hex().unwrap(),
+                &TypeSignature::type_of(&t_1).unwrap(),
+                false
+            )
+            .unwrap_err(),
+            SerializationError::DeserializeExpected(_)
+        ));
 
         // field type mismatch
-        assert!(match Value::try_deserialize_hex(
-            &t_2.serialize_to_hex().unwrap(),
-            &TypeSignature::type_of(&t_1).unwrap(),
-            false
-        )
-        .unwrap_err()
-        {
-            SerializationError::DeserializeExpected(_) => true,
-            _ => false,
-        });
+        assert!(matches!(
+            Value::try_deserialize_hex(
+                &t_2.serialize_to_hex().unwrap(),
+                &TypeSignature::type_of(&t_1).unwrap(),
+                false
+            )
+            .unwrap_err(),
+            SerializationError::DeserializeExpected(_)
+        ));
 
         // field not-present in expected
-        assert!(match Value::try_deserialize_hex(
-            &t_1.serialize_to_hex().unwrap(),
-            &TypeSignature::type_of(&t_4).unwrap(),
-            false
-        )
-        .unwrap_err()
-        {
-            SerializationError::DeserializeExpected(_) => true,
-            _ => false,
-        });
+        assert!(matches!(
+            Value::try_deserialize_hex(
+                &t_1.serialize_to_hex().unwrap(),
+                &TypeSignature::type_of(&t_4).unwrap(),
+                false
+            )
+            .unwrap_err(),
+            SerializationError::DeserializeExpected(_)
+        ));
     }
 
     #[apply(test_clarity_versions)]

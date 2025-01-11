@@ -3411,7 +3411,7 @@ fn test_trait_args() {
         },
         TraitIdentifier {
             name: ClarityName::from("trait-bar"),
-            contract_identifier: contract_identifier,
+            contract_identifier,
         },
     )];
 

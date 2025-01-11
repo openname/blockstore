@@ -18,55 +18,6 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Full genesis test with code coverage
-  full-genesis:
-    name: Full Genesis Test
-    runs-on: ubuntu-latest
-    strategy:
-      ## Continue with the test matrix even if we've had a failure
-      fail-fast: false
-      ## Run a maximum of 2 concurrent tests from the test matrix
-      max-parallel: 2
-      matrix:
-        test-name:
-          - neon_integrations::bitcoind_integration_test
-    steps:
-      ## Setup test environment
-      - name: Setup Test Environment
-        id: setup_tests
-        uses: stacks-network/actions/stacks-core/testenv@main
-        with:
-          genesis: true
-          btc-version: "25.0"
-
-      ## Run test matrix using restored cache of archive file
-      ##   - Test will timeout after env.TEST_TIMEOUT minutes
-      - name: Run Tests
-        id: run_tests
-        timeout-minutes: ${{ fromJSON(env.TEST_TIMEOUT) }}
-        uses: stacks-network/actions/stacks-core/run-tests@main
-        with:
-          test-name: ${{ matrix.test-name }}
-          threads: 1
-          archive-file: ~/genesis_archive.tar.zst
-
-      ## Upload code coverage file
-      - name: Code Coverage
-        id: codecov
-        uses: stacks-network/actions/codecov@main
-        with:
-          test-name: large_genesis
-          filename: ./lcov.info
-
-      - name: Status Output
-        run: |
-          echo "run_tests: ${{ steps.run_tests.outputs.status }}"
-          echo "codecov: ${{ steps.codecov.outputs.status }}"
-
-      - name: Check Failures
-        if: steps.run_tests.outputs.status == 'failure' || steps.codecov.outputs.status == 'failure'
-        run: exit 1
-
   # Unit tests with code coverage
   unit-tests:
     name: Unit Tests
@@ -186,7 +137,6 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     needs:
-      - full-genesis
       - open-api-validation
       - core-contracts-clarinet-test
     steps:

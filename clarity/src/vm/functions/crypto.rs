@@ -126,8 +126,8 @@ pub fn special_principal_of(
             pubkey_to_address_v1(pub_key)?
         };
         let principal = addr.to_account_principal();
-        return Ok(Value::okay(Value::Principal(principal))
-            .map_err(|_| InterpreterError::Expect("Failed to construct ok".into()))?);
+        Ok(Value::okay(Value::Principal(principal))
+            .map_err(|_| InterpreterError::Expect("Failed to construct ok".into()))?)
     } else {
         Ok(Value::err_uint(1))
     }
@@ -169,17 +169,14 @@ pub fn special_secp256k1_recover(
         _ => return Err(CheckErrors::TypeValueError(BUFF_65.clone(), param1).into()),
     };
 
-    match secp256k1_recover(&message, &signature).map_err(|_| CheckErrors::InvalidSecp65k1Signature)
-    {
-        Ok(pubkey) => {
-            return Ok(Value::okay(
-                Value::buff_from(pubkey.to_vec())
-                    .map_err(|_| InterpreterError::Expect("Failed to construct buff".into()))?,
-            )
-            .map_err(|_| InterpreterError::Expect("Failed to construct ok".into()))?)
-        }
-        _ => return Ok(Value::err_uint(1)),
-    };
+    match secp256k1_recover(message, signature).map_err(|_| CheckErrors::InvalidSecp65k1Signature) {
+        Ok(pubkey) => Ok(Value::okay(
+            Value::buff_from(pubkey.to_vec())
+                .map_err(|_| InterpreterError::Expect("Failed to construct buff".into()))?,
+        )
+        .map_err(|_| InterpreterError::Expect("Failed to construct ok".into()))?),
+        _ => Ok(Value::err_uint(1)),
+    }
 }
 
 pub fn special_secp256k1_verify(

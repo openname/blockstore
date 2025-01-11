@@ -195,7 +195,7 @@ pub trait NeighborWalkDB {
         )
         .map_err(net_error::DBError)?;
 
-        if neighbors.len() == 0 {
+        if neighbors.is_empty() {
             debug!(
                 "{:?}: No neighbors available in the peer DB newer than {}!",
                 network.get_local_peer(),
@@ -205,7 +205,7 @@ pub trait NeighborWalkDB {
                 &network.peerdb_conn(),
                 network.get_local_peer().network_id,
             )?;
-            if seed_nodes.len() == 0 {
+            if seed_nodes.is_empty() {
                 return Err(net_error::NoSuchNeighbor);
             }
             return Ok(seed_nodes);
@@ -261,7 +261,7 @@ pub trait NeighborWalkDB {
             })
             .collect();
 
-        if next_neighbors.len() == 0 {
+        if next_neighbors.is_empty() {
             return Err(net_error::NoSuchNeighbor);
         }
 
@@ -295,7 +295,7 @@ impl PeerDBNeighborWalk {
         let mut slots = PeerDB::peer_slots(conn, nk.network_id, &nk.addrbytes, nk.port)
             .map_err(net_error::DBError)?;
 
-        if slots.len() == 0 {
+        if slots.is_empty() {
             // not present
             return Ok(None);
         }

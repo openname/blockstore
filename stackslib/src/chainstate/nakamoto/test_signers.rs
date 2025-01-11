@@ -264,7 +264,7 @@ impl TestSigners {
 
         let aggregate_public_key: Vec<u8> =
             rand::thread_rng().sample_iter(Standard).take(33).collect();
-        self.aggregate_public_key = aggregate_public_key.clone();
+        self.aggregate_public_key.clone_from(&aggregate_public_key);
         aggregate_public_key
     }
 }

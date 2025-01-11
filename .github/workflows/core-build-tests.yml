@@ -1,0 +1,33 @@
+name: Core build tests
+
+# Only run when:
+#   - PRs are (re)opened against develop branch
+on:
+  workflow_call:
+
+jobs:
+  check-consts:
+    name: Check the constants from stacks-inspect
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the latest code
+        id: git_checkout
+        uses: actions/checkout@v3
+      - name: Define Rust Toolchain
+        id: define_rust_toolchain
+        run: echo "RUST_TOOLCHAIN=$(cat ./rust-toolchain)" >> $GITHUB_ENV
+      - name: Setup Rust Toolchain
+        id: setup_rust_toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+      - name: Build the binaries
+        id: build
+        run: |
+          cargo build
+      - name: Dump constants JSON
+        id: consts-dump
+        run: cargo run --bin stacks-inspect -- dump-consts | tee out.json
+      - name: Set expected constants JSON
+        id: expects-json
+        run: diff out.json ./sample/expected_consts.json

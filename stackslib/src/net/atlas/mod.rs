@@ -229,7 +229,7 @@ impl AttachmentInstance {
                             metadata,
                             contract_id: contract_id.clone(),
                             tx_id,
-                            canonical_stacks_tip_height: canonical_stacks_tip_height,
+                            canonical_stacks_tip_height,
                         };
                         return Some(instance);
                     }

@@ -48,6 +48,12 @@ use stacks::chainstate::burn::Opcodes;
 use stacks::chainstate::coordinator::comm::CoordinatorChannels;
 #[cfg(test)]
 use stacks::chainstate::stacks::address::PoxAddress;
+use stacks::config::BurnchainConfig;
+#[cfg(test)]
+use stacks::config::{
+    OP_TX_ANY_ESTIM_SIZE, OP_TX_DELEGATE_STACKS_ESTIM_SIZE, OP_TX_PRE_STACKS_ESTIM_SIZE,
+    OP_TX_STACK_STX_ESTIM_SIZE, OP_TX_TRANSFER_STACKS_ESTIM_SIZE, OP_TX_VOTE_AGG_ESTIM_SIZE,
+};
 use stacks::core::{EpochList, StacksEpochId};
 use stacks::monitoring::{increment_btc_blocks_received_counter, increment_btc_ops_sent_counter};
 use stacks::net::http::{HttpRequestContents, HttpResponsePayload};
@@ -74,12 +80,6 @@ use url::Url;
 use super::super::operations::BurnchainOpSigner;
 use super::super::Config;
 use super::{BurnchainController, BurnchainTip, Error as BurnchainControllerError};
-use crate::config::BurnchainConfig;
-#[cfg(test)]
-use crate::config::{
-    OP_TX_ANY_ESTIM_SIZE, OP_TX_DELEGATE_STACKS_ESTIM_SIZE, OP_TX_PRE_STACKS_ESTIM_SIZE,
-    OP_TX_STACK_STX_ESTIM_SIZE, OP_TX_TRANSFER_STACKS_ESTIM_SIZE, OP_TX_VOTE_AGG_ESTIM_SIZE,
-};
 
 /// The number of bitcoin blocks that can have
 ///  passed since the UTXO cache was last refreshed before
@@ -2806,13 +2806,13 @@ mod tests {
     use std::io::Write;
 
     use stacks::burnchains::BurnchainSigner;
+    use stacks::config::DEFAULT_SATS_PER_VB;
     use stacks_common::deps_common::bitcoin::blockdata::script::Builder;
     use stacks_common::types::chainstate::{BlockHeaderHash, StacksAddress, VRFSeed};
     use stacks_common::util::hash::to_hex;
     use stacks_common::util::secp256k1::Secp256k1PrivateKey;
 
     use super::*;
-    use crate::config::DEFAULT_SATS_PER_VB;
 
     #[test]
     fn test_get_satoshis_per_byte() {

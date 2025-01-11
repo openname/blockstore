@@ -81,8 +81,8 @@ fn trie_cmp<T: MarfTrieId>(
     let mut frontier_1 = VecDeque::new();
     let mut frontier_2 = VecDeque::new();
 
-    assert!(t1.data().len() > 0);
-    assert!(t2.data().len() > 0);
+    assert!(!t1.data().is_empty());
+    assert!(!t2.data().is_empty());
 
     let (n1_data, n1_hash) = t1.data()[0].clone();
     let (n2_data, n2_hash) = t2.data()[0].clone();
@@ -99,7 +99,7 @@ fn trie_cmp<T: MarfTrieId>(
     frontier_1.push_back((n1_data, n1_hash));
     frontier_2.push_back((n2_data, n2_hash));
 
-    while frontier_1.len() > 0 && frontier_2.len() > 0 {
+    while !frontier_1.is_empty() && !frontier_2.is_empty() {
         if frontier_1.len() != frontier_2.len() {
             debug!("frontier len mismatch");
             return false;

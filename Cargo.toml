@@ -21,7 +21,8 @@ rand = "0.8"
 rand_chacha = "0.3.1"
 tikv-jemallocator = "0.5.4"
 rusqlite = { version = "0.31.0", features = ["blob", "serde_json", "i128_blob", "bundled", "trace"] }
-thiserror = { version = "1.0.65" }
+thiserror = "1.0.65"
+toml = "0.5.6"
 
 # Use a bit more than default optimization for
 #  dev builds to speed up test execution

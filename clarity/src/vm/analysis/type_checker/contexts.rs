@@ -92,7 +92,7 @@ impl TypeMap {
     }
 }
 
-impl<'a> TypingContext<'a> {
+impl TypingContext<'_> {
     pub fn new(epoch: StacksEpochId, clarity_version: ClarityVersion) -> TypingContext<'static> {
         TypingContext {
             epoch,

@@ -274,6 +274,7 @@ pub fn check_special_unwrap_err(
     inner_unwrap_err(input, checker)
 }
 
+#[allow(clippy::unnecessary_lazy_evaluations)]
 fn eval_with_new_binding(
     body: &SymbolicExpression,
     bind_name: ClarityName,

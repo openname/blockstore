@@ -84,7 +84,7 @@ macro_rules! inf_or_debug {
     })
 }
 
-impl<'a, T: BlockEventDispatcher> OnChainRewardSetProvider<'a, T> {
+impl<T: BlockEventDispatcher> OnChainRewardSetProvider<'_, T> {
     /// Read a reward_set written while updating .signers
     /// `debug_log` should be set to true if the reward set loading should
     ///  log messages as `debug!` instead of `error!` or `info!`. This allows
@@ -615,14 +615,13 @@ pub fn get_nakamoto_next_recipients(
 }
 
 impl<
-        'a,
         T: BlockEventDispatcher,
         N: CoordinatorNotices,
         U: RewardSetProvider,
         CE: CostEstimator + ?Sized,
         FE: FeeEstimator + ?Sized,
         B: BurnchainHeaderReader,
-    > ChainsCoordinator<'a, T, N, U, CE, FE, B>
+    > ChainsCoordinator<'_, T, N, U, CE, FE, B>
 {
     /// Get the first nakamoto reward cycle
     fn get_first_nakamoto_reward_cycle(&self) -> u64 {

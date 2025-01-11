@@ -28,3 +28,4 @@ mutants = "0.0.3"
 
 [features]
 slog_json = ["stacks_common/slog_json", "clarity/slog_json"]
+testing = []

@@ -239,7 +239,7 @@ pub trait MarfConnection<T: MarfTrieId> {
     }
 }
 
-impl<'a, T: MarfTrieId> MarfConnection<T> for MarfTransaction<'a, T> {
+impl<T: MarfTrieId> MarfConnection<T> for MarfTransaction<'_, T> {
     fn with_conn<F, R>(&mut self, exec: F) -> R
     where
         F: FnOnce(&mut TrieStorageConnection<T>) -> R,
@@ -529,7 +529,7 @@ impl<'a, T: MarfTrieId> MarfTransaction<'a, T> {
             Some(WriteChainTip { ref block_hash, .. }) => Ok(block_hash.clone()),
         }?;
 
-        if keys.len() == 0 {
+        if keys.is_empty() {
             return Ok(());
         }
 
@@ -683,7 +683,7 @@ impl<T: MarfTrieId> MARF<T> {
         }
     }
 
-    fn node_copy_update_ptrs(ptrs: &mut [TriePtr], child_block_id: u32) -> () {
+    fn node_copy_update_ptrs(ptrs: &mut [TriePtr], child_block_id: u32) {
         for pointer in ptrs.iter_mut() {
             // if the node is empty, do nothing, if it's a back pointer,
             if pointer.id() == TrieNodeID::Empty as u8 || is_backptr(pointer.id()) {
@@ -1145,7 +1145,7 @@ impl<T: MarfTrieId> MARF<T> {
     /// Instantiate the MARF from a TrieFileStorage instance
     pub fn from_storage(storage: TrieFileStorage<T>) -> MARF<T> {
         MARF {
-            storage: storage,
+            storage,
             open_chain_tip: None,
         }
     }
@@ -1348,7 +1348,7 @@ impl<T: MarfTrieId> MARF<T> {
     ) -> Result<(), Error> {
         assert_eq!(keys.len(), values.len());
 
-        if keys.len() == 0 {
+        if keys.is_empty() {
             return Ok(());
         }
 
@@ -1394,7 +1394,7 @@ impl<T: MarfTrieId> MARF<T> {
 
 // instance methods
 impl<T: MarfTrieId> MARF<T> {
-    pub fn begin_tx<'a>(&'a mut self) -> Result<MarfTransaction<'a, T>, Error> {
+    pub fn begin_tx(&mut self) -> Result<MarfTransaction<'_, T>, Error> {
         let storage = self.storage.transaction()?;
         Ok(MarfTransaction {
             storage,
@@ -1456,7 +1456,7 @@ impl<T: MarfTrieId> MARF<T> {
             Some(WriteChainTip { ref block_hash, .. }) => Ok(block_hash.clone()),
         }?;
 
-        if keys.len() == 0 {
+        if keys.is_empty() {
             return Ok(());
         }
 
@@ -1620,7 +1620,7 @@ impl<T: MarfTrieId> MARF<T> {
     }
 
     /// Make a raw transaction to the underlying storage
-    pub fn storage_tx<'a>(&'a mut self) -> Result<Transaction<'a>, db_error> {
+    pub fn storage_tx(&mut self) -> Result<Transaction<'_>, db_error> {
         self.storage.sqlite_tx()
     }
 

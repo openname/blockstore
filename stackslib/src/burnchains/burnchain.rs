@@ -130,7 +130,7 @@ impl BurnchainStateTransition {
 
         block_total_burns.sort();
 
-        if block_total_burns.len() == 0 {
+        if block_total_burns.is_empty() {
             return Some(0);
         } else if block_total_burns.len() == 1 {
             return Some(block_total_burns[0]);

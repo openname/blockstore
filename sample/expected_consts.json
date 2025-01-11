@@ -1,0 +1,12 @@
+{
+  "chain_id_mainnet": 1,
+  "chain_id_testnet": 2147483648,
+  "microstacks_per_stacks": 1000000,
+  "miner_reward_maturity": 100,
+  "network_id_mainnet": 385875968,
+  "network_id_testnet": 4278190080,
+  "peer_version_mainnet_major": 402653184,
+  "peer_version_testnet_major": 4207599104,
+  "signer_slots_per_user": 13,
+  "stacks_epoch_max": 9223372036854775807
+}

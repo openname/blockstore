@@ -106,16 +106,16 @@ macro_rules! user_enum {
         }
 
         #[cfg(feature = "serde")]
-        impl<'de> $crate::serde::Deserialize<'de> for $name {
+        impl<'de> serde::Deserialize<'de> for $name {
             #[inline]
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
-                D: $crate::serde::Deserializer<'de>,
+                D: serde::Deserializer<'de>,
             {
-                use $crate::std::fmt::{self, Formatter};
+                use std::fmt::{self, Formatter};
 
                 struct Visitor;
-                impl<'de> $crate::serde::de::Visitor<'de> for Visitor {
+                impl<'de> serde::de::Visitor<'de> for Visitor {
                     type Value = $name;
 
                     fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
@@ -124,7 +124,7 @@ macro_rules! user_enum {
 
                     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
                     where
-                        E: $crate::serde::de::Error,
+                        E: serde::de::Error,
                     {
                         static FIELDS: &'static [&'static str] = &[$(stringify!($txt)),*];
 
@@ -136,14 +136,14 @@ macro_rules! user_enum {
 
                     fn visit_borrowed_str<E>(self, v: &'de str) -> Result<Self::Value, E>
                     where
-                        E: $crate::serde::de::Error,
+                        E: serde::de::Error,
                     {
                         self.visit_str(v)
                     }
 
                     fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
                     where
-                        E: $crate::serde::de::Error,
+                        E: serde::de::Error,
                     {
                         self.visit_str(&v)
                     }
@@ -222,19 +222,19 @@ macro_rules! hex_script (($s:expr) => (crate::deps_common::bitcoin::blockdata::s
 macro_rules! serde_struct_impl {
     ($name:ident, $($fe:ident),*) => (
         #[cfg(feature = "serde")]
-        impl<'de> $crate::serde::Deserialize<'de> for $name {
+        impl<'de> serde::Deserialize<'de> for $name {
             fn deserialize<D>(deserializer: D) -> Result<$name, D::Error>
             where
-                D: $crate::serde::de::Deserializer<'de>,
+                D: serde::de::Deserializer<'de>,
             {
-                use $crate::std::fmt::{self, Formatter};
-                use $crate::serde::de::IgnoredAny;
+                use std::fmt::{self, Formatter};
+                use serde::de::IgnoredAny;
 
                 #[allow(non_camel_case_types)]
                 enum Enum { Unknown__Field, $($fe),* }
 
                 struct EnumVisitor;
-                impl<'de> $crate::serde::de::Visitor<'de> for EnumVisitor {
+                impl<'de> serde::de::Visitor<'de> for EnumVisitor {
                     type Value = Enum;
 
                     fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
@@ -243,7 +243,7 @@ macro_rules! serde_struct_impl {
 
                     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
                     where
-                        E: $crate::serde::de::Error,
+                        E: serde::de::Error,
                     {
                         match v {
                             $(
@@ -254,7 +254,7 @@ macro_rules! serde_struct_impl {
                     }
                 }
 
-                impl<'de> $crate::serde::Deserialize<'de> for Enum {
+                impl<'de> serde::Deserialize<'de> for Enum {
                     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
                     where
                         D: ::serde::de::Deserializer<'de>,
@@ -265,7 +265,7 @@ macro_rules! serde_struct_impl {
 
                 struct Visitor;
 
-                impl<'de> $crate::serde::de::Visitor<'de> for Visitor {
+                impl<'de> serde::de::Visitor<'de> for Visitor {
                     type Value = $name;
 
                     fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
@@ -274,9 +274,9 @@ macro_rules! serde_struct_impl {
 
                     fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
                     where
-                        A: $crate::serde::de::MapAccess<'de>,
+                        A: serde::de::MapAccess<'de>,
                     {
-                        use $crate::serde::de::Error;
+                        use serde::de::Error;
 
                         $(let mut $fe = None;)*
 
@@ -317,12 +317,12 @@ macro_rules! serde_struct_impl {
         }
 
         #[cfg(feature = "serde")]
-        impl<'de> $crate::serde::Serialize for $name {
+        impl<'de> serde::Serialize for $name {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
-                S: $crate::serde::Serializer,
+                S: serde::Serializer,
             {
-                use $crate::serde::ser::SerializeStruct;
+                use serde::ser::SerializeStruct;
 
                 // Only used to get the struct length.
                 static FIELDS: &'static [&'static str] = &[$(stringify!($fe)),*];

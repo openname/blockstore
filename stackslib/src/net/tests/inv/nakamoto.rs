@@ -596,7 +596,7 @@ fn check_inv_state(
                 tenure_inv.get(bit.try_into().unwrap()).unwrap_or(false)
             };
 
-            let burn_block_height = (*tenure_rc as u64) * u64::from(rc_len) + (bit as u64);
+            let burn_block_height = *tenure_rc * u64::from(rc_len) + (bit as u64);
             if burn_block_height < nakamoto_start_burn_height {
                 // inv doesn't cover epoch 2
                 assert!(
@@ -912,7 +912,7 @@ fn test_nakamoto_inv_sync_state_machine() {
             .map(|e_id| *e_id)
             .collect();
 
-        if event_ids.len() > 0 && other_event_ids.len() > 0 {
+        if !event_ids.is_empty() && !other_event_ids.is_empty() {
             break;
         }
     }
@@ -938,7 +938,7 @@ fn test_nakamoto_inv_sync_state_machine() {
             loop {
                 let _ = other_peer.step_with_ibd(false);
                 let ev_ids: Vec<_> = other_peer.network.iter_peer_event_ids().collect();
-                if ev_ids.len() == 0 {
+                if ev_ids.is_empty() {
                     // disconnected
                     panic!("Disconnected");
                 }
@@ -1043,7 +1043,7 @@ fn test_nakamoto_inv_sync_across_epoch_change() {
             .map(|e_id| *e_id)
             .collect();
 
-        if event_ids.len() > 0 && other_event_ids.len() > 0 {
+        if !event_ids.is_empty() && !other_event_ids.is_empty() {
             break;
         }
     }

@@ -309,6 +309,8 @@ fn main() {
         process::exit(1);
     }
 
+    let common_opts = cli::drain_common_opts(&mut argv, 1);
+
     if argv[1] == "--version" {
         println!(
             "{}",
@@ -796,128 +798,7 @@ check if the associated microblocks can be downloaded
     }
 
     if argv[1] == "try-mine" {
-        if argv.len() < 3 {
-            eprintln!(
-                "Usage: {} try-mine <working-dir> [min-fee [max-time]]
-
-Given a <working-dir>, try to ''mine'' an anchored block. This invokes the miner block
-assembly, but does not attempt to broadcast a block commit. This is useful for determining
-what transactions a given chain state would include in an anchor block, or otherwise
-simulating a miner.
-",
-                argv[0]
-            );
-            process::exit(1);
-        }
-
-        let start = get_epoch_time_ms();
-        let burnchain_path = format!("{}/mainnet/burnchain", &argv[2]);
-        let sort_db_path = format!("{}/mainnet/burnchain/sortition", &argv[2]);
-        let chain_state_path = format!("{}/mainnet/chainstate/", &argv[2]);
-
-        let mut min_fee = u64::MAX;
-        let mut max_time = u64::MAX;
-
-        if argv.len() >= 4 {
-            min_fee = argv[3].parse().expect("Could not parse min_fee");
-        }
-        if argv.len() >= 5 {
-            max_time = argv[4].parse().expect("Could not parse max_time");
-        }
-
-        let sort_db = SortitionDB::open(&sort_db_path, false, PoxConstants::mainnet_default())
-            .unwrap_or_else(|_| panic!("Failed to open {sort_db_path}"));
-        let chain_id = CHAIN_ID_MAINNET;
-        let (chain_state, _) = StacksChainState::open(true, chain_id, &chain_state_path, None)
-            .expect("Failed to open stacks chain state");
-        let chain_tip = SortitionDB::get_canonical_burn_chain_tip(sort_db.conn())
-            .expect("Failed to get sortition chain tip");
-
-        let estimator = Box::new(UnitEstimator);
-        let metric = Box::new(UnitMetric);
-
-        let mut mempool_db = MemPoolDB::open(true, chain_id, &chain_state_path, estimator, metric)
-            .expect("Failed to open mempool db");
-
-        let header_tip = NakamotoChainState::get_canonical_block_header(chain_state.db(), &sort_db)
-            .unwrap()
-            .unwrap();
-        let parent_header = StacksChainState::get_anchored_block_header_info(
-            chain_state.db(),
-            &header_tip.consensus_hash,
-            &header_tip.anchored_header.block_hash(),
-        )
-        .expect("Failed to load chain tip header info")
-        .expect("Failed to load chain tip header info");
-
-        let sk = StacksPrivateKey::new();
-        let mut tx_auth = TransactionAuth::from_p2pkh(&sk).unwrap();
-        tx_auth.set_origin_nonce(0);
-
-        let mut coinbase_tx = StacksTransaction::new(
-            TransactionVersion::Mainnet,
-            tx_auth,
-            TransactionPayload::Coinbase(CoinbasePayload([0u8; 32]), None, None),
-        );
-
-        coinbase_tx.chain_id = chain_id;
-        coinbase_tx.anchor_mode = TransactionAnchorMode::OnChainOnly;
-        let mut tx_signer = StacksTransactionSigner::new(&coinbase_tx);
-        tx_signer.sign_origin(&sk).unwrap();
-        let coinbase_tx = tx_signer.get_tx().unwrap();
-
-        let mut settings = BlockBuilderSettings::limited();
-        settings.max_miner_time_ms = max_time;
-
-        let result = StacksBlockBuilder::build_anchored_block(
-            &chain_state,
-            &sort_db.index_handle(&chain_tip.sortition_id),
-            &mut mempool_db,
-            &parent_header,
-            chain_tip.total_burn,
-            VRFProof::empty(),
-            Hash160([0; 20]),
-            &coinbase_tx,
-            settings,
-            None,
-            &Burnchain::new(&burnchain_path, "bitcoin", "main").unwrap(),
-        );
-
-        let stop = get_epoch_time_ms();
-
-        println!(
-            "{} mined block @ height = {} off of {} ({}/{}) in {}ms. Min-fee: {}, Max-time: {}",
-            if result.is_ok() {
-                "Successfully"
-            } else {
-                "Failed to"
-            },
-            parent_header.stacks_block_height + 1,
-            StacksBlockHeader::make_index_block_hash(
-                &parent_header.consensus_hash,
-                &parent_header.anchored_header.block_hash()
-            ),
-            &parent_header.consensus_hash,
-            &parent_header.anchored_header.block_hash(),
-            stop.saturating_sub(start),
-            min_fee,
-            max_time
-        );
-
-        if let Ok((block, execution_cost, size)) = result {
-            let mut total_fees = 0;
-            for tx in block.txs.iter() {
-                total_fees += tx.get_tx_fee();
-            }
-            println!(
-                "Block {}: {} uSTX, {} bytes, cost {:?}",
-                block.block_hash(),
-                total_fees,
-                size,
-                &execution_cost
-            );
-        }
-
+        cli::command_try_mine(&argv[1..], common_opts.config.as_ref());
         process::exit(0);
     }
 
@@ -1142,7 +1023,7 @@ simulating a miner.
             }
             i += 1;
             let line = line.unwrap().trim().to_string();
-            if line.len() == 0 {
+            if line.is_empty() {
                 continue;
             }
             let vals: Vec<_> = line.split(" => ").map(|x| x.trim()).collect();
@@ -1436,7 +1317,7 @@ simulating a miner.
         let old_sortition_db =
             SortitionDB::open(old_sort_path, true, PoxConstants::mainnet_default()).unwrap();
 
-        // initial argon balances -- see testnet/stacks-node/conf/testnet-follower-conf.toml
+        // initial argon balances -- see sample/conf/testnet-follower-conf.toml
         let initial_balances = vec![
             (
                 StacksAddress::from_string("ST2QKZ4FKHAH1NQKYKYAYZPY440FEPK7GZ1R5HBP2")
@@ -1704,7 +1585,7 @@ simulating a miner.
                         null_event_dispatcher,
                     )
                     .unwrap();
-                if receipts.len() == 0 {
+                if receipts.is_empty() {
                     break;
                 }
             }
@@ -1719,48 +1600,47 @@ simulating a miner.
     }
 
     if argv[1] == "replay-block" {
-        cli::command_replay_block(&argv[1..], None);
+        cli::command_replay_block(&argv[1..], common_opts.config.as_ref());
         process::exit(0);
     }
 
     if argv[1] == "replay-naka-block" {
-        let chain_config =
-            if let Some(network_flag_ix) = argv.iter().position(|arg| arg == "--network") {
-                let Some(network_choice) = argv.get(network_flag_ix + 1) else {
-                    eprintln!("Must supply network choice after `--network` option");
-                    process::exit(1);
-                };
-
-                let network_config = match network_choice.to_lowercase().as_str() {
-                    "testnet" => cli::StacksChainConfig::default_testnet(),
-                    "mainnet" => cli::StacksChainConfig::default_mainnet(),
-                    other => {
-                        eprintln!("Unknown network choice `{other}`");
-                        process::exit(1);
-                    }
-                };
-
-                argv.remove(network_flag_ix + 1);
-                argv.remove(network_flag_ix);
-
-                Some(network_config)
-            } else {
-                None
-            };
-
-        cli::command_replay_block_nakamoto(&argv[1..], chain_config.as_ref());
+        cli::command_replay_block_nakamoto(&argv[1..], common_opts.config.as_ref());
         process::exit(0);
     }
 
     if argv[1] == "replay-mock-mining" {
-        cli::command_replay_mock_mining(&argv[1..], None);
+        cli::command_replay_mock_mining(&argv[1..], common_opts.config.as_ref());
         process::exit(0);
+    }
+
+    if argv[1] == "dump-consts" {
+        dump_consts();
     }
 
     if argv.len() < 4 {
         eprintln!("Usage: {} blockchain network working_dir", argv[0]);
         process::exit(1);
     }
+}
+
+#[cfg_attr(test, mutants::skip)]
+pub fn dump_consts() {
+    use stacks_common::consts;
+    let json_out = json!({
+        "miner_reward_maturity": consts::MINER_REWARD_MATURITY,
+        "chain_id_mainnet": consts::CHAIN_ID_MAINNET,
+        "chain_id_testnet": consts::CHAIN_ID_TESTNET,
+        "signer_slots_per_user": consts::SIGNER_SLOTS_PER_USER,
+        "network_id_mainnet": consts::NETWORK_ID_MAINNET,
+        "network_id_testnet": consts::NETWORK_ID_TESTNET,
+        "microstacks_per_stacks": consts::MICROSTACKS_PER_STACKS,
+        "stacks_epoch_max": consts::STACKS_EPOCH_MAX,
+        "peer_version_mainnet_major": consts::PEER_VERSION_MAINNET_MAJOR,
+        "peer_version_testnet_major": consts::PEER_VERSION_TESTNET_MAJOR,
+    });
+    println!("{}", serde_json::to_string_pretty(&json_out).unwrap());
+    process::exit(0);
 }
 
 #[cfg_attr(test, mutants::skip)]

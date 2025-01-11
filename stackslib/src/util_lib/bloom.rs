@@ -373,7 +373,7 @@ impl<H: BloomHash + Clone + StacksMessageCodec> BloomCounter<H> {
         Ok(BloomCounter {
             hasher,
             table_name: table_name.to_string(),
-            num_bins: num_bins,
+            num_bins,
             num_hashes,
             counts_rowid: counts_rowid as u32,
         })

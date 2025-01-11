@@ -10,10 +10,10 @@ use stacks::chainstate::coordinator::comm::CoordinatorChannels;
 use stacks::chainstate::stacks::db::unconfirmed::UnconfirmedTxMap;
 use stacks::chainstate::stacks::db::StacksChainState;
 use stacks::chainstate::stacks::miner::MinerStatus;
+use stacks::config::MinerConfig;
 use stacks::net::NetworkResult;
 use stacks_common::types::chainstate::{BlockHeaderHash, BurnchainHeaderHash, ConsensusHash};
 
-use crate::config::MinerConfig;
 use crate::neon::Counters;
 use crate::neon_node::LeaderKeyRegistrationState;
 use crate::run_loop::RegisteredKey;

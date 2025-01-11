@@ -991,7 +991,7 @@ fn make_stacks_block_with_input(
         parent_vtxindex,
 
         txid: next_txid(),
-        vtxindex: (1 + key_index) as u32,
+        vtxindex: 1 + key_index,
         block_height: 0,
         burn_parent_modulus: (BURN_BLOCK_MINED_AT_MODULUS - 1) as u8,
         burn_header_hash: BurnchainHeaderHash([0; 32]),

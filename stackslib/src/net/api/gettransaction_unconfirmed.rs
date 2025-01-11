@@ -130,7 +130,7 @@ impl RPCRequestHandler for RPCGetTransactionUnconfirmedRequestHandler {
                         return Ok(UnconfirmedTransactionResponse {
                             status: UnconfirmedTransactionStatus::Microblock {
                                 block_hash: mblock_hash,
-                                seq: seq,
+                                seq,
                             },
                             tx: to_hex(&transaction.serialize_to_vec()),
                         });

@@ -113,10 +113,7 @@ impl ParseError {
     }
 
     pub fn rejectable(&self) -> bool {
-        match self.err {
-            ParseErrors::InterpreterFailure => true,
-            _ => false,
-        }
+        matches!(self.err, ParseErrors::InterpreterFailure)
     }
 
     pub fn has_pre_expression(&self) -> bool {

@@ -31,9 +31,32 @@ pub mod vrf;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{error, fmt, thread, time};
+
+/// Given a relative path inside the Cargo workspace, return the absolute path
+pub fn cargo_workspace<P>(relative_path: P) -> PathBuf
+where
+    P: AsRef<Path>,
+{
+    let output = std::process::Command::new(env!("CARGO"))
+        .arg("locate-project")
+        .arg("--workspace")
+        .arg("--message-format=plain")
+        .output()
+        .expect("Failed to run command");
+    let cargo_toml = std::str::from_utf8(&output.stdout)
+        .expect("Failed to parse utf8")
+        .trim();
+    Path::new(cargo_toml)
+        .parent()
+        .expect("Failed to get parent directory")
+        .join(relative_path)
+}
+
+#[cfg(any(test, feature = "testing"))]
+pub mod tests;
 
 pub fn get_epoch_time_secs() -> u64 {
     let start = SystemTime::now();

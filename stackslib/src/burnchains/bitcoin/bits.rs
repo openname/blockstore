@@ -39,7 +39,7 @@ use crate::chainstate::stacks::{
 };
 
 /// Parse a script into its structured constituant opcodes and data and collect them
-pub fn parse_script<'a>(script: &'a Script) -> Vec<Instruction<'a>> {
+pub fn parse_script(script: &Script) -> Vec<Instruction<'_>> {
     // we will have to accept non-minimial pushdata since there's at least one OP_RETURN
     // in the transaction stream that has this property already.
     script.iter(false).collect()
@@ -93,7 +93,7 @@ impl BitcoinTxInputStructured {
         segwit: bool,
         input_txid: (Txid, u32),
     ) -> Option<BitcoinTxInputStructured> {
-        if num_sigs < 1 || pubkey_pushbytes.len() < 1 || pubkey_pushbytes.len() < num_sigs {
+        if num_sigs < 1 || pubkey_pushbytes.is_empty() || pubkey_pushbytes.len() < num_sigs {
             test_debug!(
                 "Not a multisig script: num_sigs = {}, num_pubkeys <= {}",
                 num_sigs,
@@ -136,7 +136,7 @@ impl BitcoinTxInputStructured {
 
         Some(BitcoinTxInputStructured {
             tx_ref: input_txid,
-            keys: keys,
+            keys,
             num_required: num_sigs,
             in_type: if segwit {
                 BitcoinInputType::SegwitP2SH
@@ -153,7 +153,7 @@ impl BitcoinTxInputStructured {
         pubkey_vecs: &[Vec<u8>],
         input_txid: (Txid, u32),
     ) -> Option<BitcoinTxInputStructured> {
-        if num_sigs < 1 || pubkey_vecs.len() < 1 || pubkey_vecs.len() < num_sigs {
+        if num_sigs < 1 || pubkey_vecs.is_empty() || pubkey_vecs.len() < num_sigs {
             test_debug!(
                 "Not a multisig script: num_sigs = {}, num_pubkeys <= {}",
                 num_sigs,
@@ -184,7 +184,7 @@ impl BitcoinTxInputStructured {
 
         let tx_input = BitcoinTxInputStructured {
             tx_ref: input_txid,
-            keys: keys,
+            keys,
             num_required: num_sigs,
             in_type: BitcoinInputType::SegwitP2SH,
         };
@@ -498,7 +498,7 @@ impl BitcoinTxInputRaw {
     ) -> BitcoinTxInputRaw {
         BitcoinTxInputRaw {
             scriptSig: script_sig.clone().into_bytes(),
-            witness: witness,
+            witness,
             tx_ref: input_txid,
         }
     }

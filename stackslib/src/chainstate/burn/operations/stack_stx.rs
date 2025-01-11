@@ -119,7 +119,7 @@ impl PreStxOp {
         };
 
         let outputs = tx.get_recipients();
-        assert!(outputs.len() > 0);
+        assert!(!outputs.is_empty());
 
         let output = outputs[0]
             .as_ref()
@@ -145,7 +145,7 @@ impl PreStxOp {
         }
 
         Ok(PreStxOp {
-            output: output,
+            output,
             txid: tx.txid(),
             vtxindex: tx.vtxindex(),
             block_height,
@@ -317,7 +317,7 @@ impl StackStxOp {
         })?;
 
         let outputs = tx.get_recipients();
-        assert!(outputs.len() > 0);
+        assert!(!outputs.is_empty());
 
         let first_output = outputs[0].as_ref().ok_or_else(|| {
             warn!("Invalid tx: failed to decode first output");
@@ -689,7 +689,7 @@ mod tests {
             txid: Txid([0; 32]),
             vtxindex: 0,
             opcode: Opcodes::StackStx as u8,
-            data: data,
+            data,
             data_amt: 0,
             inputs: vec![BitcoinTxInputStructured {
                 keys: vec![],
@@ -869,7 +869,7 @@ mod tests {
             auth_id: Some(0u32),
         };
         let op_bytes = {
-            let mut bytes = ['T' as u8, '3' as u8].to_vec();
+            let mut bytes = [b'T', b'3'].to_vec();
             op.consensus_serialize(&mut bytes)
                 .expect("Expected to be able to serialize op into bytes");
             bytes

@@ -55,7 +55,7 @@ impl FunctionType {
             | StacksEpochId::Epoch30
             | StacksEpochId::Epoch31 => self.check_args_2_1(accounting, args, clarity_version),
             StacksEpochId::Epoch10 => {
-                return Err(CheckErrors::Expects("Epoch10 is not supported".into()).into())
+                Err(CheckErrors::Expects("Epoch10 is not supported".into()).into())
             }
         }
     }
@@ -81,17 +81,14 @@ impl FunctionType {
                 self.check_args_by_allowing_trait_cast_2_1(db, clarity_version, func_args)
             }
             StacksEpochId::Epoch10 => {
-                return Err(CheckErrors::Expects("Epoch10 is not supported".into()).into())
+                Err(CheckErrors::Expects("Epoch10 is not supported".into()).into())
             }
         }
     }
 }
 
 fn is_reserved_word_v3(word: &str) -> bool {
-    match word {
-        "block-height" => true,
-        _ => false,
-    }
+    word == "block-height"
 }
 
 /// Is this a reserved word that should trigger an analysis error for the given

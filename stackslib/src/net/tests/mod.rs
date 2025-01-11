@@ -352,10 +352,10 @@ impl NakamotoBootPlan {
 
     /// Make a peer and transition it into the Nakamoto epoch.
     /// The node needs to be stacking; otherwise, Nakamoto won't activate.
-    fn boot_nakamoto_peers<'a>(
+    fn boot_nakamoto_peers(
         mut self,
-        observer: Option<&'a TestEventObserver>,
-    ) -> (TestPeer<'a>, Vec<TestPeer>) {
+        observer: Option<&TestEventObserver>,
+    ) -> (TestPeer<'_>, Vec<TestPeer<'_>>) {
         let mut peer_config = TestPeerConfig::new(&self.test_name, 0, 0);
         peer_config.network_id = self.network_id;
         peer_config.private_key = self.private_key.clone();
@@ -662,11 +662,11 @@ impl NakamotoBootPlan {
         debug!("========================\n\n");
     }
 
-    pub fn boot_into_nakamoto_peers<'a>(
+    pub fn boot_into_nakamoto_peers(
         self,
         boot_plan: Vec<NakamotoBootTenure>,
-        observer: Option<&'a TestEventObserver>,
-    ) -> (TestPeer<'a>, Vec<TestPeer>) {
+        observer: Option<&TestEventObserver>,
+    ) -> (TestPeer<'_>, Vec<TestPeer<'_>>) {
         let test_signers = self.test_signers.clone();
         let pox_constants = self.pox_constants.clone();
         let test_stackers = self.test_stackers.clone();
@@ -690,7 +690,7 @@ impl NakamotoBootPlan {
 
             match plan_tenure {
                 NakamotoBootTenure::NoSortition(boot_steps) => {
-                    assert!(boot_steps.len() > 0);
+                    assert!(!boot_steps.is_empty());
                     // just extend the last sortition
                     let (burn_ops, tenure_change_extend, miner_key) =
                         peer.begin_nakamoto_tenure(TenureChangeCause::Extended);
@@ -732,7 +732,7 @@ impl NakamotoBootPlan {
 
                             match next_step {
                                 NakamotoBootStep::TenureExtend(transactions) => {
-                                    assert!(transactions.len() > 0);
+                                    assert!(!transactions.is_empty());
                                     if let Some(last_block) = last_block_opt {
                                         let tenure_extension = tenure_change.extend(
                                             next_consensus_hash.clone(),
@@ -749,7 +749,7 @@ impl NakamotoBootPlan {
                                     debug!("\n\nExtend current tenure in empty tenure {} (blocks so far: {}, blocks_since_last_tenure = {}, steps so far: {})\n\n", &next_consensus_hash, blocks_so_far.len(), blocks_since_last_tenure, i);
                                 }
                                 NakamotoBootStep::Block(transactions) => {
-                                    assert!(transactions.len() > 0);
+                                    assert!(!transactions.is_empty());
                                     debug!("\n\nMake block {} with {} transactions in empty tenure {}\n\n", blocks_so_far.len(), transactions.len(), &next_consensus_hash);
                                     txs.extend_from_slice(&transactions[..]);
                                     num_expected_transactions += transactions.len();
@@ -789,7 +789,7 @@ impl NakamotoBootPlan {
                     all_blocks.push(blocks);
                 }
                 NakamotoBootTenure::Sortition(boot_steps) => {
-                    assert!(boot_steps.len() > 0);
+                    assert!(!boot_steps.is_empty());
                     let (burn_ops, mut tenure_change, miner_key) =
                         peer.begin_nakamoto_tenure(TenureChangeCause::BlockFound);
                     let (burn_ht, _, consensus_hash) = peer.next_burnchain_block(burn_ops.clone());
@@ -833,7 +833,7 @@ impl NakamotoBootPlan {
 
                             match next_step {
                                 NakamotoBootStep::TenureExtend(transactions) => {
-                                    assert!(transactions.len() > 0);
+                                    assert!(!transactions.is_empty());
                                     if let Some(last_block) = last_block_opt {
                                         let tenure_extension = tenure_change.extend(
                                             consensus_hash.clone(),
@@ -850,7 +850,7 @@ impl NakamotoBootPlan {
                                     debug!("\n\nExtend current tenure {} (blocks so far: {}, steps so far: {})\n\n", &consensus_hash, blocks_so_far.len(), i);
                                 }
                                 NakamotoBootStep::Block(transactions) => {
-                                    assert!(transactions.len() > 0);
+                                    assert!(!transactions.is_empty());
                                     debug!("\n\nMake block {} with {} transactions in tenure {}\n\n", blocks_so_far.len(), transactions.len(), &consensus_hash);
                                     txs.extend_from_slice(&transactions[..]);
                                     num_expected_transactions += transactions.len();
@@ -1017,11 +1017,11 @@ impl NakamotoBootPlan {
         (peer, other_peers)
     }
 
-    pub fn boot_into_nakamoto_peer<'a>(
+    pub fn boot_into_nakamoto_peer(
         self,
         boot_plan: Vec<NakamotoBootTenure>,
-        observer: Option<&'a TestEventObserver>,
-    ) -> TestPeer<'a> {
+        observer: Option<&TestEventObserver>,
+    ) -> TestPeer<'_> {
         self.boot_into_nakamoto_peers(boot_plan, observer).0
     }
 }

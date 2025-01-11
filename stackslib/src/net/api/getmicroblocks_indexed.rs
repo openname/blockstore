@@ -94,8 +94,8 @@ impl StacksIndexedMicroblockStream {
 
         Ok(StacksIndexedMicroblockStream {
             microblock_hash: mblock_info.microblock_hash,
-            parent_index_block_hash: parent_index_block_hash,
-            num_items_buf: num_items_buf,
+            parent_index_block_hash,
+            num_items_buf,
             num_items_ptr: 0,
             chainstate_db: chainstate.reopen_db()?,
         })

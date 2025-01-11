@@ -59,7 +59,7 @@ impl fmt::Display for NakamotoBlockObtainMethod {
     }
 }
 
-pub const NAKAMOTO_STAGING_DB_SCHEMA_1: &'static [&'static str] = &[
+pub const NAKAMOTO_STAGING_DB_SCHEMA_1: &[&str] = &[
     r#"
   -- Table for staging nakamoto blocks
   CREATE TABLE nakamoto_staging_blocks (
@@ -102,7 +102,7 @@ pub const NAKAMOTO_STAGING_DB_SCHEMA_1: &'static [&'static str] = &[
     r#"CREATE INDEX nakamoto_staging_blocks_by_tenure_start_block ON nakamoto_staging_blocks(is_tenure_start,consensus_hash);"#,
 ];
 
-pub const NAKAMOTO_STAGING_DB_SCHEMA_2: &'static [&'static str] = &[
+pub const NAKAMOTO_STAGING_DB_SCHEMA_2: &[&str] = &[
     r#"
   DROP TABLE nakamoto_staging_blocks;
   "#,
@@ -155,7 +155,7 @@ pub const NAKAMOTO_STAGING_DB_SCHEMA_2: &'static [&'static str] = &[
     r#"INSERT INTO db_version (version) VALUES (2)"#,
 ];
 
-pub const NAKAMOTO_STAGING_DB_SCHEMA_3: &'static [&'static str] = &[
+pub const NAKAMOTO_STAGING_DB_SCHEMA_3: &[&str] = &[
     r#"CREATE INDEX nakamoto_staging_blocks_by_obtain_method ON nakamoto_staging_blocks(consensus_hash,obtain_method);"#,
     r#"UPDATE db_version SET version = 3"#,
 ];
@@ -185,8 +185,8 @@ impl NakamotoStagingBlocksConn {
 
 pub struct NakamotoStagingBlocksConnRef<'a>(&'a rusqlite::Connection);
 
-impl<'a> NakamotoStagingBlocksConnRef<'a> {
-    pub fn conn(&self) -> NakamotoStagingBlocksConnRef<'a> {
+impl NakamotoStagingBlocksConnRef<'_> {
+    pub fn conn(&self) -> NakamotoStagingBlocksConnRef<'_> {
         NakamotoStagingBlocksConnRef(self.0)
     }
 }
@@ -200,7 +200,7 @@ impl Deref for NakamotoStagingBlocksConnRef<'_> {
 
 pub struct NakamotoStagingBlocksTx<'a>(rusqlite::Transaction<'a>);
 
-impl<'a> NakamotoStagingBlocksTx<'a> {
+impl NakamotoStagingBlocksTx<'_> {
     pub fn commit(self) -> Result<(), rusqlite::Error> {
         self.0.commit()
     }
@@ -217,17 +217,17 @@ impl<'a> Deref for NakamotoStagingBlocksTx<'a> {
     }
 }
 
-impl<'a> DerefMut for NakamotoStagingBlocksTx<'a> {
+impl DerefMut for NakamotoStagingBlocksTx<'_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 /// Open a Blob handle to a Nakamoto block
-fn inner_open_nakamoto_block<'a>(
-    conn: &'a Connection,
+fn inner_open_nakamoto_block(
+    conn: &Connection,
     rowid: i64,
     readwrite: bool,
-) -> Result<Blob<'a>, ChainstateError> {
+) -> Result<Blob<'_>, ChainstateError> {
     let blob = conn.blob_open(
         rusqlite::DatabaseName::Main,
         "nakamoto_staging_blocks",
@@ -240,11 +240,11 @@ fn inner_open_nakamoto_block<'a>(
 
 impl NakamotoStagingBlocksConn {
     /// Open a Blob handle to a Nakamoto block
-    pub fn open_nakamoto_block<'a>(
-        &'a self,
+    pub fn open_nakamoto_block(
+        &self,
         rowid: i64,
         readwrite: bool,
-    ) -> Result<Blob<'a>, ChainstateError> {
+    ) -> Result<Blob<'_>, ChainstateError> {
         inner_open_nakamoto_block(self.deref(), rowid, readwrite)
     }
 }
@@ -511,7 +511,7 @@ impl<'a> NakamotoStagingBlocksConnRef<'a> {
     }
 }
 
-impl<'a> NakamotoStagingBlocksTx<'a> {
+impl NakamotoStagingBlocksTx<'_> {
     /// Notify the staging database that a given stacks block has been processed.
     /// This will update the attachable status for children blocks, as well as marking the stacks
     ///  block itself as processed.
@@ -689,17 +689,15 @@ impl<'a> NakamotoStagingBlocksTx<'a> {
 impl StacksChainState {
     /// Begin a transaction against the staging blocks DB.
     /// Note that this DB is (or will eventually be) in a separate database from the headers.
-    pub fn staging_db_tx_begin<'a>(
-        &'a mut self,
-    ) -> Result<NakamotoStagingBlocksTx<'a>, ChainstateError> {
+    pub fn staging_db_tx_begin(&mut self) -> Result<NakamotoStagingBlocksTx<'_>, ChainstateError> {
         let tx = tx_begin_immediate(&mut self.nakamoto_staging_blocks_conn)?;
         Ok(NakamotoStagingBlocksTx(tx))
     }
 
     /// Begin a tx to both the headers DB and the staging DB
-    pub fn headers_and_staging_tx_begin<'a>(
-        &'a mut self,
-    ) -> Result<(rusqlite::Transaction<'a>, NakamotoStagingBlocksTx<'a>), ChainstateError> {
+    pub fn headers_and_staging_tx_begin(
+        &mut self,
+    ) -> Result<(rusqlite::Transaction<'_>, NakamotoStagingBlocksTx<'_>), ChainstateError> {
         let header_tx = self
             .state_index
             .storage_tx()
@@ -709,9 +707,9 @@ impl StacksChainState {
     }
 
     /// Open a connection to the headers DB, and open a tx to the staging DB
-    pub fn headers_conn_and_staging_tx_begin<'a>(
-        &'a mut self,
-    ) -> Result<(&'a rusqlite::Connection, NakamotoStagingBlocksTx<'a>), ChainstateError> {
+    pub fn headers_conn_and_staging_tx_begin(
+        &mut self,
+    ) -> Result<(&rusqlite::Connection, NakamotoStagingBlocksTx<'_>), ChainstateError> {
         let header_conn = self.state_index.sqlite_conn();
         let staging_tx = tx_begin_immediate(&mut self.nakamoto_staging_blocks_conn)?;
         Ok((header_conn, NakamotoStagingBlocksTx(staging_tx)))

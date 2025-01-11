@@ -62,13 +62,13 @@ impl_byte_array_newtype!(SortitionHash, u8, 32);
 #[derive(Debug, Clone, PartialEq)]
 #[repr(u8)]
 pub enum Opcodes {
-    LeaderBlockCommit = '[' as u8,
-    LeaderKeyRegister = '^' as u8,
-    StackStx = 'x' as u8,
-    PreStx = 'p' as u8,
-    TransferStx = '$' as u8,
-    DelegateStx = '#' as u8,
-    VoteForAggregateKey = 'v' as u8,
+    LeaderBlockCommit = b'[',
+    LeaderKeyRegister = b'^',
+    StackStx = b'x',
+    PreStx = b'p',
+    TransferStx = b'$',
+    DelegateStx = b'#',
+    VoteForAggregateKey = b'v',
 }
 
 // a burnchain block snapshot
@@ -183,17 +183,17 @@ impl SortitionHash {
 }
 
 impl Opcodes {
-    const HTTP_BLOCK_COMMIT: &'static str = "block_commit";
-    const HTTP_KEY_REGISTER: &'static str = "key_register";
-    const HTTP_BURN_SUPPORT: &'static str = "burn_support";
-    const HTTP_STACK_STX: &'static str = "stack_stx";
-    const HTTP_PRE_STX: &'static str = "pre_stx";
-    const HTTP_TRANSFER_STX: &'static str = "transfer_stx";
-    const HTTP_DELEGATE_STX: &'static str = "delegate_stx";
-    const HTTP_PEG_IN: &'static str = "peg_in";
-    const HTTP_PEG_OUT_REQUEST: &'static str = "peg_out_request";
-    const HTTP_PEG_OUT_FULFILL: &'static str = "peg_out_fulfill";
-    const HTTP_VOTE_FOR_AGGREGATE_KEY: &'static str = "vote_for_aggregate_key";
+    const HTTP_BLOCK_COMMIT: &str = "block_commit";
+    const HTTP_KEY_REGISTER: &str = "key_register";
+    const HTTP_BURN_SUPPORT: &str = "burn_support";
+    const HTTP_STACK_STX: &str = "stack_stx";
+    const HTTP_PRE_STX: &str = "pre_stx";
+    const HTTP_TRANSFER_STX: &str = "transfer_stx";
+    const HTTP_DELEGATE_STX: &str = "delegate_stx";
+    const HTTP_PEG_IN: &str = "peg_in";
+    const HTTP_PEG_OUT_REQUEST: &str = "peg_out_request";
+    const HTTP_PEG_OUT_FULFILL: &str = "peg_out_fulfill";
+    const HTTP_VOTE_FOR_AGGREGATE_KEY: &str = "vote_for_aggregate_key";
 
     pub fn to_http_str(&self) -> &'static str {
         match self {
@@ -350,8 +350,8 @@ impl ConsensusHashExtensions for ConsensusHash {
     ) -> Result<Vec<ConsensusHash>, db_error> {
         let mut i = 0;
         let mut prev_chs = vec![];
-        while i < 64 && block_height - (((1 as u64) << i) - 1) >= first_block_height {
-            let prev_block: u64 = block_height - (((1 as u64) << i) - 1);
+        while i < 64 && block_height - ((1 << i) - 1) >= first_block_height {
+            let prev_block: u64 = block_height - ((1 << i) - 1);
             let prev_ch = sort_tx
                 .get_consensus_at(prev_block)
                 .unwrap_or_else(|_| {
@@ -366,7 +366,7 @@ impl ConsensusHashExtensions for ConsensusHash {
             prev_chs.push(prev_ch.clone());
             i += 1;
 
-            if block_height < (((1 as u64) << i) - 1) {
+            if block_height < ((1 << i) - 1) {
                 break;
             }
         }

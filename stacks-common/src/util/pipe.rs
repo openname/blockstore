@@ -25,10 +25,11 @@ use crate::util::log;
 
 /// Inter-thread pipe for streaming messages, built on channels.
 /// Used mainly in conjunction with networking.
-/// * The read endpoint lives inside the connection, and will consume data from another thread to
-/// be sent out on the network.
-/// * The write endpoint gets fed into calls to consensus_serialize(), to be sent out on the
-/// network.
+///
+/// * The read endpoint lives inside the connection and will consume data from another thread
+///   to be sent out on the network.
+/// * The write endpoint gets fed into calls to `consensus_serialize()` to be sent out on the
+///   network.
 #[derive(Debug)]
 pub struct PipeRead {
     input: Receiver<Vec<u8>>,
@@ -187,7 +188,7 @@ impl PipeWrite {
     }
 
     fn write_or_buffer(&mut self, buf: &[u8]) -> io::Result<usize> {
-        if buf.len() == 0 {
+        if buf.is_empty() {
             return Ok(0);
         }
 

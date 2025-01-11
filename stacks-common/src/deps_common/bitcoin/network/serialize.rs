@@ -157,9 +157,9 @@ impl BitcoinHash for Vec<u8> {
 }
 
 /// Encode an object into a vector
-pub fn serialize<T: ?Sized>(data: &T) -> Result<Vec<u8>, Error>
+pub fn serialize<T>(data: &T) -> Result<Vec<u8>, Error>
 where
-    T: ConsensusEncodable<RawEncoder<Cursor<Vec<u8>>>>,
+    T: ConsensusEncodable<RawEncoder<Cursor<Vec<u8>>>> + ?Sized,
 {
     let mut encoder = RawEncoder::new(Cursor::new(vec![]));
     data.consensus_encode(&mut encoder)?;
@@ -167,9 +167,9 @@ where
 }
 
 /// Encode an object into a hex-encoded string
-pub fn serialize_hex<T: ?Sized>(data: &T) -> Result<String, Error>
+pub fn serialize_hex<T>(data: &T) -> Result<String, Error>
 where
-    T: ConsensusEncodable<RawEncoder<Cursor<Vec<u8>>>>,
+    T: ConsensusEncodable<RawEncoder<Cursor<Vec<u8>>>> + ?Sized,
 {
     let serial = serialize(data)?;
     Ok(hex_encode(&serial[..]))

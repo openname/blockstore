@@ -207,12 +207,12 @@ impl MultisigSpendingCondition {
         &mut self,
         key_encoding: TransactionPublicKeyEncoding,
         signature: MessageSignature,
-    ) -> () {
+    ) {
         self.fields
             .push(TransactionAuthField::Signature(key_encoding, signature));
     }
 
-    pub fn push_public_key(&mut self, public_key: StacksPublicKey) -> () {
+    pub fn push_public_key(&mut self, public_key: StacksPublicKey) {
         self.fields
             .push(TransactionAuthField::PublicKey(public_key));
     }
@@ -406,12 +406,12 @@ impl OrderIndependentMultisigSpendingCondition {
         &mut self,
         key_encoding: TransactionPublicKeyEncoding,
         signature: MessageSignature,
-    ) -> () {
+    ) {
         self.fields
             .push(TransactionAuthField::Signature(key_encoding, signature));
     }
 
-    pub fn push_public_key(&mut self, public_key: StacksPublicKey) -> () {
+    pub fn push_public_key(&mut self, public_key: StacksPublicKey) {
         self.fields
             .push(TransactionAuthField::PublicKey(public_key));
     }
@@ -558,18 +558,18 @@ impl StacksMessageCodec for SinglesigSpendingCondition {
         }
 
         Ok(SinglesigSpendingCondition {
-            signer: signer,
-            nonce: nonce,
-            tx_fee: tx_fee,
-            hash_mode: hash_mode,
-            key_encoding: key_encoding,
-            signature: signature,
+            signer,
+            nonce,
+            tx_fee,
+            hash_mode,
+            key_encoding,
+            signature,
         })
     }
 }
 
 impl SinglesigSpendingCondition {
-    pub fn set_signature(&mut self, signature: MessageSignature) -> () {
+    pub fn set_signature(&mut self, signature: MessageSignature) {
         self.signature = signature;
     }
 
@@ -593,7 +593,7 @@ impl SinglesigSpendingCondition {
             SinglesigHashMode::P2WPKH => C32_ADDRESS_VERSION_MAINNET_MULTISIG,
         };
         StacksAddress {
-            version: version,
+            version,
             bytes: self.signer.clone(),
         }
     }
@@ -604,7 +604,7 @@ impl SinglesigSpendingCondition {
             SinglesigHashMode::P2WPKH => C32_ADDRESS_VERSION_TESTNET_MULTISIG,
         };
         StacksAddress {
-            version: version,
+            version,
             bytes: self.signer.clone(),
         }
     }
@@ -908,7 +908,7 @@ impl TransactionSpendingCondition {
         }
     }
 
-    pub fn set_nonce(&mut self, n: u64) -> () {
+    pub fn set_nonce(&mut self, n: u64) {
         match *self {
             TransactionSpendingCondition::Singlesig(ref mut singlesig_data) => {
                 singlesig_data.nonce = n;
@@ -922,7 +922,7 @@ impl TransactionSpendingCondition {
         }
     }
 
-    pub fn set_tx_fee(&mut self, tx_fee: u64) -> () {
+    pub fn set_tx_fee(&mut self, tx_fee: u64) {
         match *self {
             TransactionSpendingCondition::Singlesig(ref mut singlesig_data) => {
                 singlesig_data.tx_fee = tx_fee;
@@ -978,7 +978,7 @@ impl TransactionSpendingCondition {
     }
 
     /// Clear fee rate, nonces, signatures, and public keys
-    pub fn clear(&mut self) -> () {
+    pub fn clear(&mut self) {
         match *self {
             TransactionSpendingCondition::Singlesig(ref mut singlesig_data) => {
                 singlesig_data.tx_fee = 0;
@@ -1309,7 +1309,7 @@ impl TransactionAuth {
         self.origin().nonce()
     }
 
-    pub fn set_origin_nonce(&mut self, n: u64) -> () {
+    pub fn set_origin_nonce(&mut self, n: u64) {
         match *self {
             TransactionAuth::Standard(ref mut s) => s.set_nonce(n),
             TransactionAuth::Sponsored(ref mut s, _) => s.set_nonce(n),
@@ -1340,7 +1340,7 @@ impl TransactionAuth {
         }
     }
 
-    pub fn set_tx_fee(&mut self, tx_fee: u64) -> () {
+    pub fn set_tx_fee(&mut self, tx_fee: u64) {
         match *self {
             TransactionAuth::Standard(ref mut s) => s.set_tx_fee(tx_fee),
             TransactionAuth::Sponsored(_, ref mut s) => s.set_tx_fee(tx_fee),
@@ -1371,12 +1371,12 @@ impl TransactionAuth {
             TransactionAuth::Standard(_) => Ok(()),
             TransactionAuth::Sponsored(_, ref sponsor_condition) => sponsor_condition
                 .verify(&origin_sighash, &TransactionAuthFlags::AuthSponsored)
-                .and_then(|_sigh| Ok(())),
+                .map(|_sigh| ()),
         }
     }
 
     /// Clear out all transaction auth fields, nonces, and fee rates from the spending condition(s).
-    pub fn clear(&mut self) -> () {
+    pub fn clear(&mut self) {
         match *self {
             TransactionAuth::Standard(ref mut origin_condition) => {
                 origin_condition.clear();

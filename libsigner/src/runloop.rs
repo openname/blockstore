@@ -120,9 +120,8 @@ impl<EV: EventReceiver<T>, R, T: SignerEventTrait> RunningSigner<EV, R, T> {
     pub fn join(self) -> Option<R> {
         debug!("Try join event loop...");
         // wait for event receiver join
-        let _ = self.event_join.join().map_err(|thread_panic| {
+        let _ = self.event_join.join().inspect_err(|thread_panic| {
             error!("Event thread panicked with: '{:?}'", &thread_panic);
-            thread_panic
         });
         info!("Event receiver thread joined");
 
@@ -131,9 +130,8 @@ impl<EV: EventReceiver<T>, R, T: SignerEventTrait> RunningSigner<EV, R, T> {
         let result_opt = self
             .signer_join
             .join()
-            .map_err(|thread_panic| {
+            .inspect_err(|thread_panic| {
                 error!("Event thread panicked with: '{:?}'", &thread_panic);
-                thread_panic
             })
             .unwrap_or(None);
 

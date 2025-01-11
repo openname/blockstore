@@ -162,15 +162,15 @@ impl From<MARFError> for Error {
 }
 
 pub trait FromRow<T> {
-    fn from_row<'a>(row: &'a Row) -> Result<T, Error>;
+    fn from_row(row: &Row) -> Result<T, Error>;
 }
 
 pub trait FromColumn<T> {
-    fn from_column<'a>(row: &'a Row, column_name: &str) -> Result<T, Error>;
+    fn from_column(row: &Row, column_name: &str) -> Result<T, Error>;
 }
 
 impl FromRow<u64> for u64 {
-    fn from_row<'a>(row: &'a Row) -> Result<u64, Error> {
+    fn from_row(row: &Row) -> Result<u64, Error> {
         let x: i64 = row.get(0)?;
         if x < 0 {
             return Err(Error::ParseError);
@@ -180,28 +180,28 @@ impl FromRow<u64> for u64 {
 }
 
 impl FromRow<u32> for u32 {
-    fn from_row<'a>(row: &'a Row) -> Result<u32, Error> {
+    fn from_row(row: &Row) -> Result<u32, Error> {
         let x: u32 = row.get(0)?;
         Ok(x)
     }
 }
 
 impl FromRow<String> for String {
-    fn from_row<'a>(row: &'a Row) -> Result<String, Error> {
+    fn from_row(row: &Row) -> Result<String, Error> {
         let x: String = row.get(0)?;
         Ok(x)
     }
 }
 
 impl FromRow<Vec<u8>> for Vec<u8> {
-    fn from_row<'a>(row: &'a Row) -> Result<Vec<u8>, Error> {
+    fn from_row(row: &Row) -> Result<Vec<u8>, Error> {
         let x: Vec<u8> = row.get(0)?;
         Ok(x)
     }
 }
 
 impl FromColumn<u64> for u64 {
-    fn from_column<'a>(row: &'a Row, column_name: &str) -> Result<u64, Error> {
+    fn from_column(row: &Row, column_name: &str) -> Result<u64, Error> {
         let x: i64 = row.get(column_name)?;
         if x < 0 {
             return Err(Error::ParseError);
@@ -211,7 +211,7 @@ impl FromColumn<u64> for u64 {
 }
 
 impl FromRow<StacksAddress> for StacksAddress {
-    fn from_row<'a>(row: &'a Row) -> Result<StacksAddress, Error> {
+    fn from_row(row: &Row) -> Result<StacksAddress, Error> {
         let addr_str: String = row.get(0)?;
         let addr = StacksAddress::from_string(&addr_str).ok_or(Error::ParseError)?;
         Ok(addr)
@@ -219,7 +219,7 @@ impl FromRow<StacksAddress> for StacksAddress {
 }
 
 impl FromColumn<Option<u64>> for u64 {
-    fn from_column<'a>(row: &'a Row, column_name: &str) -> Result<Option<u64>, Error> {
+    fn from_column(row: &Row, column_name: &str) -> Result<Option<u64>, Error> {
         let x: Option<i64> = row.get(column_name)?;
         match x {
             Some(x) => {
@@ -234,31 +234,28 @@ impl FromColumn<Option<u64>> for u64 {
 }
 
 impl FromRow<i64> for i64 {
-    fn from_row<'a>(row: &'a Row) -> Result<i64, Error> {
+    fn from_row(row: &Row) -> Result<i64, Error> {
         let x: i64 = row.get(0)?;
         Ok(x)
     }
 }
 
 impl FromColumn<i64> for i64 {
-    fn from_column<'a>(row: &'a Row, column_name: &str) -> Result<i64, Error> {
+    fn from_column(row: &Row, column_name: &str) -> Result<i64, Error> {
         let x: i64 = row.get(column_name)?;
         Ok(x)
     }
 }
 
 impl FromColumn<QualifiedContractIdentifier> for QualifiedContractIdentifier {
-    fn from_column<'a>(
-        row: &'a Row,
-        column_name: &str,
-    ) -> Result<QualifiedContractIdentifier, Error> {
+    fn from_column(row: &Row, column_name: &str) -> Result<QualifiedContractIdentifier, Error> {
         let value: String = row.get(column_name)?;
         QualifiedContractIdentifier::parse(&value).map_err(|_| Error::ParseError)
     }
 }
 
 impl FromRow<bool> for bool {
-    fn from_row<'a>(row: &'a Row) -> Result<bool, Error> {
+    fn from_row(row: &Row) -> Result<bool, Error> {
         let x: bool = row.get(0)?;
         Ok(x)
     }
@@ -266,7 +263,7 @@ impl FromRow<bool> for bool {
 
 /// Make public keys loadable from a sqlite database
 impl FromColumn<Secp256k1PublicKey> for Secp256k1PublicKey {
-    fn from_column<'a>(row: &'a Row, column_name: &str) -> Result<Secp256k1PublicKey, Error> {
+    fn from_column(row: &Row, column_name: &str) -> Result<Secp256k1PublicKey, Error> {
         let pubkey_hex: String = row.get(column_name)?;
         let pubkey = Secp256k1PublicKey::from_hex(&pubkey_hex).map_err(|_e| Error::ParseError)?;
         Ok(pubkey)
@@ -275,7 +272,7 @@ impl FromColumn<Secp256k1PublicKey> for Secp256k1PublicKey {
 
 /// Make private keys loadable from a sqlite database
 impl FromColumn<Secp256k1PrivateKey> for Secp256k1PrivateKey {
-    fn from_column<'a>(row: &'a Row, column_name: &str) -> Result<Secp256k1PrivateKey, Error> {
+    fn from_column(row: &Row, column_name: &str) -> Result<Secp256k1PrivateKey, Error> {
         let privkey_hex: String = row.get(column_name)?;
         let privkey =
             Secp256k1PrivateKey::from_hex(&privkey_hex).map_err(|_e| Error::ParseError)?;
@@ -510,14 +507,14 @@ where
     let mut rows = stmt.query(sql_args)?;
     let mut row_data = vec![];
     while let Some(row) = rows.next().map_err(|e| Error::SqliteError(e))? {
-        if row_data.len() > 0 {
+        if !row_data.is_empty() {
             return Err(Error::Overflow);
         }
         let i: i64 = row.get(0)?;
         row_data.push(i);
     }
 
-    if row_data.len() == 0 {
+    if row_data.is_empty() {
         return Err(Error::NotFoundError);
     }
 
@@ -553,7 +550,7 @@ fn inner_sql_pragma(
 pub fn sql_vacuum(conn: &Connection) -> Result<(), Error> {
     conn.execute("VACUUM", NO_PARAMS)
         .map_err(Error::SqliteError)
-        .and_then(|_| Ok(()))
+        .map(|_| ())
 }
 
 /// Returns true if the database table `table_name` exists in the active
@@ -630,7 +627,7 @@ impl<'a, C, T: MarfTrieId> IndexDBConn<'a, C, T> {
     }
 }
 
-impl<'a, C, T: MarfTrieId> Deref for IndexDBConn<'a, C, T> {
+impl<C, T: MarfTrieId> Deref for IndexDBConn<'_, C, T> {
     type Target = DBConn;
     fn deref(&self) -> &DBConn {
         self.conn()
@@ -664,7 +661,7 @@ pub fn tx_busy_handler(run_count: i32) -> bool {
 /// Begin an immediate-mode transaction, and handle busy errors with exponential backoff.
 /// Handling busy errors when the tx begins is preferable to doing it when the tx commits, since
 /// then we don't have to worry about any extra rollback logic.
-pub fn tx_begin_immediate<'a>(conn: &'a mut Connection) -> Result<DBTx<'a>, Error> {
+pub fn tx_begin_immediate(conn: &mut Connection) -> Result<DBTx<'_>, Error> {
     tx_begin_immediate_sqlite(conn).map_err(Error::from)
 }
 
@@ -672,7 +669,7 @@ pub fn tx_begin_immediate<'a>(conn: &'a mut Connection) -> Result<DBTx<'a>, Erro
 /// Handling busy errors when the tx begins is preferable to doing it when the tx commits, since
 /// then we don't have to worry about any extra rollback logic.
 /// Sames as `tx_begin_immediate` except that it returns a rusqlite error.
-pub fn tx_begin_immediate_sqlite<'a>(conn: &'a mut Connection) -> Result<DBTx<'a>, sqlite_error> {
+pub fn tx_begin_immediate_sqlite(conn: &mut Connection) -> Result<DBTx<'_>, sqlite_error> {
     conn.busy_handler(Some(tx_busy_handler))?;
     let tx = Transaction::new(conn, TransactionBehavior::Immediate)?;
     update_lock_table(tx.deref());
@@ -681,6 +678,7 @@ pub fn tx_begin_immediate_sqlite<'a>(conn: &'a mut Connection) -> Result<DBTx<'a
 
 #[cfg(feature = "profile-sqlite")]
 fn trace_profile(query: &str, duration: Duration) {
+    use serde_json::json;
     let obj = json!({"millis":duration.as_millis(), "query":query});
     debug!(
         "sqlite trace profile {}",
@@ -804,7 +802,7 @@ impl<'a, C: Clone, T: MarfTrieId> IndexDBTx<'a, C, T> {
         IndexDBTx {
             _index: Some(tx),
             block_linkage: None,
-            context: context,
+            context,
         }
     }
 
@@ -944,7 +942,7 @@ impl<'a, C: Clone, T: MarfTrieId> IndexDBTx<'a, C, T> {
     }
 }
 
-impl<'a, C: Clone, T: MarfTrieId> Drop for IndexDBTx<'a, C, T> {
+impl<C: Clone, T: MarfTrieId> Drop for IndexDBTx<'_, C, T> {
     fn drop(&mut self) {
         if let Some((ref parent, ref child)) = self.block_linkage {
             let index_tx = self

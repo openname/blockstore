@@ -73,7 +73,7 @@ fn test_simple_let(#[case] version: ClarityVersion, #[case] epoch: StacksEpochId
                              (+ z y))
                         x))";
     let contract_id = QualifiedContractIdentifier::transient();
-    let mut placeholder_context =
+    let placeholder_context =
         ContractContext::new(QualifiedContractIdentifier::transient(), version);
     if let Ok(parsed_program) = parse(&contract_id, program, version, epoch) {
         let context = LocalContext::new();
@@ -84,7 +84,7 @@ fn test_simple_let(#[case] version: ClarityVersion, #[case] epoch: StacksEpochId
             Ok(Value::Int(7)),
             eval(
                 &parsed_program[0],
-                &mut env.get_exec_environment(None, None, &mut placeholder_context),
+                &mut env.get_exec_environment(None, None, &placeholder_context),
                 &context
             )
         );

@@ -125,8 +125,8 @@ impl StacksMessageCodec for ClarityName {
 
 impl StacksMessageCodec for ContractName {
     fn consensus_serialize<W: Write>(&self, fd: &mut W) -> Result<(), codec_error> {
-        if self.as_bytes().len() < CONTRACT_MIN_NAME_LENGTH as usize
-            || self.as_bytes().len() > CONTRACT_MAX_NAME_LENGTH as usize
+        if self.as_bytes().len() < CONTRACT_MIN_NAME_LENGTH
+            || self.as_bytes().len() > CONTRACT_MAX_NAME_LENGTH
         {
             return Err(codec_error::SerializeError(format!(
                 "Failed to serialize contract name: too short or too long: {}",

@@ -89,7 +89,8 @@ jobs:
           - tests::nakamoto_integrations::miner_writes_proposed_block_to_stackerdb
           - tests::nakamoto_integrations::correct_burn_outs
           - tests::nakamoto_integrations::vote_for_aggregate_key_burn_op
-          - tests::nakamoto_integrations::follower_bootup
+          - tests::nakamoto_integrations::follower_bootup_simple
+          - tests::nakamoto_integrations::follower_bootup_custom_chain_id
           - tests::nakamoto_integrations::forked_tenure_is_ignored
           - tests::nakamoto_integrations::nakamoto_attempt_time
           - tests::nakamoto_integrations::skip_mining_long_tx
@@ -122,7 +123,9 @@ jobs:
           - tests::signer::v0::signer_set_rollover
           - tests::signer::v0::signing_in_0th_tenure_of_reward_cycle
           - tests::signer::v0::continue_after_tenure_extend
-          - tests::signer::v0::tenure_extend_after_idle
+          - tests::signer::v0::tenure_extend_after_idle_signers
+          - tests::signer::v0::tenure_extend_after_idle_miner
+          - tests::signer::v0::tenure_extend_succeeds_after_rejected_attempt
           - tests::signer::v0::stx_transfers_dont_effect_idle_timeout
           - tests::signer::v0::idle_tenure_extend_active_mining
           - tests::signer::v0::multiple_miners_with_custom_chain_id
@@ -130,6 +133,12 @@ jobs:
           - tests::signer::v0::continue_after_fast_block_no_sortition
           - tests::signer::v0::block_validation_response_timeout
           - tests::signer::v0::tenure_extend_after_bad_commit
+          - tests::signer::v0::block_proposal_max_age_rejections
+          - tests::signer::v0::global_acceptance_depends_on_block_announcement
+          - tests::signer::v0::no_reorg_due_to_successive_block_validation_ok
+          - tests::signer::v0::incoming_signers_ignore_block_proposals
+          - tests::signer::v0::outgoing_signers_ignore_block_proposals
+          - tests::signer::v0::injected_signatures_are_ignored_across_boundaries
           - tests::nakamoto_integrations::burn_ops_integration_test
           - tests::nakamoto_integrations::check_block_heights
           - tests::nakamoto_integrations::clarity_burn_state
@@ -140,6 +149,7 @@ jobs:
           - tests::nakamoto_integrations::mock_mining
           - tests::nakamoto_integrations::multiple_miners
           - tests::nakamoto_integrations::follower_bootup_across_multiple_cycles
+          - tests::nakamoto_integrations::nakamoto_lockup_events
           - tests::nakamoto_integrations::utxo_check_on_startup_panic
           - tests::nakamoto_integrations::utxo_check_on_startup_recover
           - tests::nakamoto_integrations::v3_signer_api_endpoint

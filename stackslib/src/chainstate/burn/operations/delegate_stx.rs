@@ -136,7 +136,7 @@ impl DelegateStxOp {
             return Err(op_error::InvalidInput);
         }
 
-        if outputs.len() == 0 {
+        if outputs.is_empty() {
             warn!(
                 "Invalid tx: inputs: {}, outputs: {}",
                 tx.num_signers(),
@@ -230,24 +230,24 @@ impl StacksMessageCodec for DelegateStxOp {
             .map_err(|e| codec_error::WriteError(e))?;
 
         if let Some((index, _)) = self.reward_addr {
-            fd.write_all(&(1 as u8).to_be_bytes())
+            fd.write_all(&1_u8.to_be_bytes())
                 .map_err(|e| codec_error::WriteError(e))?;
             fd.write_all(&index.to_be_bytes())
                 .map_err(|e| codec_error::WriteError(e))?;
         } else {
-            fd.write_all(&(0 as u8).to_be_bytes())
+            fd.write_all(&0_u8.to_be_bytes())
                 .map_err(|e| codec_error::WriteError(e))?;
-            fd.write_all(&(0 as u32).to_be_bytes())
+            fd.write_all(&0_u32.to_be_bytes())
                 .map_err(|e| codec_error::WriteError(e))?;
         }
 
         if let Some(height) = self.until_burn_height {
-            fd.write_all(&(1 as u8).to_be_bytes())
+            fd.write_all(&1_u8.to_be_bytes())
                 .map_err(|e| codec_error::WriteError(e))?;
             fd.write_all(&height.to_be_bytes())
                 .map_err(|e| codec_error::WriteError(e))?;
         } else {
-            fd.write_all(&(0 as u8).to_be_bytes())
+            fd.write_all(&0_u8.to_be_bytes())
                 .map_err(|e| codec_error::WriteError(e))?;
         }
         Ok(())

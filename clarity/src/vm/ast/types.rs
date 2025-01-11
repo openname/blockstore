@@ -96,6 +96,10 @@ impl PreExpressionsDrain {
     pub fn len(&self) -> usize {
         self.len
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
 }
 
 impl Iterator for PreExpressionsDrain {

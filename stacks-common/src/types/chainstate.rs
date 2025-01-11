@@ -1,4 +1,4 @@
-use std::fmt;
+use std::fmt::{self, Display};
 use std::io::{Read, Write};
 use std::str::FromStr;
 
@@ -48,7 +48,7 @@ impl TrieHash {
 
     /// TrieHash from bytes
     pub fn from_data(data: &[u8]) -> TrieHash {
-        if data.len() == 0 {
+        if data.is_empty() {
             return TrieHash::from_empty_data();
         }
 
@@ -62,7 +62,7 @@ impl TrieHash {
     }
 
     pub fn from_data_array<B: AsRef<[u8]>>(data: &[B]) -> TrieHash {
-        if data.len() == 0 {
+        if data.is_empty() {
             return TrieHash::from_empty_data();
         }
 
@@ -78,6 +78,10 @@ impl TrieHash {
     }
 
     /// Convert to a String that can be used in e.g. sqlite
+    /// If we did not implement this seperate from Display,
+    /// we would use the stacks_common::util::hash::to_hex function
+    /// which is the unrolled version of this function.
+    #[allow(clippy::inherent_to_string_shadow_display)]
     pub fn to_string(&self) -> String {
         let s = format!("{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
                           self.0[0],     self.0[1],       self.0[2],       self.0[3],

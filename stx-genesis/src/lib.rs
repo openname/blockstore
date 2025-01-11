@@ -212,10 +212,10 @@ mod tests {
     #[test]
     fn test_names_read() {
         for name in GenesisData::new(false).read_names() {
-            assert!(name.owner.len() > 0);
+            assert!(!name.owner.is_empty());
         }
         for name in GenesisData::new(true).read_names() {
-            assert!(name.owner.len() > 0);
+            assert!(!name.owner.is_empty());
         }
     }
 

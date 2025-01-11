@@ -13,6 +13,7 @@ use stacks::chainstate::stacks::db::StacksChainState;
 use stacks::chainstate::stacks::{
     StacksBlockHeader, StacksPrivateKey, StacksTransaction, TransactionPayload,
 };
+use stacks::config::{EventKeyType, InitialBalance};
 use stacks::core::{
     self, EpochList, StacksEpoch, StacksEpochId, PEER_VERSION_EPOCH_1_0, PEER_VERSION_EPOCH_2_0,
     PEER_VERSION_EPOCH_2_05, PEER_VERSION_EPOCH_2_1,
@@ -22,7 +23,6 @@ use stacks_common::types::chainstate::{BlockHeaderHash, BurnchainHeaderHash, VRF
 use stacks_common::util::hash::hex_bytes;
 use stacks_common::util::sleep_ms;
 
-use crate::config::{EventKeyType, InitialBalance};
 use crate::tests::bitcoin_regtest::BitcoinCoreController;
 use crate::tests::neon_integrations::*;
 use crate::tests::{

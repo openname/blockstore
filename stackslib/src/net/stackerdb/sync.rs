@@ -225,7 +225,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
             let mut eviction_index = None;
             if self.last_eviction_time + 60 < get_epoch_time_secs() {
                 self.last_eviction_time = get_epoch_time_secs();
-                if self.replicas.len() > 0 {
+                if !self.replicas.is_empty() {
                     eviction_index = Some(thread_rng().gen_range(0..self.replicas.len()));
                 }
             }
@@ -558,7 +558,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
         self.chunk_fetch_priorities
             .retain(|(chunk, ..)| chunk.slot_id != slot_id);
 
-        if self.chunk_fetch_priorities.len() > 0 {
+        if !self.chunk_fetch_priorities.is_empty() {
             let next_chunk_fetch_priority =
                 self.next_chunk_fetch_priority % self.chunk_fetch_priorities.len();
             self.next_chunk_fetch_priority = next_chunk_fetch_priority;
@@ -611,7 +611,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
         self.chunk_push_priorities
             .retain(|(chunk, ..)| chunk.chunk_data.slot_id != slot_id);
 
-        if self.chunk_push_priorities.len() > 0 {
+        if !self.chunk_push_priorities.is_empty() {
             let next_chunk_push_priority =
                 self.next_chunk_push_priority % self.chunk_push_priorities.len();
             self.next_chunk_push_priority = next_chunk_push_priority;
@@ -700,7 +700,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
     /// Returns Err(NoSuchNeighbor) if we don't have anyone to talk to
     /// Returns Err(..) on DB query error
     pub fn connect_begin(&mut self, network: &mut PeerNetwork) -> Result<bool, net_error> {
-        if self.replicas.len() == 0 {
+        if self.replicas.is_empty() {
             // find some from the peer DB
             let replicas = self.find_qualified_replicas(network)?;
             self.replicas = replicas;
@@ -713,7 +713,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
             network.get_num_p2p_convos();
             "replicas" => ?self.replicas
         );
-        if self.replicas.len() == 0 {
+        if self.replicas.is_empty() {
             // nothing to do
             return Err(net_error::NoSuchNeighbor);
         }
@@ -776,7 +776,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
                 }
             }
         }
-        Ok(self.connected_replicas.len() > 0)
+        Ok(!self.connected_replicas.is_empty())
     }
 
     /// Finish up connecting to our replicas.
@@ -866,7 +866,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
             return Ok(false);
         }
 
-        if self.connected_replicas.len() == 0 {
+        if self.connected_replicas.is_empty() {
             // no one to talk to
             debug!(
                 "{:?}: {}: connect_try_finish: no valid replicas",
@@ -996,7 +996,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
     /// Return Ok(true) if we processed all requested chunks
     /// Return Ok(false) if there are still some requests to make
     pub fn getchunks_begin(&mut self, network: &mut PeerNetwork) -> Result<bool, net_error> {
-        if self.chunk_fetch_priorities.len() == 0 {
+        if self.chunk_fetch_priorities.is_empty() {
             // done
             debug!(
                 "{:?}: {}: getchunks_begin: no chunks prioritized",
@@ -1083,7 +1083,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
 
         self.next_chunk_fetch_priority = cur_priority;
 
-        Ok(self.chunk_fetch_priorities.len() == 0)
+        Ok(self.chunk_fetch_priorities.is_empty())
     }
 
     /// Collect chunk replies from neighbors
@@ -1157,13 +1157,13 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
     /// Returns true if there are no more chunks to push.
     /// Returns false if there are
     pub fn pushchunks_begin(&mut self, network: &mut PeerNetwork) -> Result<bool, net_error> {
-        if self.chunk_push_priorities.len() == 0 && self.push_round != self.rounds {
+        if self.chunk_push_priorities.is_empty() && self.push_round != self.rounds {
             // only do this once per round
             let priorities = self.make_chunk_push_schedule(&network)?;
             self.chunk_push_priorities = priorities;
             self.push_round = self.rounds;
         }
-        if self.chunk_push_priorities.len() == 0 {
+        if self.chunk_push_priorities.is_empty() {
             // done
             debug!(
                 "{:?}:{}: pushchunks_begin: no chunks prioritized",
@@ -1334,7 +1334,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
         network: &PeerNetwork,
     ) -> Result<(), net_error> {
         // figure out the new expected versions
-        let mut expected_versions = vec![0u32; self.num_slots as usize];
+        let mut expected_versions = vec![0u32; self.num_slots];
         for (_, chunk_inv) in self.chunk_invs.iter() {
             for (slot_id, slot_version) in chunk_inv.slot_versions.iter().enumerate() {
                 expected_versions[slot_id] = (*slot_version).max(expected_versions[slot_id]);

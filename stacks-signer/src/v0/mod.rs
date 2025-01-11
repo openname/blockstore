@@ -17,6 +17,10 @@
 /// The signer module for processing events
 pub mod signer;
 
+#[cfg(any(test, feature = "testing"))]
+/// Test specific functions for the signer module
+pub mod tests;
+
 use libsigner::v0::messages::SignerMessage;
 
 use crate::v0::signer::Signer;

@@ -239,8 +239,8 @@ impl BitcoinBlock {
             block_height: height,
             block_hash: hash.clone(),
             parent_block_hash: parent.clone(),
-            txs: txs,
-            timestamp: timestamp,
+            txs,
+            timestamp,
         }
     }
 }

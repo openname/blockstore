@@ -21,6 +21,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use blockstack_lib::chainstate::stacks::TransactionVersion;
+use blockstack_lib::net::connection::DEFAULT_BLOCK_PROPOSAL_MAX_AGE_SECS;
 use clarity::util::hash::to_hex;
 use libsigner::SignerEntries;
 use serde::Deserialize;
@@ -138,6 +139,8 @@ pub struct SignerConfig {
     pub block_proposal_validation_timeout: Duration,
     /// How much idle time must pass before allowing a tenure extend
     pub tenure_idle_timeout: Duration,
+    /// The maximum age of a block proposal in seconds that will be processed by the signer
+    pub block_proposal_max_age_secs: u64,
 }
 
 /// The parsed configuration for the signer
@@ -176,6 +179,8 @@ pub struct GlobalConfig {
     pub block_proposal_validation_timeout: Duration,
     /// How much idle time must pass before allowing a tenure extend
     pub tenure_idle_timeout: Duration,
+    /// The maximum age of a block proposal that will be processed by the signer
+    pub block_proposal_max_age_secs: u64,
 }
 
 /// Internal struct for loading up the config file
@@ -213,6 +218,8 @@ struct RawConfigFile {
     pub block_proposal_validation_timeout_ms: Option<u64>,
     /// How much idle time (in seconds) must pass before a tenure extend is allowed
     pub tenure_idle_timeout_secs: Option<u64>,
+    /// The maximum age of a block proposal (in secs) that will be processed by the signer.
+    pub block_proposal_max_age_secs: Option<u64>,
 }
 
 impl RawConfigFile {
@@ -310,6 +317,10 @@ impl TryFrom<RawConfigFile> for GlobalConfig {
                 .unwrap_or(TENURE_IDLE_TIMEOUT_SECS),
         );
 
+        let block_proposal_max_age_secs = raw_data
+            .block_proposal_max_age_secs
+            .unwrap_or(DEFAULT_BLOCK_PROPOSAL_MAX_AGE_SECS);
+
         Ok(Self {
             node_host: raw_data.node_host,
             endpoint,
@@ -326,6 +337,7 @@ impl TryFrom<RawConfigFile> for GlobalConfig {
             tenure_last_block_proposal_timeout,
             block_proposal_validation_timeout,
             tenure_idle_timeout,
+            block_proposal_max_age_secs,
         })
     }
 }

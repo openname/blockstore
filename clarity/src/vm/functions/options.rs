@@ -212,7 +212,7 @@ pub fn special_match(
     match input {
         Value::Response(data) => special_match_resp(data, &args[1..], env, context),
         Value::Optional(data) => special_match_opt(data, &args[1..], env, context),
-        _ => return Err(CheckErrors::BadMatchInput(TypeSignature::type_of(&input)?).into()),
+        _ => Err(CheckErrors::BadMatchInput(TypeSignature::type_of(&input)?).into()),
     }
 }
 

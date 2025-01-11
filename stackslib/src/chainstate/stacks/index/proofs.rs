@@ -610,7 +610,7 @@ impl<T: MarfTrieId> TrieMerkleProof<T> {
 
             // need the target node's root trie ptr, unless this is the first proof (in which case
             // it's a junction proof)
-            if proof.len() > 0 {
+            if !proof.is_empty() {
                 let root_ptr = storage.root_trieptr();
                 let (root_node, _) = storage.read_nodetype(&root_ptr)?;
 
@@ -706,7 +706,7 @@ impl<T: MarfTrieId> TrieMerkleProof<T> {
                     return None;
                 }
 
-                if hashes.len() == 0 {
+                if hashes.is_empty() {
                     // special case -- if this shunt proof has no hashes (i.e. this is a leaf from the first
                     // block), then we can safely skip this step
                     trace!(
@@ -839,7 +839,7 @@ impl<T: MarfTrieId> TrieMerkleProof<T> {
     ) -> Result<Vec<TrieMerkleProofType<T>>, Error> {
         trace!("make_segment_proof: ptrs = {:?}", &ptrs);
 
-        assert!(ptrs.len() > 0);
+        assert!(!ptrs.is_empty());
         assert_eq!(ptrs[0], storage.root_trieptr());
         for i in 1..ptrs.len() {
             assert!(!is_backptr(ptrs[i].id()));
@@ -1004,7 +1004,7 @@ impl<T: MarfTrieId> TrieMerkleProof<T> {
     /// * segment proof 0 must end in a leaf
     /// * all segment proofs must end in a Node256 (a root)
     fn is_proof_well_formed(proof: &Vec<TrieMerkleProofType<T>>, expected_path: &TrieHash) -> bool {
-        if proof.len() == 0 {
+        if proof.is_empty() {
             trace!("Proof is empty");
             return false;
         }

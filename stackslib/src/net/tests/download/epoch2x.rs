@@ -250,7 +250,7 @@ pub fn run_get_blocks_and_microblocks<T, F, P, C, D>(
     mut done_func: D,
 ) -> Vec<TestPeer>
 where
-    T: FnOnce(&mut Vec<TestPeerConfig>) -> (),
+    T: FnOnce(&mut Vec<TestPeerConfig>),
     F: FnOnce(
         usize,
         &mut Vec<TestPeer>,
@@ -259,7 +259,7 @@ where
         Option<StacksBlock>,
         Option<Vec<StacksMicroblock>>,
     )>,
-    P: FnMut(&mut Vec<TestPeer>) -> (),
+    P: FnMut(&mut Vec<TestPeer>),
     C: FnMut(&mut TestPeer) -> bool,
     D: FnMut(&mut Vec<TestPeer>) -> bool,
 {

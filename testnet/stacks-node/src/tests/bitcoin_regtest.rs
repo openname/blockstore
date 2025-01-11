@@ -7,12 +7,12 @@ use stacks::chainstate::burn::operations::BlockstackOperationType::{
     LeaderBlockCommit, LeaderKeyRegister,
 };
 use stacks::chainstate::stacks::StacksPrivateKey;
+use stacks::config::InitialBalance;
 use stacks::core::StacksEpochId;
 use stacks_common::util::hash::hex_bytes;
 
 use super::PUBLISH_CONTRACT;
 use crate::burnchains::bitcoin_regtest_controller::BitcoinRPCRequest;
-use crate::config::InitialBalance;
 use crate::helium::RunLoop;
 use crate::tests::to_addr;
 use crate::Config;

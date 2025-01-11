@@ -24,6 +24,7 @@ use stacks::chainstate::stacks::{
 };
 use stacks::clarity_vm::clarity::ClarityConnection;
 use stacks::codec::StacksMessageCodec;
+use stacks::config::InitialBalance;
 use stacks::core::mempool::MAXIMUM_MEMPOOL_TX_CHAINING;
 use stacks::core::{
     EpochList, StacksEpoch, StacksEpochId, CHAIN_ID_TESTNET, PEER_VERSION_EPOCH_2_0,
@@ -40,7 +41,6 @@ use super::{
     make_contract_call, make_contract_publish, make_stacks_transfer, to_addr, ADDR_4, SK_1, SK_2,
     SK_3,
 };
-use crate::config::InitialBalance;
 use crate::helium::RunLoop;
 use crate::tests::make_sponsored_stacks_transfer_on_testnet;
 

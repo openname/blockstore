@@ -269,11 +269,11 @@ impl PeerNetwork {
         while num_outbound - (ret.len() as u64) > self.connection_opts.soft_num_neighbors {
             let mut weighted_sample: HashMap<u32, usize> = HashMap::new();
             for (org, neighbor_info) in org_neighbors.iter() {
-                if neighbor_info.len() > 0 {
+                if !neighbor_info.is_empty() {
                     weighted_sample.insert(*org, neighbor_info.len());
                 }
             }
-            if weighted_sample.len() == 0 {
+            if weighted_sample.is_empty() {
                 // nothing to do
                 break;
             }
@@ -397,7 +397,7 @@ impl PeerNetwork {
     }
 
     /// Prune our frontier.  Ignore connections in the preserve set.
-    pub fn prune_frontier(&mut self, preserve: &HashSet<usize>) -> () {
+    pub fn prune_frontier(&mut self, preserve: &HashSet<usize>) {
         let num_outbound = PeerNetwork::count_outbound_conversations(&self.peers);
         let num_inbound = (self.peers.len() as u64).saturating_sub(num_outbound);
         debug!(
@@ -449,7 +449,7 @@ impl PeerNetwork {
 
         #[cfg(test)]
         {
-            if pruned_by_ip.len() > 0 || pruned_by_org.len() > 0 {
+            if !pruned_by_ip.is_empty() || !pruned_by_org.is_empty() {
                 let (mut inbound, mut outbound) = self.dump_peer_table();
 
                 inbound.sort();

@@ -198,6 +198,9 @@ pub trait BlockEventDispatcher {
 }
 
 pub struct ChainsCoordinatorConfig {
+    /// true: assume all anchor blocks are present, and block chain sync until they arrive
+    /// false: process sortitions in reward cycles without anchor blocks
+    pub assume_present_anchor_blocks: bool,
     /// true: use affirmation maps before 2.1
     /// false: only use affirmation maps in 2.1 or later
     pub always_use_affirmation_maps: bool,
@@ -209,8 +212,17 @@ pub struct ChainsCoordinatorConfig {
 impl ChainsCoordinatorConfig {
     pub fn new() -> ChainsCoordinatorConfig {
         ChainsCoordinatorConfig {
-            always_use_affirmation_maps: false,
+            always_use_affirmation_maps: true,
             require_affirmed_anchor_blocks: true,
+            assume_present_anchor_blocks: true,
+        }
+    }
+
+    pub fn test_new() -> ChainsCoordinatorConfig {
+        ChainsCoordinatorConfig {
+            always_use_affirmation_maps: false,
+            require_affirmed_anchor_blocks: false,
+            assume_present_anchor_blocks: false,
         }
     }
 }
@@ -314,7 +326,7 @@ impl OnChainRewardSetProvider<'static, DummyEventDispatcher> {
     }
 }
 
-impl<'a, T: BlockEventDispatcher> RewardSetProvider for OnChainRewardSetProvider<'a, T> {
+impl<T: BlockEventDispatcher> RewardSetProvider for OnChainRewardSetProvider<'_, T> {
     fn get_reward_set(
         &self,
         cycle_start_burn_height: u64,
@@ -382,7 +394,7 @@ impl<'a, T: BlockEventDispatcher> RewardSetProvider for OnChainRewardSetProvider
     }
 }
 
-impl<'a, T: BlockEventDispatcher> OnChainRewardSetProvider<'a, T> {
+impl<T: BlockEventDispatcher> OnChainRewardSetProvider<'_, T> {
     fn get_reward_set_epoch2(
         &self,
         // Todo: `current_burn_height` is a misleading name: should be the `cycle_start_burn_height`
@@ -622,12 +634,12 @@ impl<
     }
 }
 
-impl<'a, T: BlockEventDispatcher, U: RewardSetProvider, B: BurnchainHeaderReader>
-    ChainsCoordinator<'a, T, (), U, (), (), B>
+impl<T: BlockEventDispatcher, U: RewardSetProvider, B: BurnchainHeaderReader>
+    ChainsCoordinator<'_, T, (), U, (), (), B>
 {
     /// Create a coordinator for testing, with some parameters defaulted to None
     #[cfg(test)]
-    pub fn test_new(
+    pub fn test_new<'a>(
         burnchain: &Burnchain,
         chain_id: u32,
         path: &str,
@@ -647,7 +659,7 @@ impl<'a, T: BlockEventDispatcher, U: RewardSetProvider, B: BurnchainHeaderReader
 
     /// Create a coordinator for testing allowing for all configurable params
     #[cfg(test)]
-    pub fn test_new_full(
+    pub fn test_new_full<'a>(
         burnchain: &Burnchain,
         chain_id: u32,
         path: &str,
@@ -700,7 +712,7 @@ impl<'a, T: BlockEventDispatcher, U: RewardSetProvider, B: BurnchainHeaderReader
             notifier: (),
             atlas_config,
             atlas_db: Some(atlas_db),
-            config: ChainsCoordinatorConfig::new(),
+            config: ChainsCoordinatorConfig::test_new(),
             burnchain_indexer,
             refresh_stacker_db: Arc::new(AtomicBool::new(false)),
             in_nakamoto_epoch: false,
@@ -898,7 +910,7 @@ pub fn calculate_paid_rewards(ops: &[BlockstackOperationType]) -> PaidRewards {
     let mut burn_amt = 0;
     for op in ops.iter() {
         if let BlockstackOperationType::LeaderBlockCommit(commit) = op {
-            if commit.commit_outs.len() == 0 {
+            if commit.commit_outs.is_empty() {
                 continue;
             }
             let amt_per_address = commit.burn_fee / (commit.commit_outs.len() as u64);
@@ -1100,14 +1112,13 @@ pub fn static_get_stacks_tip_affirmation_map(
 }
 
 impl<
-        'a,
         T: BlockEventDispatcher,
         N: CoordinatorNotices,
         U: RewardSetProvider,
         CE: CostEstimator + ?Sized,
         FE: FeeEstimator + ?Sized,
         B: BurnchainHeaderReader,
-    > ChainsCoordinator<'a, T, N, U, CE, FE, B>
+    > ChainsCoordinator<'_, T, N, U, CE, FE, B>
 {
     /// Process new Stacks blocks.  If we get stuck for want of a missing PoX anchor block, return
     /// its hash.
@@ -2336,6 +2347,20 @@ impl<
                     panic!("BUG: no epoch defined at height {}", header.block_height)
                 });
 
+        if self.config.assume_present_anchor_blocks {
+            // anchor blocks are always assumed to be present in the chain history,
+            // so report its absence if we don't have it.
+            if let PoxAnchorBlockStatus::SelectedAndUnknown(missing_anchor_block, _) =
+                &rc_info.anchor_status
+            {
+                info!(
+                    "Currently missing PoX anchor block {}, which is assumed to be present",
+                    &missing_anchor_block
+                );
+                return Ok(Some(missing_anchor_block.clone()));
+            }
+        }
+
         if cur_epoch.epoch_id >= StacksEpochId::Epoch21 || self.config.always_use_affirmation_maps {
             // potentially have an anchor block, but only process the next reward cycle (and
             // subsequent reward cycles) with it if the prepare-phase block-commits affirm its
@@ -2386,11 +2411,11 @@ impl<
             // burnchain has not yet advanced to epoch 3.0
             return self
                 .handle_new_epoch2_burnchain_block(&mut HashSet::new())
-                .and_then(|block_hash_opt| {
+                .map(|block_hash_opt| {
                     if let Some(block_hash) = block_hash_opt {
-                        Ok(NewBurnchainBlockStatus::WaitForPox2x(block_hash))
+                        NewBurnchainBlockStatus::WaitForPox2x(block_hash)
                     } else {
-                        Ok(NewBurnchainBlockStatus::Ready)
+                        NewBurnchainBlockStatus::Ready
                     }
                 });
         }
@@ -2419,12 +2444,12 @@ impl<
 
         // proceed to process sortitions in epoch 3.0
         self.handle_new_nakamoto_burnchain_block()
-            .and_then(|can_proceed| {
+            .map(|can_proceed| {
                 if can_proceed {
-                    Ok(NewBurnchainBlockStatus::Ready)
+                    NewBurnchainBlockStatus::Ready
                 } else {
                     // missing PoX anchor block, but unlike in 2.x, we don't know what it is!
-                    Ok(NewBurnchainBlockStatus::WaitForPoxNakamoto)
+                    NewBurnchainBlockStatus::WaitForPoxNakamoto
                 }
             })
     }
@@ -2747,7 +2772,7 @@ impl<
             }
             sortition_db_handle.commit()?;
 
-            if unorphan_blocks.len() > 0 {
+            if !unorphan_blocks.is_empty() {
                 revalidated_stacks_block = true;
                 let ic = self.sortition_db.index_conn();
                 let mut chainstate_db_tx = self.chain_state_db.db_tx_begin()?;
@@ -3078,7 +3103,7 @@ impl<
             }
         }
 
-        if !found && staging_block_chs.len() > 0 {
+        if !found && !staging_block_chs.is_empty() {
             // we have seen this block before, but in a different consensus fork.
             // queue it for re-processing -- it might still be valid if it's in a reward
             // cycle that exists on the new PoX fork.

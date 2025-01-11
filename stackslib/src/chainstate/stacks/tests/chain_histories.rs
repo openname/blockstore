@@ -2513,7 +2513,7 @@ fn assert_chainstate_blocks_eq(test_name_1: &str, test_name_2: &str) {
     }
 
     for i in 0..all_microblocks_1.len() {
-        if all_microblocks_1[i].2.len() == 0 {
+        if all_microblocks_1[i].2.is_empty() {
             continue;
         }
 
@@ -2650,7 +2650,25 @@ fn miner_trace_replay_randomized(miner_trace: &mut TestMinerTrace) {
                             &block_commit_op,
                         );
 
-                        if microblocks.len() > 0 {
+                        if microblocks.is_empty() {
+                            // process all the blocks we can
+                            test_debug!(
+                                "Process Stacks block {} and {} microblocks in {}",
+                                &stacks_block.block_hash(),
+                                microblocks.len(),
+                                &node_name
+                            );
+                            let tip_info_list = node
+                                .chainstate
+                                .process_blocks_at_tip(
+                                    connect_burnchain_db(&miner_trace.burn_node.burnchain).conn(),
+                                    &mut miner_trace.burn_node.sortdb,
+                                    expected_num_blocks,
+                                )
+                                .unwrap();
+
+                            num_processed += tip_info_list.len();
+                        } else {
                             for mblock in microblocks.iter() {
                                 preprocess_stacks_block_data(
                                     &mut node,
@@ -2680,24 +2698,6 @@ fn miner_trace_replay_randomized(miner_trace: &mut TestMinerTrace) {
 
                                 num_processed += tip_info_list.len();
                             }
-                        } else {
-                            // process all the blocks we can
-                            test_debug!(
-                                "Process Stacks block {} and {} microblocks in {}",
-                                &stacks_block.block_hash(),
-                                microblocks.len(),
-                                &node_name
-                            );
-                            let tip_info_list = node
-                                .chainstate
-                                .process_blocks_at_tip(
-                                    connect_burnchain_db(&miner_trace.burn_node.burnchain).conn(),
-                                    &mut miner_trace.burn_node.sortdb,
-                                    expected_num_blocks,
-                                )
-                                .unwrap();
-
-                            num_processed += tip_info_list.len();
                         }
                     }
                 }
@@ -2857,7 +2857,7 @@ pub fn mine_invalid_token_transfers_block(
     );
     builder.force_mine_tx(clarity_tx, &tx1).unwrap();
 
-    if miner.spent_at_nonce.get(&1).is_none() {
+    if !miner.spent_at_nonce.contains_key(&1) {
         miner.spent_at_nonce.insert(1, 11111);
     }
 
@@ -2871,7 +2871,7 @@ pub fn mine_invalid_token_transfers_block(
     );
     builder.force_mine_tx(clarity_tx, &tx2).unwrap();
 
-    if miner.spent_at_nonce.get(&2).is_none() {
+    if !miner.spent_at_nonce.contains_key(&2) {
         miner.spent_at_nonce.insert(2, 22222);
     }
 

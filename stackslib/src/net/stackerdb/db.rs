@@ -39,7 +39,7 @@ use crate::util_lib::db::{
     FromRow,
 };
 
-const STACKER_DB_SCHEMA: &'static [&'static str] = &[
+const STACKER_DB_SCHEMA: &[&str] = &[
     r#"
     PRAGMA foreign_keys = ON;
     "#,
@@ -191,7 +191,7 @@ fn inner_get_slot_validation(
     query_row(conn, &sql, args).map_err(|e| e.into())
 }
 
-impl<'a> StackerDBTx<'a> {
+impl StackerDBTx<'_> {
     pub fn commit(self) -> Result<(), db_error> {
         self.sql_tx.commit().map_err(db_error::from)
     }
@@ -527,10 +527,7 @@ impl StackerDBs {
 
     /// Open a transaction on the Stacker DB.
     /// The config would be obtained from a DBSelector instance
-    pub fn tx_begin<'a>(
-        &'a mut self,
-        config: StackerDBConfig,
-    ) -> Result<StackerDBTx<'a>, db_error> {
+    pub fn tx_begin(&mut self, config: StackerDBConfig) -> Result<StackerDBTx<'_>, db_error> {
         let sql_tx = tx_begin_immediate(&mut self.conn)?;
         Ok(StackerDBTx { sql_tx, config })
     }

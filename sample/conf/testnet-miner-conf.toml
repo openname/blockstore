@@ -7,25 +7,21 @@ prometheus_bind = "0.0.0.0:9153"
 
 [burnchain]
 mode = "krypton"
-peer_host = "bitcoin.regtest.hiro.so"
-peer_port = 18444
+peer_host = "127.0.0.1"
+username = "<Bitcoin RPC username>"
+password = "<Bitcoin RPC password>"
+rpc_port = 12345 # Bitcoin RPC port
+peer_port = 6789 # Bitcoin P2P port
 pox_prepare_length = 100
 pox_reward_length = 900
-
-# Used for sending events to a local stacks-blockchain-api service
-# [[events_observer]]
-# endpoint = "localhost:3700"
-# events_keys = ["*"]
-# timeout_ms = 60_000
-
-# Used if running a local stacks-signer service
-# [[events_observer]]
-# endpoint = "127.0.0.1:30000"
-# events_keys = ["stackerdb", "block_proposal", "burn_blocks"]
-
-# Used if running a local stacks-signer service
-# [connection_options]
-# auth_token = "" # fill with a unique password
+# Maximum amount (in sats) of "burn commitment" to broadcast for the next block's leader election
+burn_fee_cap = 20000
+# Amount (in sats) per byte - Used to calculate the transaction fees
+satoshis_per_byte = 25
+# Amount of sats to add when RBF'ing bitcoin tx  (default: 5)
+rbf_fee_increment = 5
+# Maximum percentage to RBF bitcoin tx (default: 150% of satsv/B)
+max_rbf = 150
 
 [[ustx_balance]]
 address = "ST2QKZ4FKHAH1NQKYKYAYZPY440FEPK7GZ1R5HBP2"
@@ -77,8 +73,8 @@ start_height = 6
 
 [[burnchain.epochs]]
 epoch_name = "3.0"
-start_height = 56_457
+start_height = 1900
 
 [[burnchain.epochs]]
 epoch_name = "3.1"
-start_height = 77_770
+start_height = 2000

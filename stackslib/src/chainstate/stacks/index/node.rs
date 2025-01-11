@@ -231,9 +231,9 @@ impl TriePtr {
     #[inline]
     pub fn new(id: u8, chr: u8, ptr: u32) -> TriePtr {
         TriePtr {
-            id: id,
-            chr: chr,
-            ptr: ptr,
+            id,
+            chr,
+            ptr,
             back_block: 0,
         }
     }
@@ -308,10 +308,10 @@ impl TriePtr {
         let back_block = u32::from_be_bytes([bytes[6], bytes[7], bytes[8], bytes[9]]);
 
         TriePtr {
-            id: id,
-            chr: chr,
-            ptr: ptr,
-            back_block: back_block,
+            id,
+            chr,
+            ptr,
+            back_block,
         }
     }
 }
@@ -372,7 +372,7 @@ impl<T: MarfTrieId> TrieCursor<T> {
     /// last ptr visited
     pub fn ptr(&self) -> TriePtr {
         // should always be true by construction
-        assert!(self.node_ptrs.len() > 0);
+        assert!(!self.node_ptrs.is_empty());
         self.node_ptrs[self.node_ptrs.len() - 1].clone()
     }
 
@@ -495,7 +495,7 @@ impl<T: MarfTrieId> TrieCursor<T> {
     /// Replace the last-visited node and ptr within this trie.  Used when doing a copy-on-write or
     /// promoting a node, so the cursor state accurately reflects the nodes and tries visited.
     #[inline]
-    pub fn repair_retarget(&mut self, node: &TrieNodeType, ptr: &TriePtr, hash: &T) -> () {
+    pub fn repair_retarget(&mut self, node: &TrieNodeType, ptr: &TriePtr, hash: &T) {
         // this can only be called if we failed to walk to a node (this method _should not_ be
         // called if we walked to a backptr).
         if Some(CursorError::ChrNotFound) != self.last_error
@@ -526,7 +526,7 @@ impl<T: MarfTrieId> TrieCursor<T> {
         next_node: &TrieNodeType,
         ptr: &TriePtr,
         block_hash: T,
-    ) -> () {
+    ) {
         // this can only be called if we walked to a backptr.
         // If it's anything else, we're in trouble.
         if Some(CursorError::ChrNotFound) == self.last_error
@@ -553,7 +553,7 @@ impl<T: MarfTrieId> TrieCursor<T> {
     /// Record that we landed on a non-backptr from a backptr.
     /// ptr is a non-backptr that refers to the node we landed on.
     #[inline]
-    pub fn repair_backptr_finish(&mut self, ptr: &TriePtr, block_hash: T) -> () {
+    pub fn repair_backptr_finish(&mut self, ptr: &TriePtr, block_hash: T) {
         // this can only be called if we walked to a backptr.
         // If it's anything else, we're in trouble.
         if Some(CursorError::ChrNotFound) == self.last_error
@@ -781,7 +781,7 @@ impl TrieNode256 {
         }
         TrieNode256 {
             path: node4.path.clone(),
-            ptrs: ptrs,
+            ptrs,
         }
     }
 
@@ -794,7 +794,7 @@ impl TrieNode256 {
         }
         TrieNode256 {
             path: node48.path.clone(),
-            ptrs: ptrs,
+            ptrs,
         }
     }
 }
@@ -1191,7 +1191,7 @@ impl TrieNode for TrieLeaf {
         }
 
         Ok(TrieLeaf {
-            path: path,
+            path,
             data: MARFValue(leaf_data),
         })
     }
@@ -1334,7 +1334,7 @@ impl TrieNodeType {
         with_node!(self, ref data, &data.path)
     }
 
-    pub fn set_path(&mut self, new_path: Vec<u8>) -> () {
+    pub fn set_path(&mut self, new_path: Vec<u8>) {
         with_node!(self, ref mut data, data.path = new_path)
     }
 }

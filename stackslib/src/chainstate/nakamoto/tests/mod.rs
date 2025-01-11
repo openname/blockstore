@@ -94,7 +94,7 @@ use crate::util_lib::boot::boot_code_id;
 use crate::util_lib::db::Error as db_error;
 use crate::util_lib::strings::StacksString;
 
-impl<'a> NakamotoStagingBlocksConnRef<'a> {
+impl NakamotoStagingBlocksConnRef<'_> {
     pub fn get_all_blocks_in_tenure(
         &self,
         tenure_id_consensus_hash: &ConsensusHash,
@@ -616,7 +616,7 @@ pub fn test_load_store_update_nakamoto_blocks() {
 
     let epoch2_txs = vec![coinbase_tx.clone()];
     let epoch2_tx_merkle_root = {
-        let txid_vecs = epoch2_txs
+        let txid_vecs: Vec<_> = epoch2_txs
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -710,7 +710,7 @@ pub fn test_load_store_update_nakamoto_blocks() {
 
     let nakamoto_txs = vec![tenure_change_tx.clone(), coinbase_tx.clone()];
     let nakamoto_tx_merkle_root = {
-        let txid_vecs = nakamoto_txs
+        let txid_vecs: Vec<_> = nakamoto_txs
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -720,7 +720,7 @@ pub fn test_load_store_update_nakamoto_blocks() {
 
     let nakamoto_txs_2 = vec![stx_transfer_tx.clone()];
     let nakamoto_tx_merkle_root_2 = {
-        let txid_vecs = nakamoto_txs_2
+        let txid_vecs: Vec<_> = nakamoto_txs_2
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -730,7 +730,7 @@ pub fn test_load_store_update_nakamoto_blocks() {
 
     let nakamoto_txs_3 = vec![stx_transfer_tx_3.clone()];
     let nakamoto_tx_merkle_root_3 = {
-        let txid_vecs = nakamoto_txs_3
+        let txid_vecs: Vec<_> = nakamoto_txs_3
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -740,7 +740,7 @@ pub fn test_load_store_update_nakamoto_blocks() {
 
     let nakamoto_txs_4 = vec![stx_transfer_tx_4.clone()];
     let nakamoto_tx_merkle_root_4 = {
-        let txid_vecs = nakamoto_txs_4
+        let txid_vecs: Vec<_> = nakamoto_txs_4
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -1780,7 +1780,7 @@ fn test_nakamoto_block_static_verification() {
 
     let nakamoto_txs = vec![tenure_change_tx.clone(), coinbase_tx.clone()];
     let nakamoto_tx_merkle_root = {
-        let txid_vecs = nakamoto_txs
+        let txid_vecs: Vec<_> = nakamoto_txs
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -1790,7 +1790,7 @@ fn test_nakamoto_block_static_verification() {
 
     let nakamoto_recipient_txs = vec![tenure_change_tx.clone(), coinbase_recipient_tx.clone()];
     let nakamoto_recipient_tx_merkle_root = {
-        let txid_vecs = nakamoto_recipient_txs
+        let txid_vecs: Vec<_> = nakamoto_recipient_txs
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -1803,7 +1803,7 @@ fn test_nakamoto_block_static_verification() {
         coinbase_shadow_recipient_tx.clone(),
     ];
     let nakamoto_shadow_recipient_tx_merkle_root = {
-        let txid_vecs = nakamoto_shadow_recipient_txs
+        let txid_vecs: Vec<_> = nakamoto_shadow_recipient_txs
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -1813,7 +1813,7 @@ fn test_nakamoto_block_static_verification() {
 
     let nakamoto_txs_bad_ch = vec![tenure_change_tx_bad_ch.clone(), coinbase_tx.clone()];
     let nakamoto_tx_merkle_root_bad_ch = {
-        let txid_vecs = nakamoto_txs_bad_ch
+        let txid_vecs: Vec<_> = nakamoto_txs_bad_ch
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -1824,7 +1824,7 @@ fn test_nakamoto_block_static_verification() {
     let nakamoto_txs_bad_miner_sig =
         vec![tenure_change_tx_bad_miner_sig.clone(), coinbase_tx.clone()];
     let nakamoto_tx_merkle_root_bad_miner_sig = {
-        let txid_vecs = nakamoto_txs_bad_miner_sig
+        let txid_vecs: Vec<_> = nakamoto_txs_bad_miner_sig
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -2586,7 +2586,7 @@ fn valid_vote_transaction() {
         post_conditions: vec![],
         payload: TransactionPayload::ContractCall(TransactionContractCall {
             address: contract_addr,
-            contract_name: contract_name,
+            contract_name,
             function_name: SIGNERS_VOTING_FUNCTION_NAME.into(),
             function_args: valid_function_args,
         }),

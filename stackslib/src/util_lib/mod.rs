@@ -16,7 +16,7 @@ pub mod test {
 
     pub fn with_timeout<F>(timeout_secs: u64, test_func: F)
     where
-        F: FnOnce() -> () + std::marker::Send + 'static + panic::UnwindSafe,
+        F: FnOnce() + std::marker::Send + 'static + panic::UnwindSafe,
     {
         let (sx, rx) = sync_channel(1);
 

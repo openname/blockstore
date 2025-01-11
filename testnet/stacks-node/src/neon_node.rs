@@ -187,6 +187,8 @@ use stacks::chainstate::stacks::{
     StacksMicroblock, StacksPublicKey, StacksTransaction, StacksTransactionSigner,
     TransactionAnchorMode, TransactionPayload, TransactionVersion,
 };
+use stacks::config::chain_data::MinerStats;
+use stacks::config::NodeConfig;
 use stacks::core::mempool::MemPoolDB;
 use stacks::core::{EpochList, FIRST_BURNCHAIN_CONSENSUS_HASH, STACKS_EPOCH_3_0_MARKER};
 use stacks::cost_estimates::metrics::{CostMetric, UnitMetric};
@@ -220,8 +222,6 @@ use crate::burnchains::bitcoin_regtest_controller::{
     addr2str, burnchain_params_from_config, BitcoinRegtestController, OngoingBlockCommit,
 };
 use crate::burnchains::{make_bitcoin_indexer, Error as BurnchainControllerError};
-use crate::chain_data::MinerStats;
-use crate::config::NodeConfig;
 use crate::globals::{NeonGlobals as Globals, RelayerDirective};
 use crate::nakamoto_node::signer_coordinator::SignerCoordinator;
 use crate::run_loop::neon::RunLoop;

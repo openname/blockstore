@@ -78,7 +78,7 @@ pub static MEMPOOL_NAKAMOTO_MAX_TRANSACTION_AGE: Duration =
     Duration::from_secs(MEMPOOL_MAX_TRANSACTION_AGE * 10 * 60);
 
 // name of table for storing the counting bloom filter
-pub const BLOOM_COUNTER_TABLE: &'static str = "txid_bloom_counter";
+pub const BLOOM_COUNTER_TABLE: &str = "txid_bloom_counter";
 
 // bloom filter error rate
 pub const BLOOM_COUNTER_ERROR_RATE: f64 = 0.001;
@@ -390,7 +390,12 @@ pub trait ProposalCallbackReceiver: Send {
 
 pub trait MemPoolEventDispatcher {
     fn get_proposal_callback_receiver(&self) -> Option<Box<dyn ProposalCallbackReceiver>>;
-    fn mempool_txs_dropped(&self, txids: Vec<Txid>, reason: MemPoolDropReason);
+    fn mempool_txs_dropped(
+        &self,
+        txids: Vec<Txid>,
+        new_txid: Option<Txid>,
+        reason: MemPoolDropReason,
+    );
     fn mined_block_event(
         &self,
         target_burn_height: u64,
@@ -582,13 +587,13 @@ impl MemPoolWalkSettings {
 }
 
 impl FromRow<Txid> for Txid {
-    fn from_row<'a>(row: &'a Row) -> Result<Txid, db_error> {
+    fn from_row(row: &Row) -> Result<Txid, db_error> {
         row.get(0).map_err(db_error::SqliteError)
     }
 }
 
 impl FromRow<MemPoolTxMetadata> for MemPoolTxMetadata {
-    fn from_row<'a>(row: &'a Row) -> Result<MemPoolTxMetadata, db_error> {
+    fn from_row(row: &Row) -> Result<MemPoolTxMetadata, db_error> {
         let txid = Txid::from_column(row, "txid")?;
         let tenure_consensus_hash = ConsensusHash::from_column(row, "consensus_hash")?;
         let tenure_block_header_hash = BlockHeaderHash::from_column(row, "block_header_hash")?;
@@ -624,7 +629,7 @@ impl FromRow<MemPoolTxMetadata> for MemPoolTxMetadata {
 }
 
 impl FromRow<MemPoolTxInfo> for MemPoolTxInfo {
-    fn from_row<'a>(row: &'a Row) -> Result<MemPoolTxInfo, db_error> {
+    fn from_row(row: &Row) -> Result<MemPoolTxInfo, db_error> {
         let md = MemPoolTxMetadata::from_row(row)?;
         let tx_bytes: Vec<u8> = row.get_unwrap("tx");
         let tx = StacksTransaction::consensus_deserialize(&mut &tx_bytes[..])
@@ -639,7 +644,7 @@ impl FromRow<MemPoolTxInfo> for MemPoolTxInfo {
 }
 
 impl FromRow<MemPoolTxInfoPartial> for MemPoolTxInfoPartial {
-    fn from_row<'a>(row: &'a Row) -> Result<MemPoolTxInfoPartial, db_error> {
+    fn from_row(row: &Row) -> Result<MemPoolTxInfoPartial, db_error> {
         let txid = Txid::from_column(row, "txid")?;
         let fee_rate: Option<f64> = match row.get("fee_rate") {
             Ok(rate) => Some(rate),
@@ -662,7 +667,7 @@ impl FromRow<MemPoolTxInfoPartial> for MemPoolTxInfoPartial {
 }
 
 impl FromRow<(u64, u64)> for (u64, u64) {
-    fn from_row<'a>(row: &'a Row) -> Result<(u64, u64), db_error> {
+    fn from_row(row: &Row) -> Result<(u64, u64), db_error> {
         let t1: i64 = row.get_unwrap(0);
         let t2: i64 = row.get_unwrap(1);
         if t1 < 0 || t2 < 0 {
@@ -672,7 +677,7 @@ impl FromRow<(u64, u64)> for (u64, u64) {
     }
 }
 
-const MEMPOOL_INITIAL_SCHEMA: &'static [&'static str] = &[r#"
+const MEMPOOL_INITIAL_SCHEMA: &[&str] = &[r#"
     CREATE TABLE mempool(
         txid TEXT NOT NULL,
         origin_address TEXT NOT NULL,
@@ -697,7 +702,7 @@ const MEMPOOL_INITIAL_SCHEMA: &'static [&'static str] = &[r#"
     );
     "#];
 
-const MEMPOOL_SCHEMA_2_COST_ESTIMATOR: &'static [&'static str] = &[
+const MEMPOOL_SCHEMA_2_COST_ESTIMATOR: &[&str] = &[
     r#"
     CREATE TABLE fee_estimates(
         txid TEXT NOT NULL,
@@ -722,7 +727,7 @@ const MEMPOOL_SCHEMA_2_COST_ESTIMATOR: &'static [&'static str] = &[
     "#,
 ];
 
-const MEMPOOL_SCHEMA_3_BLOOM_STATE: &'static [&'static str] = &[
+const MEMPOOL_SCHEMA_3_BLOOM_STATE: &[&str] = &[
     r#"
     CREATE TABLE IF NOT EXISTS removed_txids(
         txid TEXT PRIMARY KEY NOT NULL,
@@ -743,7 +748,7 @@ const MEMPOOL_SCHEMA_3_BLOOM_STATE: &'static [&'static str] = &[
     "#,
 ];
 
-const MEMPOOL_SCHEMA_4_BLACKLIST: &'static [&'static str] = &[
+const MEMPOOL_SCHEMA_4_BLACKLIST: &[&str] = &[
     r#"
     -- List of transactions that will never be stored to the mempool again, for as long as the rows exist.
     -- `arrival_time` indicates when the entry was created. This is used to garbage-collect the list.
@@ -782,7 +787,7 @@ const MEMPOOL_SCHEMA_4_BLACKLIST: &'static [&'static str] = &[
     "#,
 ];
 
-const MEMPOOL_SCHEMA_5: &'static [&'static str] = &[
+const MEMPOOL_SCHEMA_5: &[&str] = &[
     r#"
     ALTER TABLE mempool ADD COLUMN fee_rate NUMBER;
     "#,
@@ -798,7 +803,7 @@ const MEMPOOL_SCHEMA_5: &'static [&'static str] = &[
     "#,
 ];
 
-const MEMPOOL_SCHEMA_6_NONCES: &'static [&'static str] = &[
+const MEMPOOL_SCHEMA_6_NONCES: &[&str] = &[
     r#"
     CREATE TABLE nonces(
         address TEXT PRIMARY KEY NOT NULL,
@@ -810,7 +815,7 @@ const MEMPOOL_SCHEMA_6_NONCES: &'static [&'static str] = &[
     "#,
 ];
 
-const MEMPOOL_SCHEMA_7_TIME_ESTIMATES: &'static [&'static str] = &[
+const MEMPOOL_SCHEMA_7_TIME_ESTIMATES: &[&str] = &[
     r#"
     -- ALLOW NULL
     ALTER TABLE mempool ADD COLUMN time_estimate_ms INTEGER;
@@ -820,7 +825,7 @@ const MEMPOOL_SCHEMA_7_TIME_ESTIMATES: &'static [&'static str] = &[
     "#,
 ];
 
-const MEMPOOL_INDEXES: &'static [&'static str] = &[
+const MEMPOOL_INDEXES: &[&str] = &[
     "CREATE INDEX IF NOT EXISTS by_txid ON mempool(txid);",
     "CREATE INDEX IF NOT EXISTS by_height ON mempool(height);",
     "CREATE INDEX IF NOT EXISTS by_txid_and_height ON mempool(txid,height);",
@@ -1213,6 +1218,12 @@ impl CandidateCache {
     #[cfg_attr(test, mutants::skip)]
     fn len(&self) -> usize {
         self.cache.len() + self.next.len()
+    }
+
+    /// Is the cache empty?
+    #[cfg_attr(test, mutants::skip)]
+    fn is_empty(&self) -> bool {
+        self.cache.is_empty() && self.next.is_empty()
     }
 }
 
@@ -1835,13 +1846,10 @@ impl MemPoolDB {
                 continue;
             }
 
-            let do_consider = if settings.filter_origins.len() > 0 {
-                settings
+            let do_consider = settings.filter_origins.is_empty()
+                || settings
                     .filter_origins
-                    .contains(&tx_info.metadata.origin_address)
-            } else {
-                true
-            };
+                    .contains(&tx_info.metadata.origin_address);
 
             if !do_consider {
                 debug!("Will skip mempool tx, since it does not have an allowed origin";
@@ -1933,7 +1941,7 @@ impl MemPoolDB {
         drop(query_stmt_null);
         drop(query_stmt_fee);
 
-        if retry_store.len() > 0 {
+        if !retry_store.is_empty() {
             let tx = self.tx_begin()?;
             for (address, nonce) in retry_store.into_iter() {
                 nonce_cache.update(address, nonce, &tx);
@@ -1953,7 +1961,7 @@ impl MemPoolDB {
         &self.db
     }
 
-    pub fn tx_begin<'a>(&'a mut self) -> Result<MemPoolTx<'a>, db_error> {
+    pub fn tx_begin(&mut self) -> Result<MemPoolTx<'_>, db_error> {
         let tx = tx_begin_immediate(&mut self.db)?;
         Ok(MemPoolTx::new(
             tx,
@@ -1964,7 +1972,7 @@ impl MemPoolDB {
 
     pub fn db_has_tx(conn: &DBConn, txid: &Txid) -> Result<bool, db_error> {
         query_row(conn, "SELECT 1 FROM mempool WHERE txid = ?1", params![txid])
-            .and_then(|row_opt: Option<i64>| Ok(row_opt.is_some()))
+            .map(|row_opt: Option<i64>| row_opt.is_some())
     }
 
     pub fn get_tx(conn: &DBConn, txid: &Txid) -> Result<Option<MemPoolTxInfo>, db_error> {
@@ -2229,7 +2237,7 @@ impl MemPoolDB {
 
         // broadcast drop event if a tx is being replaced
         if let (Some(prior_tx), Some(event_observer)) = (prior_tx, event_observer) {
-            event_observer.mempool_txs_dropped(vec![prior_tx.txid], replace_reason);
+            event_observer.mempool_txs_dropped(vec![prior_tx.txid], Some(txid), replace_reason);
         };
 
         Ok(())
@@ -2275,7 +2283,7 @@ impl MemPoolDB {
         if let Some(event_observer) = event_observer {
             let sql = "SELECT txid FROM mempool WHERE accept_time < ?1";
             let txids = query_rows(tx, sql, args)?;
-            event_observer.mempool_txs_dropped(txids, MemPoolDropReason::STALE_COLLECT);
+            event_observer.mempool_txs_dropped(txids, None, MemPoolDropReason::STALE_COLLECT);
         }
 
         let sql = "DELETE FROM mempool WHERE accept_time < ?1";
@@ -2297,7 +2305,7 @@ impl MemPoolDB {
         if let Some(event_observer) = event_observer {
             let sql = "SELECT txid FROM mempool WHERE height < ?1";
             let txids = query_rows(tx, sql, args)?;
-            event_observer.mempool_txs_dropped(txids, MemPoolDropReason::STALE_COLLECT);
+            event_observer.mempool_txs_dropped(txids, None, MemPoolDropReason::STALE_COLLECT);
         }
 
         let sql = "DELETE FROM mempool WHERE height < ?1";
@@ -2572,11 +2580,7 @@ impl MemPoolDB {
 
     /// Blacklist transactions from the mempool
     /// Do not call directly; it's `pub` only for testing
-    pub fn inner_blacklist_txs<'a>(
-        tx: &DBTx<'a>,
-        txids: &[Txid],
-        now: u64,
-    ) -> Result<(), db_error> {
+    pub fn inner_blacklist_txs(tx: &DBTx<'_>, txids: &[Txid], now: u64) -> Result<(), db_error> {
         for txid in txids {
             let sql = "INSERT OR REPLACE INTO tx_blacklist (txid, arrival_time) VALUES (?1, ?2)";
             let args = params![txid, &u64_to_sql(now)?];
@@ -2587,8 +2591,8 @@ impl MemPoolDB {
 
     /// garbage-collect the tx blacklist -- delete any transactions whose blacklist timeout has
     /// been exceeded
-    pub fn garbage_collect_tx_blacklist<'a>(
-        tx: &DBTx<'a>,
+    pub fn garbage_collect_tx_blacklist(
+        tx: &DBTx<'_>,
         now: u64,
         timeout: u64,
         max_size: u64,
@@ -2649,7 +2653,7 @@ impl MemPoolDB {
 
     /// Inner code body for dropping transactions.
     /// Note that the bloom filter will *NOT* be updated.  That's the caller's job, if desired.
-    fn inner_drop_txs<'a>(tx: &DBTx<'a>, txids: &[Txid]) -> Result<(), db_error> {
+    fn inner_drop_txs(tx: &DBTx<'_>, txids: &[Txid]) -> Result<(), db_error> {
         let sql = "DELETE FROM mempool WHERE txid = ?";
         for txid in txids.iter() {
             tx.execute(sql, &[txid])?;

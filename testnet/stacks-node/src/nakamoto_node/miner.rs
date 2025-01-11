@@ -139,7 +139,7 @@ pub struct BlockMinerThread {
     burnchain: Burnchain,
     /// Last block mined
     last_block_mined: Option<NakamotoBlock>,
-    /// Number of blocks mined since a tenure change/extend
+    /// Number of blocks mined since a tenure change/extend was attempted
     mined_blocks: u64,
     /// Copy of the node's registered VRF key
     registered_key: RegisteredKey,
@@ -160,6 +160,8 @@ pub struct BlockMinerThread {
     /// Handle to the p2p thread for block broadcast
     p2p_handle: NetworkHandle,
     signer_set_cache: Option<RewardSet>,
+    /// The time at which tenure change/extend was attempted
+    tenure_change_time: Instant,
 }
 
 impl BlockMinerThread {
@@ -187,6 +189,7 @@ impl BlockMinerThread {
             reason,
             p2p_handle: rt.get_p2p_handle(),
             signer_set_cache: None,
+            tenure_change_time: Instant::now(),
         }
     }
 
@@ -1186,7 +1189,9 @@ impl BlockMinerThread {
         if self.last_block_mined.is_some() {
             // Check if we can extend the current tenure
             let tenure_extend_timestamp = coordinator.get_tenure_extend_timestamp();
-            if get_epoch_time_secs() <= tenure_extend_timestamp {
+            if get_epoch_time_secs() <= tenure_extend_timestamp
+                && self.tenure_change_time.elapsed() <= self.config.miner.tenure_timeout
+            {
                 return Ok(NakamotoTenureInfo {
                     coinbase_tx: None,
                     tenure_change_tx: None,
@@ -1195,6 +1200,8 @@ impl BlockMinerThread {
             info!("Miner: Time-based tenure extend";
                 "current_timestamp" => get_epoch_time_secs(),
                 "tenure_extend_timestamp" => tenure_extend_timestamp,
+                "tenure_change_time_elapsed" => self.tenure_change_time.elapsed().as_secs(),
+                "tenure_timeout_secs" => self.config.miner.tenure_timeout.as_secs(),
             );
             self.tenure_extend_reset();
         }
@@ -1265,6 +1272,7 @@ impl BlockMinerThread {
     }
 
     fn tenure_extend_reset(&mut self) {
+        self.tenure_change_time = Instant::now();
         self.reason = MinerReason::Extended {
             burn_view_consensus_hash: self.burn_block.consensus_hash,
         };

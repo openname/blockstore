@@ -17,7 +17,6 @@
 pub mod analysis_db;
 pub mod arithmetic_checker;
 pub mod contract_interface_builder;
-#[allow(clippy::result_large_err)]
 pub mod errors;
 pub mod read_only_checker;
 pub mod trait_checker;
@@ -52,7 +51,7 @@ pub fn mem_type_check(
     epoch: StacksEpochId,
 ) -> CheckResult<(Option<TypeSignature>, ContractAnalysis)> {
     let contract_identifier = QualifiedContractIdentifier::transient();
-    let mut contract = build_ast_with_rules(
+    let contract = build_ast_with_rules(
         &contract_identifier,
         snippet,
         &mut (),
@@ -68,7 +67,7 @@ pub fn mem_type_check(
     let cost_tracker = LimitedCostTracker::new_free();
     match run_analysis(
         &QualifiedContractIdentifier::transient(),
-        &mut contract,
+        &contract,
         &mut analysis_db,
         false,
         cost_tracker,
@@ -120,6 +119,7 @@ pub fn type_check(
     .map_err(|(e, _cost_tracker)| e)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn run_analysis(
     contract_identifier: &QualifiedContractIdentifier,
     expressions: &[SymbolicExpression],

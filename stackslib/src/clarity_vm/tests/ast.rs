@@ -35,7 +35,7 @@ fn dependency_edge_counting_runtime(
     clarity_instance
         .begin_test_genesis_block(
             &StacksBlockId::sentinel(),
-            &StacksBlockId([0 as u8; 32]),
+            &StacksBlockId([0; 32]),
             &TEST_HEADER_DB,
             &TEST_BURN_STATE_DB,
         )
@@ -43,8 +43,8 @@ fn dependency_edge_counting_runtime(
 
     let mut cost_track = clarity_instance
         .begin_block(
-            &StacksBlockId([0 as u8; 32]),
-            &StacksBlockId([1 as u8; 32]),
+            &StacksBlockId([0; 32]),
+            &StacksBlockId([1; 32]),
             &TEST_HEADER_DB,
             &TEST_BURN_STATE_DB,
         )

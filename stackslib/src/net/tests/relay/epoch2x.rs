@@ -819,7 +819,7 @@ fn http_rpc(peer_http: u16, request: StacksHttpRequest) -> Result<StacksHttpResp
     let mut resp = vec![];
     match sock.read_to_end(&mut resp) {
         Ok(_) => {
-            if resp.len() == 0 {
+            if resp.is_empty() {
                 test_debug!("Client did not receive any data");
                 return Err(net_error::PermanentlyDrained);
             }
@@ -934,7 +934,7 @@ fn push_microblocks(
     );
     let msg = StacksMessageType::Microblocks(MicroblocksData {
         index_anchor_block: StacksBlockHeader::make_index_block_hash(&consensus_hash, &block_hash),
-        microblocks: microblocks,
+        microblocks,
     });
     push_message(peer, dest, relay_hints, msg)
 }
@@ -955,7 +955,7 @@ fn broadcast_microblocks(
     );
     let msg = StacksMessageType::Microblocks(MicroblocksData {
         index_anchor_block: StacksBlockHeader::make_index_block_hash(&consensus_hash, &block_hash),
-        microblocks: microblocks,
+        microblocks,
     });
     broadcast_message(peer, relay_hints, msg)
 }
@@ -1200,16 +1200,16 @@ fn test_get_blocks_and_microblocks_2_peers_push_blocks_and_microblocks(
                     let original_block_data = original_blocks_and_microblocks.borrow();
                     let mut next_idx = idx.borrow_mut();
                     let data_to_push = {
-                        if block_data.len() > 0 {
-                            let (consensus_hash, block, microblocks) =
-                                block_data[*next_idx].clone();
-                            Some((consensus_hash, block, microblocks))
-                        } else {
+                        if block_data.is_empty() {
                             // start over (can happen if a message gets
                             // dropped due to a timeout)
                             test_debug!("Reset block transmission (possible timeout)");
                             *block_data = (*original_block_data).clone();
                             *next_idx = thread_rng().gen::<usize>() % block_data.len();
+                            let (consensus_hash, block, microblocks) =
+                                block_data[*next_idx].clone();
+                            Some((consensus_hash, block, microblocks))
+                        } else {
                             let (consensus_hash, block, microblocks) =
                                 block_data[*next_idx].clone();
                             Some((consensus_hash, block, microblocks))
@@ -1259,7 +1259,7 @@ fn test_get_blocks_and_microblocks_2_peers_push_blocks_and_microblocks(
 
                             if pushed_block && pushed_microblock {
                                 block_data.remove(*next_idx);
-                                if block_data.len() > 0 {
+                                if !block_data.is_empty() {
                                     *next_idx = thread_rng().gen::<usize>() % block_data.len();
                                 }
                                 *sent_blocks = false;
@@ -2123,8 +2123,8 @@ fn test_get_blocks_and_microblocks_peers_broadcast() {
 
                 let ((tip_consensus_hash, tip_block, _), idx) = {
                     let block_data = blocks_and_microblocks.borrow();
-                    let idx = blocks_idx.borrow();
-                    (block_data[(*idx as usize).saturating_sub(1)].clone(), *idx)
+                    let idx: usize = *blocks_idx.borrow();
+                    (block_data[idx.saturating_sub(1)].clone(), idx)
                 };
 
                 if idx > 0 {
@@ -2596,7 +2596,7 @@ fn test_get_blocks_and_microblocks_2_peers_buffered_messages() {
                             peers[1].network.pending_messages.iter()
                         {
                             debug!("Pending at {} is ({}, {})", *i, event_id, pending.len());
-                            if pending.len() >= 1 {
+                            if !pending.is_empty() {
                                 update_sortition = true;
                             }
                         }
@@ -2968,7 +2968,7 @@ fn process_new_blocks_rejects_problematic_asts() {
             let mut bad_block = bad_block.0;
             bad_block.txs.push(bad_tx.clone());
 
-            let txid_vecs = bad_block
+            let txid_vecs: Vec<_> = bad_block
                 .txs
                 .iter()
                 .map(|tx| tx.txid().as_bytes().to_vec())
@@ -3024,7 +3024,7 @@ fn process_new_blocks_rejects_problematic_asts() {
             bad_mblock.txs.push(bad_tx.clone());
 
             // force it in anyway
-            let txid_vecs = bad_mblock
+            let txid_vecs: Vec<_> = bad_mblock
                 .txs
                 .iter()
                 .map(|tx| tx.txid().as_bytes().to_vec())

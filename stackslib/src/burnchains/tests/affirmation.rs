@@ -246,11 +246,11 @@ pub fn make_simple_key_register(
             &hex_bytes("a366b51292bef4edd64063d9145c617fec373bceb0758e98cd72becd84d54c7a").unwrap(),
         )
         .unwrap(),
-        memo: vec![01, 02, 03, 04, 05],
+        memo: vec![1, 2, 3, 4, 5],
 
         txid: next_txid(),
-        vtxindex: vtxindex,
-        block_height: block_height,
+        vtxindex,
+        block_height,
         burn_header_hash: burn_header_hash.clone(),
     }
 }
@@ -389,16 +389,11 @@ pub fn make_reward_cycle_with_vote(
                     );
 
                     if let Some(ref parent_commit) = parent_commits[i].as_ref() {
+                        assert!(parent_commit.block_height != block_commit.block_height);
                         assert!(
-                            parent_commit.block_height as u64 != block_commit.block_height as u64
+                            parent_commit.block_height == u64::from(block_commit.parent_block_ptr)
                         );
-                        assert!(
-                            parent_commit.block_height as u64
-                                == block_commit.parent_block_ptr as u64
-                        );
-                        assert!(
-                            parent_commit.vtxindex as u64 == block_commit.parent_vtxindex as u64
-                        );
+                        assert!(parent_commit.vtxindex == u32::from(block_commit.parent_vtxindex));
                     }
 
                     parent_commits[i] = Some(block_commit.clone());
@@ -418,7 +413,7 @@ pub fn make_reward_cycle_with_vote(
             new_commits.push(commits.clone());
             commits
                 .into_iter()
-                .filter_map(|cmt| cmt)
+                .flatten()
                 .map(|cmt| BlockstackOperationType::LeaderBlockCommit(cmt))
                 .collect()
         };

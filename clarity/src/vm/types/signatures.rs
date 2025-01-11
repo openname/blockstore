@@ -589,9 +589,7 @@ impl TypeSignature {
             | StacksEpochId::Epoch25
             | StacksEpochId::Epoch30
             | StacksEpochId::Epoch31 => self.admits_type_v2_1(other),
-            StacksEpochId::Epoch10 => {
-                return Err(CheckErrors::Expects("epoch 1.0 not supported".into()))
-            }
+            StacksEpochId::Epoch10 => Err(CheckErrors::Expects("epoch 1.0 not supported".into())),
         }
     }
 
@@ -678,16 +676,12 @@ impl TypeSignature {
                 }
             }
             NoType => Err(CheckErrors::CouldNotDetermineType),
-            CallableType(_) => {
-                return Err(CheckErrors::Expects(
-                    "CallableType should not be used in epoch v2.0".into(),
-                ))
-            }
-            ListUnionType(_) => {
-                return Err(CheckErrors::Expects(
-                    "ListUnionType should not be used in epoch v2.0".into(),
-                ))
-            }
+            CallableType(_) => Err(CheckErrors::Expects(
+                "CallableType should not be used in epoch v2.0".into(),
+            )),
+            ListUnionType(_) => Err(CheckErrors::Expects(
+                "ListUnionType should not be used in epoch v2.0".into(),
+            )),
             _ => Ok(other == self),
         }
     }
@@ -1162,9 +1156,7 @@ impl TypeSignature {
             | StacksEpochId::Epoch25
             | StacksEpochId::Epoch30
             | StacksEpochId::Epoch31 => Self::least_supertype_v2_1(a, b),
-            StacksEpochId::Epoch10 => {
-                return Err(CheckErrors::Expects("epoch 1.0 not supported".into()))
-            }
+            StacksEpochId::Epoch10 => Err(CheckErrors::Expects("epoch 1.0 not supported".into())),
         }
     }
 
@@ -1455,8 +1447,7 @@ impl TypeSignature {
 
     // Checks if resulting type signature is of valid size.
     pub fn construct_parent_list_type(args: &[Value]) -> Result<ListTypeData> {
-        let children_types: Result<Vec<_>> =
-            args.iter().map(|x| TypeSignature::type_of(x)).collect();
+        let children_types: Result<Vec<_>> = args.iter().map(TypeSignature::type_of).collect();
         TypeSignature::parent_list_type(&children_types?)
     }
 
@@ -1660,7 +1651,7 @@ impl TypeSignature {
     ) -> Result<BTreeMap<ClarityName, FunctionSignature>> {
         let mut trait_signature: BTreeMap<ClarityName, FunctionSignature> = BTreeMap::new();
         let functions_types = type_args
-            .get(0)
+            .first()
             .ok_or_else(|| CheckErrors::InvalidTypeDescription)?
             .match_list()
             .ok_or(CheckErrors::DefineTraitBadSignature)?;
@@ -1682,11 +1673,10 @@ impl TypeSignature {
             let fn_args_exprs = args[1]
                 .match_list()
                 .ok_or(CheckErrors::DefineTraitBadSignature)?;
-            let mut fn_args = Vec::with_capacity(fn_args_exprs.len());
-            for arg_type in fn_args_exprs.into_iter() {
-                let arg_t = TypeSignature::parse_type_repr(epoch, arg_type, accounting)?;
-                fn_args.push(arg_t);
-            }
+            let fn_args = fn_args_exprs
+                .iter()
+                .map(|arg_type| TypeSignature::parse_type_repr(epoch, arg_type, accounting))
+                .collect::<Result<_>>()?;
 
             // Extract function's type return - must be a response
             let fn_return = match TypeSignature::parse_type_repr(epoch, &args[2], accounting) {
@@ -1766,7 +1756,6 @@ impl TypeSignature {
                 "FAIL: .size() overflowed on too large of a type. construction should have failed!"
                     .into(),
             )
-            .into()
         })
     }
 
@@ -1885,9 +1874,8 @@ impl TupleTypeSignature {
     }
 
     pub fn size(&self) -> Result<u32> {
-        self.inner_size()?.ok_or_else(|| {
-            CheckErrors::Expects("size() overflowed on a constructed type.".into()).into()
-        })
+        self.inner_size()?
+            .ok_or_else(|| CheckErrors::Expects("size() overflowed on a constructed type.".into()))
     }
 
     fn max_depth(&self) -> u8 {

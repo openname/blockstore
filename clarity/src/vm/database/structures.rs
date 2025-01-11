@@ -257,7 +257,7 @@ impl ClaritySerializable for STXBalance {
 
 impl ClarityDeserializable<STXBalance> for STXBalance {
     fn deserialize(input: &str) -> Result<Self> {
-        let bytes = hex_bytes(&input).map_err(|_| {
+        let bytes = hex_bytes(input).map_err(|_| {
             InterpreterError::Expect("STXBalance deserialization: failed decoding bytes.".into())
         })?;
         let result = if bytes.len() == STXBalance::unlocked_and_v1_size {
@@ -555,7 +555,7 @@ impl<'db, 'conn> STXBalanceSnapshot<'db, 'conn> {
             );
         }
 
-        if !(self.balance.amount_locked() <= new_total_locked) {
+        if self.balance.amount_locked() > new_total_locked {
             return Err(InterpreterError::Expect(
                 "FATAL: account must lock more after `increase_lock_v2`".into(),
             )
@@ -623,7 +623,7 @@ impl<'db, 'conn> STXBalanceSnapshot<'db, 'conn> {
         }
 
         // caller needs to have checked this
-        if !(amount_to_lock > 0) {
+        if amount_to_lock == 0 {
             return Err(InterpreterError::Expect("BUG: cannot lock 0 tokens".into()).into());
         }
 
@@ -977,6 +977,12 @@ impl<'db, 'conn> STXBalanceSnapshot<'db, 'conn> {
         )?;
         self.balance = new_balance;
         Ok(unlocked)
+    }
+}
+
+impl Default for STXBalance {
+    fn default() -> Self {
+        STXBalance::zero()
     }
 }
 

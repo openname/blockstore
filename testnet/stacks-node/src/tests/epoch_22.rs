@@ -8,6 +8,7 @@ use stacks::chainstate::stacks::address::PoxAddress;
 use stacks::chainstate::stacks::db::StacksChainState;
 use stacks::chainstate::stacks::miner::{signal_mining_blocked, signal_mining_ready};
 use stacks::clarity_cli::vm_execute as execute;
+use stacks::config::{EventKeyType, EventObserverConfig, InitialBalance};
 use stacks::core::{self, EpochList, STACKS_EPOCH_MAX};
 use stacks::util_lib::boot::boot_code_id;
 use stacks_common::types::chainstate::{StacksAddress, StacksBlockId};
@@ -17,7 +18,6 @@ use stacks_common::util::secp256k1::Secp256k1PublicKey;
 use stacks_common::util::sleep_ms;
 
 use super::neon_integrations::get_account;
-use crate::config::{EventKeyType, EventObserverConfig, InitialBalance};
 use crate::neon_node::StacksNode;
 use crate::stacks_common::types::Address;
 use crate::stacks_common::util::hash::bytes_to_hex;

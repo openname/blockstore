@@ -347,7 +347,7 @@ impl StackerDBs {
                         &e
                     );
                 }
-            } else if (new_config != stackerdb_config && new_config.signers.len() > 0)
+            } else if (new_config != stackerdb_config && !new_config.signers.is_empty())
                 || (new_config == stackerdb_config
                     && new_config.signers.len()
                         != self.get_slot_versions(&stackerdb_contract_id)?.len())

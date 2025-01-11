@@ -177,7 +177,7 @@ impl TransferStxOp {
         })?;
 
         let outputs = tx.get_recipients();
-        assert!(outputs.len() > 0);
+        assert!(!outputs.is_empty());
 
         let output = outputs[0]
             .as_ref()

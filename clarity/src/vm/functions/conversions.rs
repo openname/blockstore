@@ -57,13 +57,13 @@ pub fn buff_to_int_generic(
                 > BufferLength::try_from(16_u32)
                     .map_err(|_| InterpreterError::Expect("Failed to construct".into()))?
             {
-                return Err(CheckErrors::TypeValueError(
+                Err(CheckErrors::TypeValueError(
                     SequenceType(BufferType(BufferLength::try_from(16_u32).map_err(
                         |_| InterpreterError::Expect("Failed to construct".into()),
                     )?)),
                     value,
                 )
-                .into());
+                .into())
             } else {
                 let mut transfer_buffer = [0u8; 16];
                 let original_slice = sequence_data.as_slice();
@@ -82,15 +82,13 @@ pub fn buff_to_int_generic(
                 Ok(value)
             }
         }
-        _ => {
-            return Err(CheckErrors::TypeValueError(
-                SequenceType(BufferType(BufferLength::try_from(16_u32).map_err(
-                    |_| InterpreterError::Expect("Failed to construct".into()),
-                )?)),
-                value,
-            )
-            .into())
-        }
+        _ => Err(CheckErrors::TypeValueError(
+            SequenceType(BufferType(BufferLength::try_from(16_u32).map_err(
+                |_| InterpreterError::Expect("Failed to construct".into()),
+            )?)),
+            value,
+        )
+        .into()),
     }
 }
 

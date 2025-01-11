@@ -26,6 +26,8 @@ use clarity::vm::analysis::contract_interface_builder::build_contract_interface;
 use clarity::vm::costs::ExecutionCost;
 use clarity::vm::events::{FTEventType, NFTEventType, STXEventType};
 use clarity::vm::types::{AssetIdentifier, QualifiedContractIdentifier, Value};
+#[cfg(any(test, feature = "testing"))]
+use lazy_static::lazy_static;
 use rand::Rng;
 use rusqlite::{params, Connection};
 use serde_json::json;
@@ -49,6 +51,7 @@ use stacks::chainstate::stacks::miner::TransactionEvent;
 use stacks::chainstate::stacks::{
     StacksBlock, StacksMicroblock, StacksTransaction, TransactionPayload,
 };
+use stacks::config::{EventKeyType, EventObserverConfig};
 use stacks::core::mempool::{MemPoolDropReason, MemPoolEventDispatcher, ProposalCallbackReceiver};
 use stacks::libstackerdb::StackerDBChunkData;
 use stacks::net::api::postblock_proposal::{
@@ -59,6 +62,8 @@ use stacks::net::http::HttpRequestContents;
 use stacks::net::httpcore::{send_http_request, StacksHttpRequest};
 use stacks::net::stackerdb::StackerDBEventDispatcher;
 use stacks::util::hash::to_hex;
+#[cfg(any(test, feature = "testing"))]
+use stacks::util::tests::TestFlag;
 use stacks::util_lib::db::Error as db_error;
 use stacks_common::bitvec::BitVec;
 use stacks_common::codec::StacksMessageCodec;
@@ -68,7 +73,11 @@ use stacks_common::util::hash::{bytes_to_hex, Sha512Trunc256Sum};
 use stacks_common::util::secp256k1::MessageSignature;
 use url::Url;
 
-use super::config::{EventKeyType, EventObserverConfig};
+#[cfg(any(test, feature = "testing"))]
+lazy_static! {
+    /// Do not announce a signed/mined block to the network when set to true.
+    pub static ref TEST_SKIP_BLOCK_ANNOUNCEMENT: TestFlag<bool> = TestFlag::default();
+}
 
 #[derive(Debug, Clone)]
 struct EventObserver {
@@ -153,6 +162,7 @@ pub struct MinedNakamotoBlockEvent {
     pub block_size: u64,
     pub cost: ExecutionCost,
     pub miner_signature: MessageSignature,
+    pub miner_signature_hash: Sha512Trunc256Sum,
     pub signer_signature_hash: Sha512Trunc256Sum,
     pub tx_events: Vec<TransactionEvent>,
     pub signer_bitvec: String,
@@ -943,9 +953,14 @@ impl ProposalCallbackReceiver for ProposalCallbackHandler {
 }
 
 impl MemPoolEventDispatcher for EventDispatcher {
-    fn mempool_txs_dropped(&self, txids: Vec<Txid>, reason: MemPoolDropReason) {
+    fn mempool_txs_dropped(
+        &self,
+        txids: Vec<Txid>,
+        new_txid: Option<Txid>,
+        reason: MemPoolDropReason,
+    ) {
         if !txids.is_empty() {
-            self.process_dropped_mempool_txs(txids, reason)
+            self.process_dropped_mempool_txs(txids, new_txid, reason)
         }
     }
 
@@ -1299,6 +1314,11 @@ impl EventDispatcher {
 
             let mature_rewards = serde_json::Value::Array(mature_rewards_vec);
 
+            #[cfg(any(test, feature = "testing"))]
+            if test_skip_block_announcement(&block) {
+                return;
+            }
+
             for (observer_id, filtered_events_ids) in dispatch_matrix.iter().enumerate() {
                 let filtered_events: Vec<_> = filtered_events_ids
                     .iter()
@@ -1514,6 +1534,7 @@ impl EventDispatcher {
             cost: consumed.clone(),
             tx_events,
             miner_signature: block.header.miner_signature,
+            miner_signature_hash: block.header.miner_signature_hash(),
             signer_signature_hash: block.header.signer_signature_hash(),
             signer_signature: block.header.signer_signature.clone(),
             signer_bitvec,
@@ -1568,7 +1589,12 @@ impl EventDispatcher {
         }
     }
 
-    pub fn process_dropped_mempool_txs(&self, txs: Vec<Txid>, reason: MemPoolDropReason) {
+    pub fn process_dropped_mempool_txs(
+        &self,
+        txs: Vec<Txid>,
+        new_txid: Option<Txid>,
+        reason: MemPoolDropReason,
+    ) {
         // lazily assemble payload only if we have observers
         let interested_observers = self.filter_observers(&self.mempool_observers_lookup, true);
 
@@ -1581,10 +1607,22 @@ impl EventDispatcher {
             .map(|tx| serde_json::Value::String(format!("0x{tx}")))
             .collect();
 
-        let payload = json!({
-            "dropped_txids": serde_json::Value::Array(dropped_txids),
-            "reason": reason.to_string(),
-        });
+        let payload = match new_txid {
+            Some(id) => {
+                json!({
+                    "dropped_txids": serde_json::Value::Array(dropped_txids),
+                    "reason": reason.to_string(),
+                    "new_txid": format!("0x{}", &id),
+                })
+            }
+            None => {
+                json!({
+                    "dropped_txids": serde_json::Value::Array(dropped_txids),
+                    "reason": reason.to_string(),
+                    "new_txid": null,
+                })
+            }
+        };
 
         for observer in interested_observers.iter() {
             observer.send_dropped_mempool_txs(&payload);
@@ -1693,6 +1731,18 @@ impl EventDispatcher {
 
         self.registered_observers.push(event_observer);
     }
+}
+
+#[cfg(any(test, feature = "testing"))]
+fn test_skip_block_announcement(block: &StacksBlockEventData) -> bool {
+    if TEST_SKIP_BLOCK_ANNOUNCEMENT.get() {
+        warn!(
+            "Skipping new block announcement due to testing directive";
+            "block_hash" => %block.block_hash
+        );
+        return true;
+    }
+    false
 }
 
 #[cfg(test)]

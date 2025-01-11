@@ -36,7 +36,7 @@ mod traits;
 mod variables;
 
 #[cfg(any(test, feature = "testing"))]
-impl<'a, 'hooks> OwnedEnvironment<'a, 'hooks> {
+impl OwnedEnvironment<'_, '_> {
     pub fn set_tenure_height(&mut self, tenure_height: u32) {
         self.context.database.begin();
         self.context

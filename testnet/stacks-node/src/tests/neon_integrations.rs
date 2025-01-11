@@ -5,7 +5,6 @@ use std::sync::{mpsc, Arc};
 use std::time::{Duration, Instant};
 use std::{cmp, env, fs, io, thread};
 
-use clarity::consts::BITCOIN_REGTEST_FIRST_BLOCK_TIMESTAMP;
 use clarity::vm::ast::stack_depth_checker::AST_CALL_STACK_DEPTH_BUFFER;
 use clarity::vm::ast::ASTRules;
 use clarity::vm::costs::ExecutionCost;
@@ -39,8 +38,9 @@ use stacks::chainstate::stacks::{
     StacksPublicKey, StacksTransaction, TransactionContractCall, TransactionPayload,
 };
 use stacks::clarity_cli::vm_execute as execute;
-use stacks::cli::{self, StacksChainConfig};
+use stacks::cli;
 use stacks::codec::StacksMessageCodec;
+use stacks::config::{EventKeyType, EventObserverConfig, FeeEstimatorName, InitialBalance};
 use stacks::core::mempool::MemPoolWalkTxTypes;
 use stacks::core::{
     self, EpochList, StacksEpoch, StacksEpochId, BLOCK_LIMIT_MAINNET_20, BLOCK_LIMIT_MAINNET_205,
@@ -83,7 +83,6 @@ use super::{
     SK_2, SK_3,
 };
 use crate::burnchains::bitcoin_regtest_controller::{self, addr2str, BitcoinRPCRequest, UTXO};
-use crate::config::{EventKeyType, EventObserverConfig, FeeEstimatorName, InitialBalance};
 use crate::neon_node::RelayerThread;
 use crate::operations::BurnchainOpSigner;
 use crate::stacks_common::types::PrivateKey;
@@ -199,13 +198,13 @@ pub mod test_observer {
     use stacks::chainstate::stacks::events::StackerDBChunksEvent;
     use stacks::chainstate::stacks::StacksTransaction;
     use stacks::codec::StacksMessageCodec;
+    use stacks::config::{EventKeyType, EventObserverConfig};
     use stacks::net::api::postblock_proposal::BlockValidateResponse;
     use stacks::util::hash::hex_bytes;
     use stacks_common::types::chainstate::StacksBlockId;
     use warp::Filter;
     use {tokio, warp};
 
-    use crate::config::{EventKeyType, EventObserverConfig};
     use crate::event_dispatcher::{MinedBlockEvent, MinedMicroblockEvent, MinedNakamotoBlockEvent};
     use crate::Config;
 
@@ -579,7 +578,7 @@ pub mod test_observer {
         PROPOSAL_RESPONSES.lock().unwrap().clear();
     }
 
-    /// Parse the StacksTransactions from a block (does not include burn ops)
+    /// Parse the StacksTransactions from a block (does not include burn ops or phantom txs)
     ///  panics on any failures to parse
     pub fn parse_transactions(block: &serde_json::Value) -> Vec<StacksTransaction> {
         block
@@ -589,15 +588,20 @@ pub mod test_observer {
             .unwrap()
             .iter()
             .filter_map(|tx_json| {
+                // Filter out burn ops
                 if let Some(burnchain_op_val) = tx_json.get("burnchain_op") {
                     if !burnchain_op_val.is_null() {
                         return None;
                     }
                 }
+                // Filter out phantom txs
                 let tx_hex = tx_json.get("raw_tx").unwrap().as_str().unwrap();
                 let tx_bytes = hex_bytes(&tx_hex[2..]).unwrap();
                 let tx =
                     StacksTransaction::consensus_deserialize(&mut tx_bytes.as_slice()).unwrap();
+                if tx.is_phantom() {
+                    return None;
+                }
                 Some(tx)
             })
             .collect()
@@ -3379,7 +3383,7 @@ fn make_signed_microblock(
 ) -> StacksMicroblock {
     let mut rng = rand::thread_rng();
 
-    let txid_vecs = txs.iter().map(|tx| tx.txid().as_bytes().to_vec()).collect();
+    let txid_vecs: Vec<_> = txs.iter().map(|tx| tx.txid().as_bytes().to_vec()).collect();
     let merkle_tree = MerkleTree::<Sha512Trunc256Sum>::new(&txid_vecs);
     let tx_merkle_root = merkle_tree.root();
 
@@ -12691,22 +12695,9 @@ fn mock_miner_replay() {
     let blocks_dir = blocks_dir.into_os_string().into_string().unwrap();
     let db_path = format!("{}/neon", conf.node.working_dir);
     let args: Vec<String> = vec!["replay-mock-mining".into(), db_path, blocks_dir];
-    let SortitionDB {
-        first_block_height,
-        first_burn_header_hash,
-        ..
-    } = *btc_regtest_controller.sortdb_mut();
-    let replay_config = StacksChainConfig {
-        chain_id: conf.burnchain.chain_id,
-        first_block_height,
-        first_burn_header_hash,
-        first_burn_header_timestamp: BITCOIN_REGTEST_FIRST_BLOCK_TIMESTAMP.into(),
-        pox_constants: burnchain_config.pox_constants,
-        epochs: conf.burnchain.epochs.expect("Missing `epochs` in config"),
-    };
 
     info!("Replaying mock mined blocks...");
-    cli::command_replay_mock_mining(&args, Some(&replay_config));
+    cli::command_replay_mock_mining(&args, Some(&conf));
 
     // ---------- Test finished, clean up ----------
 

@@ -26,6 +26,7 @@ use stacks::chainstate::stacks::boot::RawRewardSetEntry;
 use stacks::chainstate::stacks::db::StacksChainState;
 use stacks::chainstate::stacks::{Error, StacksTransaction, TransactionPayload};
 use stacks::clarity_cli::vm_execute as execute;
+use stacks::config::InitialBalance;
 use stacks::core::{self, EpochList, StacksEpochId};
 use stacks_common::address::{AddressHashMode, C32_ADDRESS_VERSION_TESTNET_SINGLESIG};
 use stacks_common::consts::STACKS_EPOCH_MAX;
@@ -35,7 +36,6 @@ use stacks_common::util::hash::{bytes_to_hex, hex_bytes, Hash160};
 use stacks_common::util::secp256k1::Secp256k1PublicKey;
 use stacks_common::util::sleep_ms;
 
-use crate::config::InitialBalance;
 use crate::stacks_common::codec::StacksMessageCodec;
 use crate::tests::bitcoin_regtest::BitcoinCoreController;
 use crate::tests::neon_integrations::{
