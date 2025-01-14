@@ -4990,7 +4990,7 @@ fn forked_tenure_is_ignored() {
 
     // For the next tenure, submit the commit op but do not allow any stacks blocks to be broadcasted.
     // Stall the miner thread; only wait until the number of submitted commits increases.
-    TEST_BROADCAST_STALL.lock().unwrap().replace(true);
+    TEST_BROADCAST_STALL.set(true);
     TEST_BLOCK_ANNOUNCE_STALL.lock().unwrap().replace(true);
     let blocks_before = mined_blocks.load(Ordering::SeqCst);
     let commits_before = commits_submitted.load(Ordering::SeqCst);
@@ -5008,7 +5008,7 @@ fn forked_tenure_is_ignored() {
     // Unpause the broadcast of Tenure B's block, do not submit commits, and do not allow blocks to
     // be processed
     test_skip_commit_op.set(true);
-    TEST_BROADCAST_STALL.lock().unwrap().replace(false);
+    TEST_BROADCAST_STALL.set(false);
 
     // Wait for a stacks block to be broadcasted.
     // However, it will not be processed.
@@ -6099,7 +6099,7 @@ fn clarity_burn_state() {
             result.expect_result_ok().expect("Read-only call failed");
 
             // Pause mining to prevent the stacks block from being mined before the tenure change is processed
-            TEST_MINE_STALL.lock().unwrap().replace(true);
+            TEST_MINE_STALL.set(true);
             // Submit a tx for the next block (the next block will be a new tenure, so the burn block height will increment)
             let call_tx = tests::make_contract_call(
                 &sender_sk,
@@ -6124,7 +6124,7 @@ fn clarity_burn_state() {
             Ok(commits_submitted.load(Ordering::SeqCst) > commits_before)
         })
         .unwrap();
-        TEST_MINE_STALL.lock().unwrap().replace(false);
+        TEST_MINE_STALL.set(false);
         wait_for(20, || {
             Ok(coord_channel
                 .lock()
@@ -10407,7 +10407,7 @@ fn clarity_cost_spend_down() {
             .expect("Mutex poisoned")
             .get_stacks_blocks_processed();
         // Pause mining so we can add all our transactions to the mempool at once.
-        TEST_MINE_STALL.lock().unwrap().replace(true);
+        TEST_MINE_STALL.set(true);
         let mut submitted_txs = vec![];
         for _nmb_tx in 0..nmb_txs_per_signer {
             for sender_sk in sender_sks.iter() {
@@ -10436,7 +10436,7 @@ fn clarity_cost_spend_down() {
                 }
             }
         }
-        TEST_MINE_STALL.lock().unwrap().replace(false);
+        TEST_MINE_STALL.set(false);
         wait_for(120, || {
             let blocks_processed = coord_channel
                 .lock()

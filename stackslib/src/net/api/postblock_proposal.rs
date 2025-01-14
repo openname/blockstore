@@ -15,6 +15,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use std::io::{Read, Write};
+#[cfg(any(test, feature = "testing"))]
+use std::sync::LazyLock;
 use std::thread::{self, JoinHandle, Thread};
 #[cfg(any(test, feature = "testing"))]
 use std::time::Duration;
@@ -35,6 +37,8 @@ use stacks_common::types::net::PeerHost;
 use stacks_common::types::StacksPublicKeyBuffer;
 use stacks_common::util::hash::{hex_bytes, to_hex, Hash160, Sha256Sum, Sha512Trunc256Sum};
 use stacks_common::util::retry::BoundReader;
+#[cfg(any(test, feature = "testing"))]
+use stacks_common::util::tests::TestFlag;
 use stacks_common::util::{get_epoch_time_ms, get_epoch_time_secs};
 
 use crate::burnchains::affirmation::AffirmationMap;
@@ -67,7 +71,7 @@ use crate::net::{
 use crate::util_lib::db::Error as DBError;
 
 #[cfg(any(test, feature = "testing"))]
-pub static TEST_VALIDATE_STALL: std::sync::Mutex<Option<bool>> = std::sync::Mutex::new(None);
+pub static TEST_VALIDATE_STALL: LazyLock<TestFlag<bool>> = LazyLock::new(TestFlag::default);
 #[cfg(any(test, feature = "testing"))]
 /// Artificial delay to add to block validation.
 pub static TEST_VALIDATE_DELAY_DURATION_SECS: std::sync::Mutex<Option<u64>> =
@@ -353,10 +357,10 @@ impl NakamotoBlockProposal {
     ) -> Result<BlockValidateOk, BlockValidateRejectReason> {
         #[cfg(any(test, feature = "testing"))]
         {
-            if *TEST_VALIDATE_STALL.lock().unwrap() == Some(true) {
+            if TEST_VALIDATE_STALL.get() {
                 // Do an extra check just so we don't log EVERY time.
                 warn!("Block validation is stalled due to testing directive.");
-                while *TEST_VALIDATE_STALL.lock().unwrap() == Some(true) {
+                while TEST_VALIDATE_STALL.get() {
                     std::thread::sleep(std::time::Duration::from_millis(10));
                 }
                 info!(

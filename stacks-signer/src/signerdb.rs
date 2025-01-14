@@ -711,15 +711,13 @@ impl SignerDb {
         try_deserialize(result)
     }
 
-    /// Return the last signed block in a tenure (identified by its consensus hash)
-    pub fn get_last_signed_block_in_tenure(
-        &self,
-        tenure: &ConsensusHash,
-    ) -> Result<Option<BlockInfo>, DBError> {
-        let query = "SELECT block_info FROM blocks WHERE consensus_hash = ? AND signed_over = 1 ORDER BY stacks_height DESC LIMIT 1";
+    /// Return whether a block proposal has been stored for a tenure (identified by its consensus hash)
+    /// Does not consider the block's state.
+    pub fn has_proposed_block_in_tenure(&self, tenure: &ConsensusHash) -> Result<bool, DBError> {
+        let query = "SELECT block_info FROM blocks WHERE consensus_hash = ? LIMIT 1";
         let result: Option<String> = query_row(&self.db, query, [tenure])?;
 
-        try_deserialize(result)
+        Ok(result.is_some())
     }
 
     /// Return the first signed block in a tenure (identified by its consensus hash)
@@ -1733,5 +1731,29 @@ mod tests {
             timestamp_hash_3.saturating_add(tenure_idle_timeout.as_secs())
                 < block_infos[0].proposed_time
         );
+    }
+
+    #[test]
+    fn has_proposed_block() {
+        let db_path = tmp_db_path();
+        let consensus_hash_1 = ConsensusHash([0x01; 20]);
+        let consensus_hash_2 = ConsensusHash([0x02; 20]);
+        let mut db = SignerDb::new(db_path).expect("Failed to create signer db");
+        let (mut block_info, _) = create_block_override(|b| {
+            b.block.header.consensus_hash = consensus_hash_1.clone();
+            b.block.header.chain_length = 1;
+        });
+
+        assert!(!db.has_proposed_block_in_tenure(&consensus_hash_1).unwrap());
+        assert!(!db.has_proposed_block_in_tenure(&consensus_hash_2).unwrap());
+
+        db.insert_block(&block_info).unwrap();
+
+        block_info.block.header.chain_length = 2;
+
+        db.insert_block(&block_info).unwrap();
+
+        assert!(db.has_proposed_block_in_tenure(&consensus_hash_1).unwrap());
+        assert!(!db.has_proposed_block_in_tenure(&consensus_hash_2).unwrap());
     }
 }

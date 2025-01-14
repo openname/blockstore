@@ -89,10 +89,8 @@ impl SortitionState {
         if self.miner_status != SortitionMinerStatus::Valid {
             return Ok(false);
         }
-        // if we've already signed a block in this tenure, the miner can't have timed out.
-        let has_blocks = signer_db
-            .get_last_signed_block_in_tenure(&self.consensus_hash)?
-            .is_some();
+        // if we've already seen a proposed block from this miner. It cannot have timed out.
+        let has_blocks = signer_db.has_proposed_block_in_tenure(&self.consensus_hash)?;
         if has_blocks {
             return Ok(false);
         }
