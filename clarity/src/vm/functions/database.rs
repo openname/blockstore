@@ -730,14 +730,12 @@ pub fn special_delete_entry_v205(
 /// - `miner-spend-winner` returns the number of satoshis spent by the winning miner for the block at `block-height`
 /// - `miner-spend-total` returns the total number of satoshis spent by all miners for the block at `block-height`
 /// - `block-reward` returns the block reward for the block at `block-height`
-
 ///
 /// # Errors:
 /// - CheckErrors::IncorrectArgumentCount if there aren't 2 arguments.
 /// - CheckErrors::GetStacksBlockInfoExpectPropertyName if `args[0]` isn't a ClarityName.
 /// - CheckErrors::NoSuchStacksBlockInfoProperty if `args[0]` isn't a StacksBlockInfoProperty.
 /// - CheckErrors::TypeValueError if `args[1]` isn't a `uint`.
-
 pub fn special_get_block_info(
     args: &[SymbolicExpression],
     env: &mut Environment,

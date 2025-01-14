@@ -224,8 +224,7 @@ fn make_logger() -> Logger {
         let decorator = get_decorator();
         let atty = isatty(Stream::Stderr);
         let drain = TermFormat::new(decorator, pretty_print, debug, atty);
-        let logger = Logger::root(drain.ignore_res(), o!());
-        logger
+        Logger::root(drain.ignore_res(), o!())
     }
 }
 

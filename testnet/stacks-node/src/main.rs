@@ -471,7 +471,7 @@ testnet\t\tStart a node that will join and stream blocks from the public testnet
 
 start\t\tStart a node with a config of your own. Can be used for joining a network, starting new chain, etc.
 \t\tArguments:
-\t\t  --config: path of the config (such as https://github.com/blockstack/stacks-blockchain/blob/master/testnet/stacks-node/conf/testnet-follower-conf.toml).
+\t\t  --config: path of the config (such as https://github.com/blockstack/stacks-blockchain/blob/master/sample/conf/testnet-follower-conf.toml).
 \t\tExample:
 \t\t  stacks-node start --config /path/to/config.toml
 

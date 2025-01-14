@@ -76,7 +76,7 @@ enum BitFieldEncoding {
 }
 
 /// Encode the inner count array, using a sparse representation if it would save space
-fn encode_bitfield<W: Write>(fd: &mut W, bytes: &Vec<u8>) -> Result<(), codec_error> {
+fn encode_bitfield<W: Write>(fd: &mut W, bytes: &[u8]) -> Result<(), codec_error> {
     let mut num_filled = 0;
     for bits in bytes.iter() {
         if *bits > 0 {
@@ -99,7 +99,7 @@ fn encode_bitfield<W: Write>(fd: &mut W, bytes: &Vec<u8>) -> Result<(), codec_er
         // more efficient to encode as-is
         // (note that the array has a 4-byte length prefix)
         write_next(fd, &(BitFieldEncoding::Full as u8))?;
-        write_next(fd, bytes)?;
+        write_next(fd, &bytes.to_vec())?;
     }
     Ok(())
 }
@@ -373,7 +373,7 @@ impl<H: BloomHash + Clone + StacksMessageCodec> BloomCounter<H> {
         Ok(BloomCounter {
             hasher,
             table_name: table_name.to_string(),
-            num_bins: num_bins,
+            num_bins,
             num_hashes,
             counts_rowid: counts_rowid as u32,
         })

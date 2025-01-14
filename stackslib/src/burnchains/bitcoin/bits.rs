@@ -39,7 +39,7 @@ use crate::chainstate::stacks::{
 };
 
 /// Parse a script into its structured constituant opcodes and data and collect them
-pub fn parse_script<'a>(script: &'a Script) -> Vec<Instruction<'a>> {
+pub fn parse_script(script: &Script) -> Vec<Instruction<'_>> {
     // we will have to accept non-minimial pushdata since there's at least one OP_RETURN
     // in the transaction stream that has this property already.
     script.iter(false).collect()
@@ -48,7 +48,7 @@ pub fn parse_script<'a>(script: &'a Script) -> Vec<Instruction<'a>> {
 impl BitcoinTxInputStructured {
     /// Parse a script instruction stream encoding a p2pkh scritpsig into a BitcoinTxInput
     pub fn from_bitcoin_p2pkh_script_sig(
-        instructions: &Vec<Instruction>,
+        instructions: &[Instruction],
         input_txid: (Txid, u32),
     ) -> Option<BitcoinTxInputStructured> {
         if instructions.len() != 2 {
@@ -93,7 +93,7 @@ impl BitcoinTxInputStructured {
         segwit: bool,
         input_txid: (Txid, u32),
     ) -> Option<BitcoinTxInputStructured> {
-        if num_sigs < 1 || pubkey_pushbytes.len() < 1 || pubkey_pushbytes.len() < num_sigs {
+        if num_sigs < 1 || pubkey_pushbytes.is_empty() || pubkey_pushbytes.len() < num_sigs {
             test_debug!(
                 "Not a multisig script: num_sigs = {}, num_pubkeys <= {}",
                 num_sigs,
@@ -136,7 +136,7 @@ impl BitcoinTxInputStructured {
 
         Some(BitcoinTxInputStructured {
             tx_ref: input_txid,
-            keys: keys,
+            keys,
             num_required: num_sigs,
             in_type: if segwit {
                 BitcoinInputType::SegwitP2SH
@@ -153,7 +153,7 @@ impl BitcoinTxInputStructured {
         pubkey_vecs: &[Vec<u8>],
         input_txid: (Txid, u32),
     ) -> Option<BitcoinTxInputStructured> {
-        if num_sigs < 1 || pubkey_vecs.len() < 1 || pubkey_vecs.len() < num_sigs {
+        if num_sigs < 1 || pubkey_vecs.is_empty() || pubkey_vecs.len() < num_sigs {
             test_debug!(
                 "Not a multisig script: num_sigs = {}, num_pubkeys <= {}",
                 num_sigs,
@@ -184,7 +184,7 @@ impl BitcoinTxInputStructured {
 
         let tx_input = BitcoinTxInputStructured {
             tx_ref: input_txid,
-            keys: keys,
+            keys,
             num_required: num_sigs,
             in_type: BitcoinInputType::SegwitP2SH,
         };
@@ -277,7 +277,7 @@ impl BitcoinTxInputStructured {
 
     /// parse a p2sh scriptsig
     fn from_bitcoin_p2sh_multisig_script_sig(
-        instructions: &Vec<Instruction>,
+        instructions: &[Instruction],
         input_txid: (Txid, u32),
     ) -> Option<BitcoinTxInputStructured> {
         // format: OP_0 <sig1> <sig2> ... <sig_m> OP_m <pubkey1> <pubkey2> ... <pubkey_n> OP_n OP_CHECKMULTISIG
@@ -328,8 +328,8 @@ impl BitcoinTxInputStructured {
 
     /// parse p2wpkh-over-p2sh public keys, given p2sh scriptsig as hash of witness
     fn from_bitcoin_p2wpkh_p2sh_script_sig(
-        instructions: &Vec<Instruction>,
-        witness: &Vec<Vec<u8>>,
+        instructions: &[Instruction],
+        witness: &[Vec<u8>],
         input_txid: (Txid, u32),
     ) -> Option<BitcoinTxInputStructured> {
         // redeem script format: OP_PUSHDATA <20-byte witness hash>
@@ -378,8 +378,8 @@ impl BitcoinTxInputStructured {
 
     /// parse a p2wsh-over-p2sh multisig redeem script
     fn from_bitcoin_p2wsh_p2sh_multisig_script_sig(
-        instructions: &Vec<Instruction>,
-        witness: &Vec<Vec<u8>>,
+        instructions: &[Instruction],
+        witness: &[Vec<u8>],
         input_txid: (Txid, u32),
     ) -> Option<BitcoinTxInputStructured> {
         // redeem script format: OP_PUSHDATA <32-byte witness hash>
@@ -461,7 +461,7 @@ impl BitcoinTxInputStructured {
     /// script.
     fn from_bitcoin_witness_script_sig(
         script_sig: &Script,
-        witness: &Vec<Vec<u8>>,
+        witness: &[Vec<u8>],
         input_txid: (Txid, u32),
     ) -> Option<BitcoinTxInputStructured> {
         let instructions = parse_script(script_sig);
@@ -498,7 +498,7 @@ impl BitcoinTxInputRaw {
     ) -> BitcoinTxInputRaw {
         BitcoinTxInputRaw {
             scriptSig: script_sig.clone().into_bytes(),
-            witness: witness,
+            witness,
             tx_ref: input_txid,
         }
     }
@@ -1062,47 +1062,47 @@ mod tests {
                 // 0-of-0 multisig
                 // taken from 970b435253b69cde8207b3245d7723bb24861fd7ab3cfe361f45ae8de085ac52
                 script: Builder::from(hex_bytes("00000001ae").unwrap()).into_script(),
-                result: Some(BitcoinTxInputRaw::from_hex_parts("00000001ae", &vec![])),
+                result: Some(BitcoinTxInputRaw::from_hex_parts("00000001ae", &[])),
             },
             ScriptFixture {
                 // segwit p2sh p2wsh redeem script by itself
                 script: Builder::from(hex_bytes("2200200db5e96eaf886fab2f1a20f00528f293e9fc9fb202d2c68c2f57a41eba47b5bf").unwrap()).into_script(),
-                result: Some(BitcoinTxInputRaw::from_hex_parts("2200200db5e96eaf886fab2f1a20f00528f293e9fc9fb202d2c68c2f57a41eba47b5bf", &vec![])),
+                result: Some(BitcoinTxInputRaw::from_hex_parts("2200200db5e96eaf886fab2f1a20f00528f293e9fc9fb202d2c68c2f57a41eba47b5bf", &[])),
             },
             ScriptFixture {
                 // segwit p2sh p2wpkh redeem script by itself
                 script: Builder::from(hex_bytes("160014751e76e8199196d454941c45d1b3a323f1433bd6").unwrap()).into_script(),
-                result: Some(BitcoinTxInputRaw::from_hex_parts("160014751e76e8199196d454941c45d1b3a323f1433bd6", &vec![])),
+                result: Some(BitcoinTxInputRaw::from_hex_parts("160014751e76e8199196d454941c45d1b3a323f1433bd6", &[])),
             },
             ScriptFixture {
                 // nonsensical 4-of-3 multisig, wth 2 signatures
                 script: Builder::from(hex_bytes("004730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea014730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea014c69542103310188e911026cf18c3ce274e0ebb5f95b007f230d8cb7d09879d96dbeab1aff210243930746e6ed6552e03359db521b088134652905bd2d1541fa9124303a41e95621029e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c7725553ae").unwrap()).into_script(),
-                result: Some(BitcoinTxInputRaw::from_hex_parts("004730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea014730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea014c69542103310188e911026cf18c3ce274e0ebb5f95b007f230d8cb7d09879d96dbeab1aff210243930746e6ed6552e03359db521b088134652905bd2d1541fa9124303a41e95621029e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c7725553ae", &vec![])),
+                result: Some(BitcoinTxInputRaw::from_hex_parts("004730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea014730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea014c69542103310188e911026cf18c3ce274e0ebb5f95b007f230d8cb7d09879d96dbeab1aff210243930746e6ed6552e03359db521b088134652905bd2d1541fa9124303a41e95621029e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c7725553ae", &[])),
             },
             ScriptFixture {
                 // nonsensical 4-of-3 multisig, with 3 signatures 
                 script: Builder::from(hex_bytes("004730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea014730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea01483045022100be57031bf2c095945ba2876e97b3f86ee051643a29b908f22ed45ccf58620103022061e056e5f48c5a51c66604a1ca28e4bfaabab1478424c9bbb396cc6afe5c222e014c69542103310188e911026cf18c3ce274e0ebb5f95b007f230d8cb7d09879d96dbeab1aff210243930746e6ed6552e03359db521b088134652905bd2d1541fa9124303a41e95621029e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c7725553ae").unwrap()).into_script(),
-                result: Some(BitcoinTxInputRaw::from_hex_parts("004730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea014730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea01483045022100be57031bf2c095945ba2876e97b3f86ee051643a29b908f22ed45ccf58620103022061e056e5f48c5a51c66604a1ca28e4bfaabab1478424c9bbb396cc6afe5c222e014c69542103310188e911026cf18c3ce274e0ebb5f95b007f230d8cb7d09879d96dbeab1aff210243930746e6ed6552e03359db521b088134652905bd2d1541fa9124303a41e95621029e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c7725553ae", &vec![]))
+                result: Some(BitcoinTxInputRaw::from_hex_parts("004730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea014730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea01483045022100be57031bf2c095945ba2876e97b3f86ee051643a29b908f22ed45ccf58620103022061e056e5f48c5a51c66604a1ca28e4bfaabab1478424c9bbb396cc6afe5c222e014c69542103310188e911026cf18c3ce274e0ebb5f95b007f230d8cb7d09879d96dbeab1aff210243930746e6ed6552e03359db521b088134652905bd2d1541fa9124303a41e95621029e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c7725553ae", &[]))
             },
             ScriptFixture {
                 // nonsensical 4-of-3 multisig, with 4 signatures 
                 script: Builder::from(hex_bytes("004730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea014730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea01483045022100be57031bf2c095945ba2876e97b3f86ee051643a29b908f22ed45ccf58620103022061e056e5f48c5a51c66604a1ca28e4bfaabab1478424c9bbb396cc6afe5c222e01483045022100fd9c04b330810694cb4bfef793b193f9cbfaa07325700f217b9cb03e5207005302202f07e7c9c6774c5619a043752444f6da6fd81b9d9d008ec965796d87271598de014c69542103310188e911026cf18c3ce274e0ebb5f95b007f230d8cb7d09879d96dbeab1aff210243930746e6ed6552e03359db521b088134652905bd2d1541fa9124303a41e95621029e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c7725553ae").unwrap()).into_script(),
-                result: Some(BitcoinTxInputRaw::from_hex_parts("004730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea014730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea01483045022100be57031bf2c095945ba2876e97b3f86ee051643a29b908f22ed45ccf58620103022061e056e5f48c5a51c66604a1ca28e4bfaabab1478424c9bbb396cc6afe5c222e01483045022100fd9c04b330810694cb4bfef793b193f9cbfaa07325700f217b9cb03e5207005302202f07e7c9c6774c5619a043752444f6da6fd81b9d9d008ec965796d87271598de014c69542103310188e911026cf18c3ce274e0ebb5f95b007f230d8cb7d09879d96dbeab1aff210243930746e6ed6552e03359db521b088134652905bd2d1541fa9124303a41e95621029e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c7725553ae", &vec![])),
+                result: Some(BitcoinTxInputRaw::from_hex_parts("004730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea014730440220338862b4a13d67415fdaac35d408bd2a6d86e4c3be03b7abc92ee769b254dbe1022043ba94f304aff774fdb957af078c9b302425976370cc66f42ae05382c84ea5ea01483045022100be57031bf2c095945ba2876e97b3f86ee051643a29b908f22ed45ccf58620103022061e056e5f48c5a51c66604a1ca28e4bfaabab1478424c9bbb396cc6afe5c222e01483045022100fd9c04b330810694cb4bfef793b193f9cbfaa07325700f217b9cb03e5207005302202f07e7c9c6774c5619a043752444f6da6fd81b9d9d008ec965796d87271598de014c69542103310188e911026cf18c3ce274e0ebb5f95b007f230d8cb7d09879d96dbeab1aff210243930746e6ed6552e03359db521b088134652905bd2d1541fa9124303a41e95621029e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c7725553ae", &[])),
             },
             ScriptFixture {
                 // pushdata 64-byte 0's
                 script: Builder::from(hex_bytes("4e404000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000").unwrap()).into_script(),
-                result: Some(BitcoinTxInputRaw::from_hex_parts("4e404000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", &vec![])),
+                result: Some(BitcoinTxInputRaw::from_hex_parts("4e404000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", &[])),
             },
             ScriptFixture {
                 // scriptsig from mainnet transaction 09f691b2263260e71f363d1db51ff3100d285956a40cc0e4f8c8c2c4a80559b1
                 script: Builder::from(hex_bytes("4c500100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a29ab5f49ffff001d1dac2b7c").unwrap()).into_script(),
-                result: Some(BitcoinTxInputRaw::from_hex_parts("4c500100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a29ab5f49ffff001d1dac2b7c", &vec![]))
+                result: Some(BitcoinTxInputRaw::from_hex_parts("4c500100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a29ab5f49ffff001d1dac2b7c", &[]))
             },
             ScriptFixture {
                 // scriptsig from mainnet transaction 8d31992805518fd62daa3bdd2a5c4fd2cd3054c9b3dca1d78055e9528cff6adc
                 script: Builder::from(hex_bytes("4d4001255044462d312e330a25e2e3cfd30a0a0a312030206f626a0a3c3c2f57696474682032203020522f4865696768742033203020522f547970652034203020522f537562747970652035203020522f46696c7465722036203020522f436f6c6f7253706163652037203020522f4c656e6774682038203020522f42697473506572436f6d706f6e656e7420383e3e0a73747265616d0affd8fffe00245348412d3120697320646561642121212121852fec092339759c39b1a1c63c4c97e1fffe017f46dc93a6b67e013b029aaa1db2560b45ca67d688c7f84b8c4c791fe02b3df614f86db1690901c56b45c1530afedfb76038e972722fe7ad728f0e4904e046c230570fe9d41398abe12ef5bc942be33542a4802d98b5d70f2a332ec37fac3514e74ddc0f2cc1a874cd0c78305a21566461309789606bd0bf3f98cda8044629a14d4001255044462d312e330a25e2e3cfd30a0a0a312030206f626a0a3c3c2f57696474682032203020522f4865696768742033203020522f547970652034203020522f537562747970652035203020522f46696c7465722036203020522f436f6c6f7253706163652037203020522f4c656e6774682038203020522f42697473506572436f6d706f6e656e7420383e3e0a73747265616d0affd8fffe00245348412d3120697320646561642121212121852fec092339759c39b1a1c63c4c97e1fffe017346dc9166b67e118f029ab621b2560ff9ca67cca8c7f85ba84c79030c2b3de218f86db3a90901d5df45c14f26fedfb3dc38e96ac22fe7bd728f0e45bce046d23c570feb141398bb552ef5a0a82be331fea48037b8b5d71f0e332edf93ac3500eb4ddc0decc1a864790c782c76215660dd309791d06bd0af3f98cda4bc4629b1086e879169a77ca787").unwrap()).into_script(),
-                result: Some(BitcoinTxInputRaw::from_hex_parts("4d4001255044462d312e330a25e2e3cfd30a0a0a312030206f626a0a3c3c2f57696474682032203020522f4865696768742033203020522f547970652034203020522f537562747970652035203020522f46696c7465722036203020522f436f6c6f7253706163652037203020522f4c656e6774682038203020522f42697473506572436f6d706f6e656e7420383e3e0a73747265616d0affd8fffe00245348412d3120697320646561642121212121852fec092339759c39b1a1c63c4c97e1fffe017f46dc93a6b67e013b029aaa1db2560b45ca67d688c7f84b8c4c791fe02b3df614f86db1690901c56b45c1530afedfb76038e972722fe7ad728f0e4904e046c230570fe9d41398abe12ef5bc942be33542a4802d98b5d70f2a332ec37fac3514e74ddc0f2cc1a874cd0c78305a21566461309789606bd0bf3f98cda8044629a14d4001255044462d312e330a25e2e3cfd30a0a0a312030206f626a0a3c3c2f57696474682032203020522f4865696768742033203020522f547970652034203020522f537562747970652035203020522f46696c7465722036203020522f436f6c6f7253706163652037203020522f4c656e6774682038203020522f42697473506572436f6d706f6e656e7420383e3e0a73747265616d0affd8fffe00245348412d3120697320646561642121212121852fec092339759c39b1a1c63c4c97e1fffe017346dc9166b67e118f029ab621b2560ff9ca67cca8c7f85ba84c79030c2b3de218f86db3a90901d5df45c14f26fedfb3dc38e96ac22fe7bd728f0e45bce046d23c570feb141398bb552ef5a0a82be331fea48037b8b5d71f0e332edf93ac3500eb4ddc0decc1a864790c782c76215660dd309791d06bd0af3f98cda4bc4629b1086e879169a77ca787", &vec![]))
+                result: Some(BitcoinTxInputRaw::from_hex_parts("4d4001255044462d312e330a25e2e3cfd30a0a0a312030206f626a0a3c3c2f57696474682032203020522f4865696768742033203020522f547970652034203020522f537562747970652035203020522f46696c7465722036203020522f436f6c6f7253706163652037203020522f4c656e6774682038203020522f42697473506572436f6d706f6e656e7420383e3e0a73747265616d0affd8fffe00245348412d3120697320646561642121212121852fec092339759c39b1a1c63c4c97e1fffe017f46dc93a6b67e013b029aaa1db2560b45ca67d688c7f84b8c4c791fe02b3df614f86db1690901c56b45c1530afedfb76038e972722fe7ad728f0e4904e046c230570fe9d41398abe12ef5bc942be33542a4802d98b5d70f2a332ec37fac3514e74ddc0f2cc1a874cd0c78305a21566461309789606bd0bf3f98cda8044629a14d4001255044462d312e330a25e2e3cfd30a0a0a312030206f626a0a3c3c2f57696474682032203020522f4865696768742033203020522f547970652034203020522f537562747970652035203020522f46696c7465722036203020522f436f6c6f7253706163652037203020522f4c656e6774682038203020522f42697473506572436f6d706f6e656e7420383e3e0a73747265616d0affd8fffe00245348412d3120697320646561642121212121852fec092339759c39b1a1c63c4c97e1fffe017346dc9166b67e118f029ab621b2560ff9ca67cca8c7f85ba84c79030c2b3de218f86db3a90901d5df45c14f26fedfb3dc38e96ac22fe7bd728f0e45bce046d23c570feb141398bb552ef5a0a82be331fea48037b8b5d71f0e332edf93ac3500eb4ddc0decc1a864790c782c76215660dd309791d06bd0af3f98cda4bc4629b1086e879169a77ca787", &[]))
             }
         ];
 

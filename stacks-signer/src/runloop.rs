@@ -26,6 +26,8 @@ use stacks_common::{debug, error, info, warn};
 use crate::chainstate::SortitionsView;
 use crate::client::{retry_with_exponential_backoff, ClientError, StacksClient};
 use crate::config::{GlobalConfig, SignerConfig};
+#[cfg(any(test, feature = "testing"))]
+use crate::v0::tests::TEST_SKIP_SIGNER_CLEANUP;
 use crate::Signer as SignerTrait;
 
 #[derive(thiserror::Error, Debug)]
@@ -46,6 +48,8 @@ pub struct StateInfo {
     pub runloop_state: State,
     /// the current reward cycle info
     pub reward_cycle_info: Option<RewardCycleInfo>,
+    /// The current running signers reward cycles
+    pub running_signers: Vec<u64>,
 }
 
 /// The signer result that can be sent across threads
@@ -421,6 +425,11 @@ impl<Signer: SignerTrait<T>, T: StacksMessageCodec + Clone + Send + Debug> RunLo
     }
 
     fn cleanup_stale_signers(&mut self, current_reward_cycle: u64) {
+        #[cfg(any(test, feature = "testing"))]
+        if TEST_SKIP_SIGNER_CLEANUP.get() {
+            warn!("Skipping signer cleanup due to testing directive.");
+            return;
+        }
         let mut to_delete = Vec::new();
         for (idx, signer) in &mut self.stacks_signers {
             let reward_cycle = signer.reward_cycle();
@@ -467,6 +476,11 @@ impl<Signer: SignerTrait<T>, T: StacksMessageCodec + Clone + Send + Debug>
             if let Err(e) = res.send(vec![StateInfo {
                 runloop_state: self.state,
                 reward_cycle_info: self.current_reward_cycle_info,
+                running_signers: self
+                    .stacks_signers
+                    .values()
+                    .map(|s| s.reward_cycle())
+                    .collect(),
             }
             .into()])
             {

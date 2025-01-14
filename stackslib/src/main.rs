@@ -1023,7 +1023,7 @@ check if the associated microblocks can be downloaded
             }
             i += 1;
             let line = line.unwrap().trim().to_string();
-            if line.len() == 0 {
+            if line.is_empty() {
                 continue;
             }
             let vals: Vec<_> = line.split(" => ").map(|x| x.trim()).collect();
@@ -1317,7 +1317,7 @@ check if the associated microblocks can be downloaded
         let old_sortition_db =
             SortitionDB::open(old_sort_path, true, PoxConstants::mainnet_default()).unwrap();
 
-        // initial argon balances -- see testnet/stacks-node/conf/testnet-follower-conf.toml
+        // initial argon balances -- see sample/conf/testnet-follower-conf.toml
         let initial_balances = vec![
             (
                 StacksAddress::from_string("ST2QKZ4FKHAH1NQKYKYAYZPY440FEPK7GZ1R5HBP2")
@@ -1585,7 +1585,7 @@ check if the associated microblocks can be downloaded
                         null_event_dispatcher,
                     )
                     .unwrap();
-                if receipts.len() == 0 {
+                if receipts.is_empty() {
                     break;
                 }
             }
@@ -1614,10 +1614,33 @@ check if the associated microblocks can be downloaded
         process::exit(0);
     }
 
+    if argv[1] == "dump-consts" {
+        dump_consts();
+    }
+
     if argv.len() < 4 {
         eprintln!("Usage: {} blockchain network working_dir", argv[0]);
         process::exit(1);
     }
+}
+
+#[cfg_attr(test, mutants::skip)]
+pub fn dump_consts() {
+    use stacks_common::consts;
+    let json_out = json!({
+        "miner_reward_maturity": consts::MINER_REWARD_MATURITY,
+        "chain_id_mainnet": consts::CHAIN_ID_MAINNET,
+        "chain_id_testnet": consts::CHAIN_ID_TESTNET,
+        "signer_slots_per_user": consts::SIGNER_SLOTS_PER_USER,
+        "network_id_mainnet": consts::NETWORK_ID_MAINNET,
+        "network_id_testnet": consts::NETWORK_ID_TESTNET,
+        "microstacks_per_stacks": consts::MICROSTACKS_PER_STACKS,
+        "stacks_epoch_max": consts::STACKS_EPOCH_MAX,
+        "peer_version_mainnet_major": consts::PEER_VERSION_MAINNET_MAJOR,
+        "peer_version_testnet_major": consts::PEER_VERSION_TESTNET_MAJOR,
+    });
+    println!("{}", serde_json::to_string_pretty(&json_out).unwrap());
+    process::exit(0);
 }
 
 #[cfg_attr(test, mutants::skip)]

@@ -71,11 +71,11 @@ use crate::util_lib::bloom::*;
 use crate::util_lib::db::{tx_begin_immediate, DBConn, FromRow};
 use crate::util_lib::strings::StacksString;
 
-const FOO_CONTRACT: &'static str = "(define-public (foo) (ok 1))
+const FOO_CONTRACT: &str = "(define-public (foo) (ok 1))
                                     (define-public (bar (x uint)) (ok x))";
-const SK_1: &'static str = "a1289f6438855da7decf9b61b852c882c398cff1446b2a0f823538aa2ebef92e01";
-const SK_2: &'static str = "4ce9a8f7539ea93753a36405b16e8b57e15a552430410709c2b6d65dca5c02e201";
-const SK_3: &'static str = "cb95ddd0fe18ec57f4f3533b95ae564b3f1ae063dbf75b46334bd86245aef78501";
+const SK_1: &str = "a1289f6438855da7decf9b61b852c882c398cff1446b2a0f823538aa2ebef92e01";
+const SK_2: &str = "4ce9a8f7539ea93753a36405b16e8b57e15a552430410709c2b6d65dca5c02e201";
+const SK_3: &str = "cb95ddd0fe18ec57f4f3533b95ae564b3f1ae063dbf75b46334bd86245aef78501";
 
 #[test]
 fn mempool_db_init() {
@@ -142,8 +142,8 @@ pub fn make_block(
         .put_indexed_all(
             &StacksBlockId::new(&parent.0, &parent.1),
             &new_index_hash,
-            &vec![],
-            &vec![],
+            &[],
+            &[],
         )
         .unwrap();
 
@@ -1211,10 +1211,10 @@ fn test_iterate_candidates_concurrent_write_lock() {
 
         mempool_tx.commit().unwrap();
     }
-    assert!(expected_addr_nonces.len() > 0);
+    assert!(!expected_addr_nonces.is_empty());
 
     let all_addr_nonces = db_get_all_nonces(mempool.conn()).unwrap();
-    assert_eq!(all_addr_nonces.len(), 0);
+    assert!(all_addr_nonces.is_empty());
 
     // start a thread that holds a write-lock on the mempool
     let write_thread = std::thread::spawn(move || {
@@ -1266,7 +1266,7 @@ fn test_iterate_candidates_concurrent_write_lock() {
     assert_eq!(all_addr_nonces.len(), expected_addr_nonces.len());
 
     for (addr, nonce) in all_addr_nonces {
-        assert!(expected_addr_nonces.get(&addr).is_some());
+        assert!(expected_addr_nonces.contains_key(&addr));
         assert_eq!(nonce, 24);
     }
 }
@@ -1397,7 +1397,7 @@ fn mempool_db_load_store_replace_tx(#[case] behavior: MempoolCollectionBehavior)
     let chainstate_path = chainstate_path(&path_name);
     let mut mempool = MemPoolDB::open_test(false, 0x80000000, &chainstate_path).unwrap();
 
-    let mut txs = codec_all_transactions(
+    let txs = codec_all_transactions(
         &TransactionVersion::Testnet,
         0x80000000,
         &TransactionAnchorMode::Any,
@@ -1409,7 +1409,7 @@ fn mempool_db_load_store_replace_tx(#[case] behavior: MempoolCollectionBehavior)
     let mut mempool_tx = mempool.tx_begin().unwrap();
 
     eprintln!("add all txs");
-    for (i, mut tx) in txs.drain(..).enumerate() {
+    for (i, mut tx) in txs.into_iter().enumerate() {
         // make sure each address is unique per tx (not the case in codec_all_transactions)
         let origin_address = StacksAddress {
             version: 22,
@@ -1666,7 +1666,7 @@ fn mempool_db_test_rbf() {
         key_encoding: TransactionPublicKeyEncoding::Uncompressed,
         nonce: 123,
         tx_fee: 456,
-        signature: MessageSignature::from_raw(&vec![0xff; 65]),
+        signature: MessageSignature::from_raw(&[0xff; 65]),
     });
     let stx_address = StacksAddress {
         version: 1,
@@ -1992,8 +1992,7 @@ fn test_txtags() {
 
         let txtags = mempool.get_txtags(&seed).unwrap();
         let len_txtags = all_txtags.len();
-        let last_txtags =
-            &all_txtags[len_txtags.saturating_sub(BLOOM_COUNTER_DEPTH as usize)..len_txtags];
+        let last_txtags = &all_txtags[len_txtags.saturating_sub(BLOOM_COUNTER_DEPTH)..len_txtags];
 
         let mut expected_txtag_set = HashSet::new();
         for txtags in last_txtags.iter() {
@@ -2240,7 +2239,7 @@ fn test_find_next_missing_transactions() {
             txid.clone(),
             tx_bytes,
             tx_fee,
-            block_height as u64,
+            block_height,
             &origin_addr,
             origin_nonce,
             &sponsor_addr,
@@ -2375,9 +2374,9 @@ fn test_find_next_missing_transactions() {
             )
             .unwrap();
         assert!(txs.len() <= page_size as usize);
-        assert!(num_visited <= page_size as u64);
+        assert!(num_visited <= page_size);
 
-        if txs.len() == 0 {
+        if txs.is_empty() {
             assert!(next_page_opt.is_none());
             break;
         }
@@ -2414,9 +2413,9 @@ fn test_find_next_missing_transactions() {
         eprintln!("find_next_missing_transactions with empty bloom filter took {} ms to serve {} transactions", ts_after.saturating_sub(ts_before), page_size);
 
         assert!(txs.len() <= page_size as usize);
-        assert!(num_visited <= page_size as u64);
+        assert!(num_visited <= page_size);
 
-        if txs.len() == 0 {
+        if txs.is_empty() {
             assert!(next_page_opt.is_none());
             break;
         }

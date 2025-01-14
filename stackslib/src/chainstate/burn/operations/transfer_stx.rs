@@ -65,7 +65,7 @@ impl TransferStxOp {
         }
     }
 
-    fn parse_data(data: &Vec<u8>) -> Option<ParsedData> {
+    fn parse_data(data: &[u8]) -> Option<ParsedData> {
         /*
             Wire format:
             0      2  3                             19        80
@@ -177,7 +177,7 @@ impl TransferStxOp {
         })?;
 
         let outputs = tx.get_recipients();
-        assert!(outputs.len() > 0);
+        assert!(!outputs.is_empty());
 
         let output = outputs[0]
             .as_ref()

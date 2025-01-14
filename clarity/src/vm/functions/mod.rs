@@ -79,7 +79,6 @@ mod boolean;
 mod conversions;
 pub mod crypto;
 mod database;
-#[allow(clippy::result_large_err)]
 pub mod define;
 mod options;
 pub mod principals;

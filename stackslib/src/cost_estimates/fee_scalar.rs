@@ -21,7 +21,7 @@ use crate::util_lib::db::{
 };
 
 const SINGLETON_ROW_ID: i64 = 1;
-const CREATE_TABLE: &'static str = "
+const CREATE_TABLE: &str = "
 CREATE TABLE scalar_fee_estimator (
     estimate_key NUMBER PRIMARY KEY,
     high NUMBER NOT NULL,

@@ -360,7 +360,7 @@ pub enum BlockstackOperationType {
 }
 
 // serialization helpers for blockstack_op_to_json function
-pub fn memo_serialize(memo: &Vec<u8>) -> String {
+pub fn memo_serialize(memo: &[u8]) -> String {
     let hex_inst = to_hex(memo);
     format!("0x{}", hex_inst)
 }

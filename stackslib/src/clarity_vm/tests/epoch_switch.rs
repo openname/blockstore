@@ -124,7 +124,7 @@ fn test_vm_epoch_switch() {
     let mut end_height = 0;
     for i in 0..20 {
         cur_snapshot =
-            test_append_snapshot(&mut db, BurnchainHeaderHash([((i + 1) as u8); 32]), &vec![]);
+            test_append_snapshot(&mut db, BurnchainHeaderHash([((i + 1) as u8); 32]), &[]);
         end_height = cur_snapshot.block_height as u32;
     }
 

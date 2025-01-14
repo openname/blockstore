@@ -1,0 +1,40 @@
+## Perform Clippy checks - currently set to defaults
+##   https://github.com/rust-lang/rust-clippy#usage
+##   https://rust-lang.github.io/rust-clippy/master/index.html
+##
+name: Clippy Checks
+
+# Only run when:
+#   - PRs are (re)opened against develop branch
+on:
+  pull_request:
+    branches:
+      - develop
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+jobs:
+  clippy_check:
+    name: Clippy Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the latest code
+        id: git_checkout
+        uses: actions/checkout@v3
+      - name: Define Rust Toolchain
+        id: define_rust_toolchain
+        run: echo "RUST_TOOLCHAIN=$(cat ./rust-toolchain)" >> $GITHUB_ENV
+      - name: Setup Rust Toolchain
+        id: setup_rust_toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          components: clippy
+      - name: Clippy
+        id: clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: -p libstackerdb -p stacks-signer -p pox-locking -p clarity -p libsigner -p stacks-common --no-deps --tests --all-features -- -D warnings

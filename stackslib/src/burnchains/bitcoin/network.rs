@@ -45,7 +45,7 @@ impl BitcoinIndexer {
     pub fn send_message(&mut self, payload: btc_message::NetworkMessage) -> Result<(), btc_error> {
         let message = btc_message::RawNetworkMessage {
             magic: network_id_to_bytes(self.runtime.network_id),
-            payload: payload,
+            payload,
         };
 
         self.with_socket(|ref mut sock| {
@@ -127,16 +127,16 @@ impl BitcoinIndexer {
         // classify the message here, so we can pass it along to the handler explicitly
         match message {
             btc_message::NetworkMessage::Version(..) => {
-                return self.handle_version(message).and_then(|_r| Ok(true));
+                return self.handle_version(message).map(|_r| true);
             }
             btc_message::NetworkMessage::Verack => {
-                return self.handle_verack(message).and_then(|_r| Ok(true));
+                return self.handle_verack(message).map(|_r| true);
             }
             btc_message::NetworkMessage::Ping(..) => {
-                return self.handle_ping(message).and_then(|_r| Ok(true));
+                return self.handle_ping(message).map(|_r| true);
             }
             btc_message::NetworkMessage::Pong(..) => {
-                return self.handle_pong(message).and_then(|_r| Ok(true));
+                return self.handle_pong(message).map(|_r| true);
             }
             _ => match handler {
                 Some(custom_handler) => custom_handler.handle_message(self, message),
@@ -245,7 +245,7 @@ impl BitcoinIndexer {
         let payload = btc_message_network::VersionMessage {
             version: btc_constants::PROTOCOL_VERSION,
             services: 0,
-            timestamp: timestamp,
+            timestamp,
             receiver: remote_address,
             sender: sender_address,
             nonce: self.runtime.version_nonce,
@@ -354,8 +354,8 @@ impl BitcoinIndexer {
     }
 
     /// Send a GetData message
-    pub fn send_getdata(&mut self, block_hashes: &Vec<Sha256dHash>) -> Result<(), btc_error> {
-        assert!(block_hashes.len() > 0);
+    pub fn send_getdata(&mut self, block_hashes: &[Sha256dHash]) -> Result<(), btc_error> {
+        assert!(!block_hashes.is_empty());
         let getdata_invs = block_hashes
             .iter()
             .map(|h| btc_message_blockdata::Inventory {

@@ -76,11 +76,11 @@ fn rollback_value_check(value: &String, check: &RollbackValueCheck) {
     assert_eq!(value, check)
 }
 #[cfg(feature = "rollback_value_check")]
-fn rollback_edits_push<T>(edits: &mut Vec<(T, RollbackValueCheck)>, key: T, value: &String)
+fn rollback_edits_push<T>(edits: &mut Vec<(T, RollbackValueCheck)>, key: T, value: &str)
 where
     T: Eq + Hash + Clone,
 {
-    edits.push((key, value.clone()));
+    edits.push((key, value.to_owned()));
 }
 // this function is used to check the lookup map when committing at the "bottom" of the
 //   wrapper -- i.e., when committing to the underlying store.
@@ -88,7 +88,7 @@ where
 fn rollback_check_pre_bottom_commit<T>(
     edits: Vec<(T, RollbackValueCheck)>,
     lookup_map: &mut HashMap<T, Vec<String>>,
-) -> Vec<(T, String)>
+) -> Result<Vec<(T, String)>, InterpreterError>
 where
     T: Eq + Hash + Clone,
 {
@@ -96,10 +96,10 @@ where
         edit_history.reverse();
     }
     for (key, value) in edits.iter() {
-        rollback_lookup_map(key, &value, lookup_map);
+        let _ = rollback_lookup_map(key, value, lookup_map);
     }
     assert!(lookup_map.is_empty());
-    edits
+    Ok(edits)
 }
 
 /// Result structure for fetched values from the
@@ -283,7 +283,7 @@ impl<'a> RollbackWrapper<'a> {
             // stack is empty, committing to the backing store
             let all_edits =
                 rollback_check_pre_bottom_commit(last_item.edits, &mut self.lookup_map)?;
-            if all_edits.len() > 0 {
+            if !all_edits.is_empty() {
                 self.store.put_all_data(all_edits).map_err(|e| {
                     InterpreterError::Expect(format!(
                         "ERROR: Failed to commit data to sql store: {e:?}"
@@ -295,7 +295,7 @@ impl<'a> RollbackWrapper<'a> {
                 last_item.metadata_edits,
                 &mut self.metadata_lookup_map,
             )?;
-            if metadata_edits.len() > 0 {
+            if !metadata_edits.is_empty() {
                 self.store.put_all_metadata(metadata_edits).map_err(|e| {
                     InterpreterError::Expect(format!(
                         "ERROR: Failed to commit data to sql store: {e:?}"
@@ -316,12 +316,12 @@ fn inner_put_data<T>(
 ) where
     T: Eq + Hash + Clone,
 {
-    let key_edit_deque = lookup_map.entry(key.clone()).or_insert_with(|| Vec::new());
+    let key_edit_deque = lookup_map.entry(key.clone()).or_default();
     rollback_edits_push(edits, key, &value);
     key_edit_deque.push(value);
 }
 
-impl<'a> RollbackWrapper<'a> {
+impl RollbackWrapper<'_> {
     pub fn put_data(&mut self, key: &str, value: &str) -> InterpreterResult<()> {
         let current = self.stack.last_mut().ok_or_else(|| {
             InterpreterError::Expect(
@@ -329,12 +329,13 @@ impl<'a> RollbackWrapper<'a> {
             )
         })?;
 
-        Ok(inner_put_data(
+        inner_put_data(
             &mut self.lookup_map,
             &mut current.edits,
             key.to_string(),
             value.to_string(),
-        ))
+        );
+        Ok(())
     }
 
     ///
@@ -347,13 +348,12 @@ impl<'a> RollbackWrapper<'a> {
         bhh: StacksBlockId,
         query_pending_data: bool,
     ) -> InterpreterResult<StacksBlockId> {
-        self.store.set_block_hash(bhh).map(|x| {
+        self.store.set_block_hash(bhh).inspect(|_| {
             // use and_then so that query_pending_data is only set once set_block_hash succeeds
             //  this doesn't matter in practice, because a set_block_hash failure always aborts
             //  the transaction with a runtime error (destroying its environment), but it's much
             //  better practice to do this, especially if the abort behavior changes in the future.
             self.query_pending_data = query_pending_data;
-            x
         })
     }
 
@@ -501,12 +501,13 @@ impl<'a> RollbackWrapper<'a> {
 
         let metadata_key = (contract.clone(), key.to_string());
 
-        Ok(inner_put_data(
+        inner_put_data(
             &mut self.metadata_lookup_map,
             &mut current.metadata_edits,
             metadata_key,
             value.to_string(),
-        ))
+        );
+        Ok(())
     }
 
     // Throws a NoSuchContract error if contract doesn't exist,

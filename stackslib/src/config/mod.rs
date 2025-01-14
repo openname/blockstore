@@ -59,7 +59,7 @@ use crate::cost_estimates::fee_scalar::ScalarFeeRateEstimator;
 use crate::cost_estimates::metrics::{CostMetric, ProportionalDotProduct, UnitMetric};
 use crate::cost_estimates::{CostEstimator, FeeEstimator, PessimisticEstimator, UnitEstimator};
 use crate::net::atlas::AtlasConfig;
-use crate::net::connection::ConnectionOptions;
+use crate::net::connection::{ConnectionOptions, DEFAULT_BLOCK_PROPOSAL_MAX_AGE_SECS};
 use crate::net::{Neighbor, NeighborAddress, NeighborKey};
 use crate::types::chainstate::BurnchainHeaderHash;
 use crate::types::EpochList;
@@ -181,7 +181,7 @@ impl ConfigFile {
             mode: Some("xenon".to_string()),
             rpc_port: Some(18332),
             peer_port: Some(18333),
-            peer_host: Some("bitcoind.testnet.stacks.co".to_string()),
+            peer_host: Some("0.0.0.0".to_string()),
             magic_bytes: Some("T2".into()),
             ..BurnchainConfigFile::default()
         };
@@ -227,9 +227,9 @@ impl ConfigFile {
             mode: Some("mainnet".to_string()),
             rpc_port: Some(8332),
             peer_port: Some(8333),
-            peer_host: Some("bitcoin.blockstack.com".to_string()),
-            username: Some("blockstack".to_string()),
-            password: Some("blockstacksystem".to_string()),
+            peer_host: Some("0.0.0.0".to_string()),
+            username: Some("bitcoin".to_string()),
+            password: Some("bitcoin".to_string()),
             magic_bytes: Some("X2".to_string()),
             ..BurnchainConfigFile::default()
         };
@@ -1438,7 +1438,7 @@ impl BurnchainConfigFile {
             // check magic bytes and set if not defined
             let mainnet_magic = ConfigFile::mainnet().burnchain.unwrap().magic_bytes;
             if self.magic_bytes.is_none() {
-                self.magic_bytes = mainnet_magic.clone();
+                self.magic_bytes.clone_from(&mainnet_magic);
             }
             if self.magic_bytes != mainnet_magic {
                 return Err(format!(
@@ -1500,21 +1500,15 @@ impl BurnchainConfigFile {
                 .unwrap_or(default_burnchain_config.commit_anchor_block_within),
             peer_host: match self.peer_host.as_ref() {
                 Some(peer_host) => {
-                    // Using std::net::LookupHost would be preferable, but it's
-                    // unfortunately unstable at this point.
-                    // https://doc.rust-lang.org/1.6.0/std/net/struct.LookupHost.html
-                    let mut sock_addrs = format!("{peer_host}:1")
+                    format!("{}:1", &peer_host)
                         .to_socket_addrs()
-                        .map_err(|e| format!("Invalid burnchain.peer_host: {e}"))?;
-                    let sock_addr = match sock_addrs.next() {
-                        Some(addr) => addr,
-                        None => {
-                            return Err(format!(
-                                "No IP address could be queried for '{peer_host}'"
-                            ));
-                        }
-                    };
-                    format!("{}", sock_addr.ip())
+                        .map_err(|e| format!("Invalid burnchain.peer_host: {}", &e))?
+                        .next()
+                        .is_none()
+                        .then(|| {
+                            return format!("No IP address could be queried for '{}'", &peer_host);
+                        });
+                    peer_host.clone()
                 }
                 None => default_burnchain_config.peer_host,
             },
@@ -1656,6 +1650,7 @@ pub struct NodeConfig {
     pub use_test_genesis_chainstate: Option<bool>,
     pub always_use_affirmation_maps: bool,
     pub require_affirmed_anchor_blocks: bool,
+    pub assume_present_anchor_blocks: bool,
     /// Fault injection for failing to push blocks
     pub fault_injection_block_push_fail_probability: Option<u8>,
     // fault injection for hiding blocks.
@@ -1939,6 +1934,7 @@ impl Default for NodeConfig {
             use_test_genesis_chainstate: None,
             always_use_affirmation_maps: true,
             require_affirmed_anchor_blocks: true,
+            assume_present_anchor_blocks: true,
             fault_injection_block_push_fail_probability: None,
             fault_injection_hide_blocks: false,
             chain_liveness_poll_time_secs: 300,
@@ -2245,6 +2241,7 @@ pub struct ConnectionOptionsFile {
     pub antientropy_retry: Option<u64>,
     pub reject_blocks_pushed: Option<bool>,
     pub stackerdb_hint_replicas: Option<String>,
+    pub block_proposal_max_age_secs: Option<u64>,
 }
 
 impl ConnectionOptionsFile {
@@ -2393,6 +2390,9 @@ impl ConnectionOptionsFile {
                 .transpose()?
                 .map(HashMap::from_iter)
                 .unwrap_or(default.stackerdb_hint_replicas),
+            block_proposal_max_age_secs: self
+                .block_proposal_max_age_secs
+                .unwrap_or(DEFAULT_BLOCK_PROPOSAL_MAX_AGE_SECS),
             ..default
         })
     }
@@ -2428,6 +2428,7 @@ pub struct NodeConfigFile {
     pub use_test_genesis_chainstate: Option<bool>,
     pub always_use_affirmation_maps: Option<bool>,
     pub require_affirmed_anchor_blocks: Option<bool>,
+    pub assume_present_anchor_blocks: Option<bool>,
     /// At most, how often should the chain-liveness thread
     ///  wake up the chains-coordinator. Defaults to 300s (5 min).
     pub chain_liveness_poll_time_secs: Option<u64>,
@@ -2509,6 +2510,10 @@ impl NodeConfigFile {
             // miners should always try to mine, even if they don't have the anchored
             // blocks in the canonical affirmation map. Followers, however, can stall.
             require_affirmed_anchor_blocks: self.require_affirmed_anchor_blocks.unwrap_or(!miner),
+            // as of epoch 3.0, all prepare phases have anchor blocks.
+            // at the start of epoch 3.0, the chain stalls without anchor blocks.
+            // only set this to false if you're doing some very extreme testing.
+            assume_present_anchor_blocks: true,
             // chainstate fault_injection activation for hide_blocks.
             // you can't set this in the config file.
             fault_injection_hide_blocks: false,

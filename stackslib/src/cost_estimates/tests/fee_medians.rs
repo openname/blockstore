@@ -286,7 +286,7 @@ fn test_window_size_forget_something() {
 #[test]
 fn test_fee_rate_estimate_5_vs_95() {
     assert_eq!(
-        fee_rate_estimate_from_sorted_weighted_fees(&vec![
+        fee_rate_estimate_from_sorted_weighted_fees(&[
             FeeRateAndWeight {
                 fee_rate: 1f64,
                 weight: 5u64,
@@ -307,7 +307,7 @@ fn test_fee_rate_estimate_5_vs_95() {
 #[test]
 fn test_fee_rate_estimate_50_vs_50() {
     assert_eq!(
-        fee_rate_estimate_from_sorted_weighted_fees(&vec![
+        fee_rate_estimate_from_sorted_weighted_fees(&[
             FeeRateAndWeight {
                 fee_rate: 1f64,
                 weight: 50u64,
@@ -328,7 +328,7 @@ fn test_fee_rate_estimate_50_vs_50() {
 #[test]
 fn test_fee_rate_estimate_95_vs_5() {
     assert_eq!(
-        fee_rate_estimate_from_sorted_weighted_fees(&vec![
+        fee_rate_estimate_from_sorted_weighted_fees(&[
             FeeRateAndWeight {
                 fee_rate: 1f64,
                 weight: 95u64,

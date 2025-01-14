@@ -41,11 +41,9 @@ use stacks_common::types::chainstate::StacksPrivateKey;
 
 extern crate alloc;
 
-#[derive(Parser, Debug)]
-#[command(author, version, about)]
-#[command(long_version = VERSION_STRING.as_str())]
-
 /// The CLI arguments for the stacks signer
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_version = VERSION_STRING.as_str())]
 pub struct Cli {
     /// Subcommand action to take
     #[command(subcommand)]

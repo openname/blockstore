@@ -7,7 +7,7 @@
 // notice may not be copied, modified, or distributed except
 // according to those terms.
 
-#[macro_use]
+#![macro_use]
 
 mod error;
 mod platform;

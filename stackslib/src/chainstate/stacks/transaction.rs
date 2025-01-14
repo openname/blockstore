@@ -34,6 +34,7 @@ use crate::chainstate::stacks::{TransactionPayloadID, *};
 use crate::codec::Error as CodecError;
 use crate::core::*;
 use crate::net::Error as net_error;
+use crate::util_lib::boot::boot_code_addr;
 
 impl StacksMessageCodec for TransactionContractCall {
     fn consensus_serialize<W: Write>(&self, fd: &mut W) -> Result<(), codec_error> {
@@ -345,7 +346,7 @@ where
     H: MerkleHashFunc + Clone + PartialEq + fmt::Debug,
 {
     fn from_iter<T: IntoIterator<Item = &'a StacksTransaction>>(iter: T) -> Self {
-        let txid_vec = iter
+        let txid_vec: Vec<_> = iter
             .into_iter()
             .map(|x| x.txid().as_bytes().to_vec())
             .collect();
@@ -722,13 +723,13 @@ impl StacksTransaction {
         };
 
         StacksTransaction {
-            version: version,
+            version,
             chain_id: 0,
-            auth: auth,
-            anchor_mode: anchor_mode,
+            auth,
+            anchor_mode,
             post_condition_mode: TransactionPostConditionMode::Deny,
             post_conditions: vec![],
-            payload: payload,
+            payload,
         }
     }
 
@@ -738,7 +739,7 @@ impl StacksTransaction {
     }
 
     /// Set fee rate
-    pub fn set_tx_fee(&mut self, tx_fee: u64) -> () {
+    pub fn set_tx_fee(&mut self, tx_fee: u64) {
         self.auth.set_tx_fee(tx_fee);
     }
 
@@ -753,7 +754,7 @@ impl StacksTransaction {
     }
 
     /// set origin nonce
-    pub fn set_origin_nonce(&mut self, n: u64) -> () {
+    pub fn set_origin_nonce(&mut self, n: u64) {
         self.auth.set_origin_nonce(n);
     }
 
@@ -763,17 +764,17 @@ impl StacksTransaction {
     }
 
     /// Set anchor mode
-    pub fn set_anchor_mode(&mut self, anchor_mode: TransactionAnchorMode) -> () {
+    pub fn set_anchor_mode(&mut self, anchor_mode: TransactionAnchorMode) {
         self.anchor_mode = anchor_mode;
     }
 
     /// Set post-condition mode
-    pub fn set_post_condition_mode(&mut self, postcond_mode: TransactionPostConditionMode) -> () {
+    pub fn set_post_condition_mode(&mut self, postcond_mode: TransactionPostConditionMode) {
         self.post_condition_mode = postcond_mode;
     }
 
     /// Add a post-condition
-    pub fn add_post_condition(&mut self, post_condition: TransactionPostCondition) -> () {
+    pub fn add_post_condition(&mut self, post_condition: TransactionPostCondition) {
         self.post_conditions.push(post_condition);
     }
 
@@ -1031,6 +1032,16 @@ impl StacksTransaction {
             _ => false,
         }
     }
+
+    /// Is this a phantom transaction?
+    pub fn is_phantom(&self) -> bool {
+        let boot_address = boot_code_addr(self.is_mainnet()).into();
+        if let TransactionPayload::TokenTransfer(address, amount, _) = &self.payload {
+            *address == boot_address && *amount == 0
+        } else {
+            false
+        }
+    }
 }
 
 impl StacksTransactionSigner {
@@ -1064,11 +1075,11 @@ impl StacksTransactionSigner {
         })
     }
 
-    pub fn resume(&mut self, tx: &StacksTransaction) -> () {
+    pub fn resume(&mut self, tx: &StacksTransaction) {
         self.tx = tx.clone()
     }
 
-    pub fn disable_checks(&mut self) -> () {
+    pub fn disable_checks(&mut self) {
         self.check_oversign = false;
         self.check_overlap = false;
     }
@@ -1553,7 +1564,7 @@ mod test {
         signed_tx: &StacksTransaction,
         corrupt_origin: bool,
         corrupt_sponsor: bool,
-    ) -> () {
+    ) {
         // signature is well-formed otherwise
         signed_tx.verify().unwrap();
 
@@ -3384,7 +3395,7 @@ mod test {
             .consensus_serialize(&mut contract_call_bytes)
             .unwrap();
 
-        let mut transaction_contract_call = vec![0xff as u8];
+        let mut transaction_contract_call = vec![0xff];
         transaction_contract_call.append(&mut contract_call_bytes.clone());
 
         assert!(
@@ -3479,7 +3490,7 @@ mod test {
             version: 1,
             bytes: Hash160([0xff; 20]),
         };
-        let addr_bytes = vec![
+        let addr_bytes = [
             // version
             0x01, // bytes
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -3489,14 +3500,14 @@ mod test {
         let asset_name = ClarityName::try_from("hello-asset").unwrap();
         let mut asset_name_bytes = vec![
             // length
-            asset_name.len() as u8,
+            asset_name.len(),
         ];
         asset_name_bytes.extend_from_slice(&asset_name.to_string().as_str().as_bytes());
 
         let contract_name = ContractName::try_from("hello-world").unwrap();
         let mut contract_name_bytes = vec![
             // length
-            contract_name.len() as u8,
+            contract_name.len(),
         ];
         contract_name_bytes.extend_from_slice(&contract_name.to_string().as_str().as_bytes());
 
@@ -3641,7 +3652,7 @@ mod test {
             ]);
 
             let pcs = vec![stx_pc, fungible_pc, nonfungible_pc];
-            let pc_bytes = vec![stx_pc_bytes, fungible_pc_bytes, nonfungible_pc_bytes];
+            let pc_bytes = [stx_pc_bytes, fungible_pc_bytes, nonfungible_pc_bytes];
             for i in 0..3 {
                 check_codec_and_corruption::<TransactionPostCondition>(&pcs[i], &pc_bytes[i]);
             }
@@ -3727,7 +3738,7 @@ mod test {
             FungibleConditionCode::SentGt as u8,
         ]);
 
-        let bad_pc_bytes = vec![
+        let bad_pc_bytes = [
             stx_pc_bytes_bad_condition,
             fungible_pc_bytes_bad_condition,
             nonfungible_pc_bytes_bad_condition,
@@ -3807,7 +3818,7 @@ mod test {
             FungibleConditionCode::SentGt as u8,
         ]);
 
-        let bad_pc_bytes = vec![
+        let bad_pc_bytes = [
             stx_pc_bytes_bad_principal,
             fungible_pc_bytes_bad_principal,
             nonfungible_pc_bytes_bad_principal,
@@ -3969,7 +3980,7 @@ mod test {
         txs
     }
 
-    fn check_oversign_origin_singlesig(signed_tx: &mut StacksTransaction) -> () {
+    fn check_oversign_origin_singlesig(signed_tx: &mut StacksTransaction) {
         let txid_before = signed_tx.txid();
         match signed_tx.append_next_origin(
             &StacksPublicKey::from_hex(
@@ -3990,7 +4001,7 @@ mod test {
         assert_eq!(txid_before, signed_tx.txid());
     }
 
-    fn check_sign_no_sponsor(signed_tx: &mut StacksTransaction) -> () {
+    fn check_sign_no_sponsor(signed_tx: &mut StacksTransaction) {
         let txid_before = signed_tx.txid();
         match signed_tx.append_next_sponsor(
             &StacksPublicKey::from_hex(
@@ -4010,7 +4021,7 @@ mod test {
         assert_eq!(txid_before, signed_tx.txid());
     }
 
-    fn check_oversign_sponsor_singlesig(signed_tx: &mut StacksTransaction) -> () {
+    fn check_oversign_sponsor_singlesig(signed_tx: &mut StacksTransaction) {
         let txid_before = signed_tx.txid();
         match signed_tx.append_next_sponsor(
             &StacksPublicKey::from_hex(
@@ -4038,7 +4049,7 @@ mod test {
         }
     }
 
-    fn check_oversign_origin_multisig(signed_tx: &StacksTransaction) -> () {
+    fn check_oversign_origin_multisig(signed_tx: &StacksTransaction) {
         let tx = signed_tx.clone();
         let privk = StacksPrivateKey::from_hex(
             "c6ebf45dabca8cac9a25ae39ab690743b96eb2b0960066e98ba6df50d6f9293b01",
@@ -4068,7 +4079,7 @@ mod test {
         }
     }
 
-    fn check_oversign_origin_multisig_uncompressed(signed_tx: &StacksTransaction) -> () {
+    fn check_oversign_origin_multisig_uncompressed(signed_tx: &StacksTransaction) {
         let tx = signed_tx.clone();
         let privk = StacksPrivateKey::from_hex(
             "c6ebf45dabca8cac9a25ae39ab690743b96eb2b0960066e98ba6df50d6f9293b",
@@ -4102,7 +4113,7 @@ mod test {
         }
     }
 
-    fn check_oversign_sponsor_multisig(signed_tx: &StacksTransaction) -> () {
+    fn check_oversign_sponsor_multisig(signed_tx: &StacksTransaction) {
         let tx = signed_tx.clone();
         let privk = StacksPrivateKey::from_hex(
             "c6ebf45dabca8cac9a25ae39ab690743b96eb2b0960066e98ba6df50d6f9293b01",
@@ -4132,7 +4143,7 @@ mod test {
         }
     }
 
-    fn check_oversign_sponsor_multisig_uncompressed(signed_tx: &StacksTransaction) -> () {
+    fn check_oversign_sponsor_multisig_uncompressed(signed_tx: &StacksTransaction) {
         let tx = signed_tx.clone();
         let privk = StacksPrivateKey::from_hex(
             "c6ebf45dabca8cac9a25ae39ab690743b96eb2b0960066e98ba6df50d6f9293b",

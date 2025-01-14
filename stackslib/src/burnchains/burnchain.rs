@@ -130,7 +130,7 @@ impl BurnchainStateTransition {
 
         block_total_burns.sort();
 
-        if block_total_burns.len() == 0 {
+        if block_total_burns.is_empty() {
             return Some(0);
         } else if block_total_burns.len() == 1 {
             return Some(block_total_burns[0]);
@@ -151,7 +151,7 @@ impl BurnchainStateTransition {
         sort_tx: &mut SortitionHandleTx,
         burnchain: &Burnchain,
         parent_snapshot: &BlockSnapshot,
-        block_ops: &Vec<BlockstackOperationType>,
+        block_ops: &[BlockstackOperationType],
         missed_commits: &[MissedBlockCommit],
     ) -> Result<BurnchainStateTransition, burnchain_error> {
         // block commits discovered in this block.
@@ -976,7 +976,7 @@ impl Burnchain {
     }
 
     /// Sanity check -- a list of checked ops is sorted and all vtxindexes are unique
-    pub fn ops_are_sorted(ops: &Vec<BlockstackOperationType>) -> bool {
+    pub fn ops_are_sorted(ops: &[BlockstackOperationType]) -> bool {
         if ops.len() > 1 {
             for i in 0..ops.len() - 1 {
                 if ops[i].vtxindex() >= ops[i + 1].vtxindex() {

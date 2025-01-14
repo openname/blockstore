@@ -48,7 +48,7 @@ use crate::clarity_vm::database::MemoryBackingStore;
 use crate::util_lib::boot::boot_code_id;
 
 fn test_block_headers(n: u8) -> StacksBlockId {
-    StacksBlockId([n as u8; 32])
+    StacksBlockId([n; 32])
 }
 
 pub const TEST_BURN_STATE_DB_AST_PRECHECK: UnitTestBurnStateDB = UnitTestBurnStateDB {
@@ -131,7 +131,7 @@ fn test_simple_token_system(#[case] version: ClarityVersion, #[case] epoch: Stac
 
     let mut gb = clarity.begin_test_genesis_block(
         &StacksBlockId::sentinel(),
-        &StacksBlockId([0xfe as u8; 32]),
+        &StacksBlockId([0xfe; 32]),
         &TEST_HEADER_DB,
         burn_db,
     );
@@ -199,8 +199,8 @@ fn test_simple_token_system(#[case] version: ClarityVersion, #[case] epoch: Stac
     {
         let mut block = new_block(
             &mut clarity,
-            &StacksBlockId([0xfe as u8; 32]),
-            &StacksBlockId([0 as u8; 32]),
+            &StacksBlockId([0xfe; 32]),
+            &StacksBlockId([0; 32]),
             &TEST_HEADER_DB,
             burn_db,
         );
@@ -438,7 +438,7 @@ fn test_simple_token_system(#[case] version: ClarityVersion, #[case] epoch: Stac
 
 pub fn with_versioned_memory_environment<F>(f: F, version: ClarityVersion, top_level: bool)
 where
-    F: FnOnce(&mut OwnedEnvironment, ClarityVersion) -> (),
+    F: FnOnce(&mut OwnedEnvironment, ClarityVersion),
 {
     let mut marf_kv = MemoryBackingStore::new();
 
@@ -699,7 +699,7 @@ pub fn rollback_log_memory_test(
     clarity_instance
         .begin_test_genesis_block(
             &StacksBlockId::sentinel(),
-            &StacksBlockId([0 as u8; 32]),
+            &StacksBlockId([0; 32]),
             &TEST_HEADER_DB,
             burn_db,
         )
@@ -708,8 +708,8 @@ pub fn rollback_log_memory_test(
     {
         let mut conn = new_block(
             &mut clarity_instance,
-            &StacksBlockId([0 as u8; 32]),
-            &StacksBlockId([1 as u8; 32]),
+            &StacksBlockId([0; 32]),
+            &StacksBlockId([1; 32]),
             &TEST_HEADER_DB,
             burn_db,
         );
@@ -771,7 +771,7 @@ pub fn let_memory_test(#[case] clarity_version: ClarityVersion, #[case] epoch_id
     clarity_instance
         .begin_test_genesis_block(
             &StacksBlockId::sentinel(),
-            &StacksBlockId([0 as u8; 32]),
+            &StacksBlockId([0; 32]),
             &TEST_HEADER_DB,
             burn_db,
         )
@@ -780,8 +780,8 @@ pub fn let_memory_test(#[case] clarity_version: ClarityVersion, #[case] epoch_id
     {
         let mut conn = new_block(
             &mut clarity_instance,
-            &StacksBlockId([0 as u8; 32]),
-            &StacksBlockId([1 as u8; 32]),
+            &StacksBlockId([0; 32]),
+            &StacksBlockId([1; 32]),
             &TEST_HEADER_DB,
             burn_db,
         );
@@ -851,7 +851,7 @@ pub fn argument_memory_test(
     clarity_instance
         .begin_test_genesis_block(
             &StacksBlockId::sentinel(),
-            &StacksBlockId([0 as u8; 32]),
+            &StacksBlockId([0; 32]),
             &TEST_HEADER_DB,
             burn_db,
         )
@@ -860,8 +860,8 @@ pub fn argument_memory_test(
     {
         let mut conn = new_block(
             &mut clarity_instance,
-            &StacksBlockId([0 as u8; 32]),
-            &StacksBlockId([1 as u8; 32]),
+            &StacksBlockId([0; 32]),
+            &StacksBlockId([1; 32]),
             &TEST_HEADER_DB,
             burn_db,
         );
@@ -929,7 +929,7 @@ pub fn fcall_memory_test(#[case] clarity_version: ClarityVersion, #[case] epoch_
     clarity_instance
         .begin_test_genesis_block(
             &StacksBlockId::sentinel(),
-            &StacksBlockId([0 as u8; 32]),
+            &StacksBlockId([0; 32]),
             &TEST_HEADER_DB,
             burn_db,
         )
@@ -938,8 +938,8 @@ pub fn fcall_memory_test(#[case] clarity_version: ClarityVersion, #[case] epoch_
     {
         let mut conn = new_block(
             &mut clarity_instance,
-            &StacksBlockId([0 as u8; 32]),
-            &StacksBlockId([1 as u8; 32]),
+            &StacksBlockId([0; 32]),
+            &StacksBlockId([1; 32]),
             &TEST_HEADER_DB,
             burn_db,
         );
@@ -1050,7 +1050,7 @@ pub fn ccall_memory_test(#[case] clarity_version: ClarityVersion, #[case] epoch_
     clarity_instance
         .begin_test_genesis_block(
             &StacksBlockId::sentinel(),
-            &StacksBlockId([0 as u8; 32]),
+            &StacksBlockId([0; 32]),
             &TEST_HEADER_DB,
             burn_db,
         )
@@ -1059,8 +1059,8 @@ pub fn ccall_memory_test(#[case] clarity_version: ClarityVersion, #[case] epoch_
     {
         let mut conn = new_block(
             &mut clarity_instance,
-            &StacksBlockId([0 as u8; 32]),
-            &StacksBlockId([1 as u8; 32]),
+            &StacksBlockId([0; 32]),
+            &StacksBlockId([1; 32]),
             &TEST_HEADER_DB,
             burn_db,
         );

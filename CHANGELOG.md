@@ -8,19 +8,17 @@ and this project adheres to the versioning scheme outlined in the [README.md](RE
 ## [Unreleased]
 
 ### Added
+
 - Add `tenure_timeout_secs` to the miner for determining when a time-based tenure extend should be attempted.
+- Added configuration option `block_proposal_max_age_secs` under `[connection_options]` to prevent processing stale block proposals
 
 ### Changed
+- The RPC endpoint `/v3/block_proposal` no longer will evaluate block proposals more than `block_proposal_max_age_secs` old
 
-## [3.1.0.0.1]
+- When a transaction is dropped due to replace-by-fee, the `/drop_mempool_tx` event observer payload now includes `new_txid`, which is the transaction that replaced this dropped transaction. When a transaction is dropped for other reasons, `new_txid` is `null`. [#5381](https://github.com/stacks-network/stacks-core/pull/5381)
+- Nodes will assume that all PoX anchor blocks exist by default, and stall initial block download indefinitely to await their arrival (#5502)
 
-### Added
-
-- A miner will now generate a tenure-extend when at least 70% of the signers have confirmed that they are willing to allow one, via the new timestamp included in block responses. This allows the miner to refresh its budget in between Bitcoin blocks. ([#5476](https://github.com/stacks-network/stacks-core/discussions/5476))
-
-### Changed
-
-## [3.1.0.0.0]
+## [3.1.0.0.2]
 
 ### Added
 
@@ -29,6 +27,8 @@ and this project adheres to the versioning scheme outlined in the [README.md](RE
   - `/v2/clarity/marf/:marf_key_hash`
   - `/v2/clarity/metadata/:principal/:contract_name/:clarity_metadata_key`
 - When a proposed block is validated by a node, the block can be validated even when the block version is different than the node's default ([#5539](https://github.com/stacks-network/stacks-core/pull/5539))
+- A miner will now generate a tenure-extend when at least 70% of the signers have confirmed that they are willing to allow one, via the new timestamp included in block responses. This allows the miner to refresh its budget in between Bitcoin blocks. ([#5476](https://github.com/stacks-network/stacks-core/discussions/5476))
+- Set the epoch to 3.1 in the Clarity DB upon activation.
 
 ### Changed
 

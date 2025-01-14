@@ -687,11 +687,11 @@ impl NakamotoTenureDownloaderSet {
                 self.clear_downloader(naddr);
             }
         }
-        for done_naddr in finished.drain(..) {
+        for done_naddr in finished.into_iter() {
             debug!("Remove finished downloader for {done_naddr}");
             self.clear_downloader(&done_naddr);
         }
-        for done_tenure in finished_tenures.drain(..) {
+        for done_tenure in finished_tenures.into_iter() {
             self.completed_tenures.insert(done_tenure);
         }
 

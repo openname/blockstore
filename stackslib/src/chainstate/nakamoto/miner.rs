@@ -86,7 +86,7 @@ use crate::util_lib::boot::boot_code_id;
 use crate::util_lib::db::Error as DBError;
 
 /// Nakamaoto tenure information
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct NakamotoTenureInfo {
     /// Coinbase tx, if this is a new tenure
     pub coinbase_tx: Option<StacksTransaction>,
@@ -98,8 +98,8 @@ impl NakamotoTenureInfo {
     pub fn cause(&self) -> Option<TenureChangeCause> {
         self.tenure_change_tx
             .as_ref()
-            .map(|tx| tx.try_as_tenure_change().map(|payload| payload.cause))
-            .flatten()
+            .map(|tx| tx.try_as_tenure_change())?
+            .map(|payload| payload.cause)
     }
 
     pub fn tenure_change_tx(&self) -> Option<&StacksTransaction> {
@@ -464,7 +464,7 @@ impl NakamotoBlockBuilder {
     /// Returns the unsigned Nakamoto block
     fn finalize_block(&mut self, clarity_tx: &mut ClarityTx) -> NakamotoBlock {
         // done!  Calculate state root and tx merkle root
-        let txid_vecs = self
+        let txid_vecs: Vec<_> = self
             .txs
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
@@ -596,7 +596,7 @@ impl NakamotoBlockBuilder {
             tenure_info.coinbase_tx.clone(),
         ]
         .into_iter()
-        .filter_map(|x| x)
+        .flatten()
         .collect();
 
         // TODO: update this mempool check to prioritize signer vote transactions over other transactions

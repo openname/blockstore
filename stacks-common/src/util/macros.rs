@@ -47,8 +47,8 @@ macro_rules! define_named_enum {
             $($Variant),*,
         }
         impl $Name {
-            pub const ALL: &'static [$Name] = &[$($Name::$Variant),*];
-            pub const ALL_NAMES: &'static [&'static str] = &[$($VarName),*];
+            pub const ALL: &[$Name] = &[$($Name::$Variant),*];
+            pub const ALL_NAMES: &[&str] = &[$($VarName),*];
 
             pub fn lookup_by_name(name: &str) -> Option<Self> {
                 match name {
@@ -113,8 +113,8 @@ macro_rules! define_versioned_named_enum_internal {
         }
 
         impl $Name {
-            pub const ALL: &'static [$Name] = &[$($Name::$Variant),*];
-            pub const ALL_NAMES: &'static [&'static str] = &[$($VarName),*];
+            pub const ALL: &[$Name] = &[$($Name::$Variant),*];
+            pub const ALL_NAMES: &[&str] = &[$($VarName),*];
 
             pub fn lookup_by_name(name: &str) -> Option<Self> {
                 match name {
@@ -538,7 +538,7 @@ macro_rules! impl_byte_array_newtype {
 
             /// Instantiates from a vector of bytes
             #[allow(dead_code)]
-            pub fn from_vec(inp: &Vec<u8>) -> Option<$thing> {
+            pub fn from_vec(inp: &[u8]) -> Option<$thing> {
                 match inp.len() {
                     $len => {
                         let mut ret = [0; $len];
@@ -552,7 +552,7 @@ macro_rules! impl_byte_array_newtype {
 
             /// Instantiates from a big-endian vector of bytes, converting to host byte order
             #[allow(dead_code)]
-            pub fn from_vec_be(b: &Vec<u8>) -> Option<$thing> {
+            pub fn from_vec_be(b: &[u8]) -> Option<$thing> {
                 match b.len() {
                     $len => {
                         let mut ret = [0; $len];

@@ -359,7 +359,9 @@ impl NakamotoBlockProposal {
                 while *TEST_VALIDATE_STALL.lock().unwrap() == Some(true) {
                     std::thread::sleep(std::time::Duration::from_millis(10));
                 }
-                info!("Block validation is no longer stalled due to testing directive.");
+                info!(
+                    "Block validation is no longer stalled due to testing directive. Continuing..."
+                );
             }
         }
         let start = Instant::now();
@@ -562,7 +564,10 @@ impl NakamotoBlockProposal {
         // Clone signatures from block proposal
         // These have already been validated by `validate_nakamoto_block_burnchain()``
         block.header.miner_signature = self.block.header.miner_signature.clone();
-        block.header.signer_signature = self.block.header.signer_signature.clone();
+        block
+            .header
+            .signer_signature
+            .clone_from(&self.block.header.signer_signature);
 
         // Clone the timestamp from the block proposal, which has already been validated
         block.header.timestamp = self.block.header.timestamp;
@@ -742,6 +747,20 @@ impl RPCRequestHandler for RPCBlockProposalRequestHandler {
                     NetError::SendError("Proposal currently being evaluated".into()),
                 ));
             }
+
+            if block_proposal
+                .block
+                .header
+                .timestamp
+                .saturating_add(network.get_connection_opts().block_proposal_max_age_secs)
+                < get_epoch_time_secs()
+            {
+                return Err((
+                    422,
+                    NetError::SendError("Block proposal is too old to process.".into()),
+                ));
+            }
+
             let (chainstate, _) = chainstate.reopen().map_err(|e| (400, NetError::from(e)))?;
             let sortdb = sortdb.reopen().map_err(|e| (400, NetError::from(e)))?;
             let receiver = rpc_args

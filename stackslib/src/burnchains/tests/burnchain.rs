@@ -99,7 +99,7 @@ fn test_process_block_ops() {
             &hex_bytes("a366b51292bef4edd64063d9145c617fec373bceb0758e98cd72becd84d54c7a").unwrap(),
         )
         .unwrap(),
-        memo: vec![01, 02, 03, 04, 05],
+        memo: vec![1, 2, 3, 4, 5],
 
         txid: Txid::from_bytes(
             &hex_bytes("1bfa831b5fc56c858198acb8e77e5863c1e9d8ac26d49ddb914e24d8d4083562").unwrap(),
@@ -119,7 +119,7 @@ fn test_process_block_ops() {
             &hex_bytes("bb519494643f79f1dea0350e6fb9a1da88dfdb6137117fc2523824a8aa44fe1c").unwrap(),
         )
         .unwrap(),
-        memo: vec![01, 02, 03, 04, 05],
+        memo: vec![1, 2, 3, 4, 5],
 
         txid: Txid::from_bytes(
             &hex_bytes("9410df84e2b440055c33acb075a0687752df63fe8fe84aeec61abe469f0448c7").unwrap(),
@@ -139,7 +139,7 @@ fn test_process_block_ops() {
             &hex_bytes("de8af7037e522e65d2fe2d63fb1b764bfea829df78b84444338379df13144a02").unwrap(),
         )
         .unwrap(),
-        memo: vec![01, 02, 03, 04, 05],
+        memo: vec![1, 2, 3, 4, 5],
 
         txid: Txid::from_bytes(
             &hex_bytes("eb54704f71d4a2d1128d60ffccced547054b52250ada6f3e7356165714f44d4c").unwrap(),
@@ -271,7 +271,7 @@ fn test_process_block_ops() {
         vec![BlockstackOperationType::LeaderKeyRegister(
             leader_key_3.clone(),
         )];
-    let block_opshash_121 = OpsHash::from_txids(&vec![leader_key_3.txid.clone()]);
+    let block_opshash_121 = OpsHash::from_txids(&[leader_key_3.txid.clone()]);
     let block_prev_chs_121 =
         vec![ConsensusHash::from_hex("0000000000000000000000000000000000000000").unwrap()];
     let mut block_121_snapshot = BlockSnapshot {
@@ -316,7 +316,7 @@ fn test_process_block_ops() {
     let block_ops_122 = vec![BlockstackOperationType::LeaderKeyRegister(
         leader_key_2.clone(),
     )];
-    let block_opshash_122 = OpsHash::from_txids(&vec![leader_key_2.txid.clone()]);
+    let block_opshash_122 = OpsHash::from_txids(&[leader_key_2.txid.clone()]);
     let block_prev_chs_122 = vec![
         block_121_snapshot.consensus_hash.clone(),
         ConsensusHash::from_hex("0000000000000000000000000000000000000000").unwrap(),
@@ -365,7 +365,7 @@ fn test_process_block_ops() {
     let block_ops_123 = vec![BlockstackOperationType::LeaderKeyRegister(
         leader_key_1.clone(),
     )];
-    let block_opshash_123 = OpsHash::from_txids(&vec![
+    let block_opshash_123 = OpsHash::from_txids(&[
         // notably, the user burns here _wont_ be included in the consensus hash
         leader_key_1.txid.clone(),
     ]);
@@ -417,7 +417,7 @@ fn test_process_block_ops() {
 
     // multiple possibilities for block 124 -- we'll reorg the chain each time back to 123 and
     // re-try block 124 to test them all.
-    let block_ops_124_possibilities = vec![
+    let block_ops_124_possibilities = [
         vec![BlockstackOperationType::LeaderBlockCommit(
             block_commit_1.clone(),
         )],
@@ -464,11 +464,8 @@ fn test_process_block_ops() {
         123,
     ));
 
-    let initial_snapshot = BlockSnapshot::initial(
-        first_block_height,
-        &first_burn_hash,
-        first_block_height as u64,
-    );
+    let initial_snapshot =
+        BlockSnapshot::initial(first_block_height, &first_burn_hash, first_block_height);
 
     // process up to 124
     {
@@ -574,7 +571,7 @@ fn test_process_block_ops() {
             acc
         });
 
-        let next_sortition = block_ops_124.len() > 0 && burn_total > 0;
+        let next_sortition = !block_ops_124.is_empty() && burn_total > 0;
 
         let mut block_124_snapshot = BlockSnapshot {
             accumulated_coinbase_ustx: 400_000_000,
@@ -658,7 +655,7 @@ fn test_process_block_ops() {
         // There should only be two -- the winning block at height 124, and the genesis
         // sentinel block hash.  This is because epochs 121, 122, and 123 don't have any block
         // commits.
-        let expected_winning_hashes = vec![
+        let expected_winning_hashes = [
             BlockHeaderHash([0u8; 32]),
             block_124_winners[scenario_idx].block_header_hash.clone(),
         ];
@@ -733,16 +730,13 @@ fn test_burn_snapshot_sequence() {
 
     // insert all operations
     let mut db = SortitionDB::connect_test(first_block_height, &first_burn_hash).unwrap();
-    let mut prev_snapshot = BlockSnapshot::initial(
-        first_block_height,
-        &first_burn_hash,
-        first_block_height as u64,
-    );
+    let mut prev_snapshot =
+        BlockSnapshot::initial(first_block_height, &first_burn_hash, first_block_height);
     let mut all_stacks_block_hashes = vec![];
 
     for i in 0..32 {
         let mut block_ops = vec![];
-        let burn_block_hash = BurnchainHeaderHash::from_bytes(&vec![
+        let burn_block_hash = BurnchainHeaderHash::from_bytes(&[
             i + 1,
             i + 1,
             0,
@@ -786,12 +780,12 @@ fn test_burn_snapshot_sequence() {
                 sunset_burn: 0,
                 treatment: vec![],
                 commit_outs: vec![],
-                block_header_hash: BlockHeaderHash::from_bytes(&vec![
+                block_header_hash: BlockHeaderHash::from_bytes(&[
                     i, i, i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0,
                 ])
                 .unwrap(),
-                new_seed: VRFSeed::from_bytes(&vec![
+                new_seed: VRFSeed::from_bytes(&[
                     i, i, i, i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0,
                 ])
@@ -817,7 +811,7 @@ fn test_burn_snapshot_sequence() {
                     .unwrap()],
                 ),
 
-                txid: Txid::from_bytes(&vec![
+                txid: Txid::from_bytes(&[
                     i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, i,
                 ])
@@ -850,7 +844,7 @@ fn test_burn_snapshot_sequence() {
             .unwrap(),
             memo: vec![0, 0, 0, 0, i],
 
-            txid: Txid::from_bytes(&vec![
+            txid: Txid::from_bytes(&[
                 i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0,
             ])
@@ -897,7 +891,7 @@ fn test_burn_snapshot_sequence() {
             assert_eq!(snapshot.total_burn, expected_burn_total);
             assert_eq!(
                 snapshot.winning_block_txid,
-                Txid::from_bytes(&vec![
+                Txid::from_bytes(&[
                     i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, i
                 ])
@@ -905,7 +899,7 @@ fn test_burn_snapshot_sequence() {
             );
             assert_eq!(
                 snapshot.winning_stacks_block_hash,
-                BlockHeaderHash::from_bytes(&vec![
+                BlockHeaderHash::from_bytes(&[
                     i, i, i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0
                 ])

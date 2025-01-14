@@ -355,16 +355,13 @@ impl NakamotoTenureDownloader {
     /// Determine how many blocks must be in this tenure.
     /// Returns None if we don't have the start and end blocks yet.
     pub fn tenure_length(&self) -> Option<u64> {
-        self.tenure_end_block
-            .as_ref()
-            .map(|tenure_end_block| {
-                let Some(tc_payload) = tenure_end_block.try_get_tenure_change_payload() else {
-                    return None;
-                };
+        self.tenure_end_block.as_ref().and_then(|tenure_end_block| {
+            let Some(tc_payload) = tenure_end_block.try_get_tenure_change_payload() else {
+                return None;
+            };
 
-                Some(u64::from(tc_payload.previous_tenure_blocks))
-            })
-            .flatten()
+            Some(u64::from(tc_payload.previous_tenure_blocks))
+        })
     }
 
     /// Add downloaded tenure blocks to this machine.

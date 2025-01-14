@@ -711,7 +711,7 @@ fn test_principal_construct_good() {
             data: Box::new(Value::Principal(PrincipalData::Contract(
                 QualifiedContractIdentifier::new(
                     StandardPrincipalData(22, transfer_buffer),
-                    "hello-world".try_into().unwrap()
+                    "hello-world".into()
                 )
             )))
         }),
@@ -735,7 +735,7 @@ fn test_principal_construct_good() {
             data: Box::new(Value::Principal(PrincipalData::Contract(
                 QualifiedContractIdentifier::new(
                     StandardPrincipalData(20, transfer_buffer),
-                    "hello-world".try_into().unwrap()
+                    "hello-world".into()
                 )
             )))
         }),
@@ -799,7 +799,7 @@ fn test_principal_construct_good() {
             data: Box::new(Value::Principal(PrincipalData::Contract(
                 QualifiedContractIdentifier::new(
                     StandardPrincipalData(26, transfer_buffer),
-                    "hello-world".try_into().unwrap()
+                    "hello-world".into()
                 )
             )))
         }),
@@ -823,7 +823,7 @@ fn test_principal_construct_good() {
             data: Box::new(Value::Principal(PrincipalData::Contract(
                 QualifiedContractIdentifier::new(
                     StandardPrincipalData(21, transfer_buffer),
-                    "hello-world".try_into().unwrap()
+                    "hello-world".into()
                 )
             )))
         }),
@@ -854,7 +854,7 @@ fn create_principal_from_strings(
         // contract principal requested
         Value::Principal(PrincipalData::Contract(QualifiedContractIdentifier::new(
             StandardPrincipalData(version_array[0], principal_array),
-            name.try_into().unwrap(),
+            name.into(),
         )))
     } else {
         // standard principal requested

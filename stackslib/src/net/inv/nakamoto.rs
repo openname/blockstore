@@ -241,7 +241,7 @@ impl InvGenerator {
         tenure_id_consensus_hash: &ConsensusHash,
     ) -> Result<Option<InvTenureInfo>, NetError> {
         let tip_block_id = StacksBlockId::new(tip_block_ch, tip_block_bh);
-        if self.processed_tenures.get(&tip_block_id).is_none() {
+        if !self.processed_tenures.contains_key(&tip_block_id) {
             // this tip has no known table.
             // does it have an ancestor with a table? If so, then move its ancestor's table to this
             // tip. Otherwise, make a new table.

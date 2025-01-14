@@ -420,7 +420,7 @@ impl Graph {
         let list = self
             .adjacency_list
             .get_mut(src_expr_index)
-            .ok_or_else(|| ParseErrors::InterpreterFailure)?;
+            .ok_or(ParseErrors::InterpreterFailure)?;
         list.push(dst_expr_index);
         Ok(())
     }
@@ -491,7 +491,7 @@ impl GraphWalker {
     fn get_cycling_dependencies(
         &mut self,
         graph: &Graph,
-        sorted_indexes: &Vec<usize>,
+        sorted_indexes: &[usize],
     ) -> Option<Vec<usize>> {
         let mut tainted: HashSet<usize> = HashSet::new();
 

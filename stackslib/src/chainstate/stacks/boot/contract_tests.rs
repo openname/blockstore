@@ -354,7 +354,7 @@ fn cost_2_contract_is_arithmetic_only() {
 
 impl BurnStateDB for TestSimBurnStateDB {
     fn get_tip_burn_block_height(&self) -> Option<u32> {
-        Some(self.height as u32)
+        Some(self.height)
     }
 
     fn get_tip_sortition_id(&self) -> Option<SortitionId> {
@@ -587,7 +587,7 @@ impl HeadersDB for TestSimHeadersDB {
             let burn_block_height = self.get_burn_block_height_for_block(id_bhh)? as u64;
             Some(
                 BITCOIN_REGTEST_FIRST_BLOCK_TIMESTAMP as u64 + burn_block_height
-                    - BITCOIN_REGTEST_FIRST_BLOCK_HEIGHT as u64,
+                    - BITCOIN_REGTEST_FIRST_BLOCK_HEIGHT,
             )
         }
     }
@@ -607,7 +607,7 @@ impl HeadersDB for TestSimHeadersDB {
                 None
             } else {
                 Some(
-                    (BITCOIN_REGTEST_FIRST_BLOCK_HEIGHT as u32 + input_height as u32)
+                    (BITCOIN_REGTEST_FIRST_BLOCK_HEIGHT + input_height)
                         .try_into()
                         .unwrap(),
                 )
@@ -3055,7 +3055,7 @@ fn test_vote_too_many_confirms() {
                 .0,
                 Value::Response(ResponseData {
                     committed: true,
-                    data: Value::UInt(i as u128).into()
+                    data: Value::UInt(i).into()
                 })
             );
         }
@@ -3069,10 +3069,7 @@ fn test_vote_too_many_confirms() {
                         None,
                         COST_VOTING_CONTRACT_TESTNET.clone(),
                         "vote-proposal",
-                        &symbols_from_values(vec![
-                            Value::UInt(i as u128),
-                            Value::UInt(USTX_PER_HOLDER)
-                        ]),
+                        &symbols_from_values(vec![Value::UInt(i), Value::UInt(USTX_PER_HOLDER)]),
                     )
                     .unwrap()
                     .0,
@@ -3087,7 +3084,7 @@ fn test_vote_too_many_confirms() {
                     None,
                     COST_VOTING_CONTRACT_TESTNET.clone(),
                     "confirm-votes",
-                    &symbols_from_values(vec![Value::UInt(i as u128)])
+                    &symbols_from_values(vec![Value::UInt(i)])
                 )
                 .unwrap()
                 .0,
@@ -3101,10 +3098,7 @@ fn test_vote_too_many_confirms() {
                     None,
                     COST_VOTING_CONTRACT_TESTNET.clone(),
                     "withdraw-votes",
-                    &symbols_from_values(vec![
-                        Value::UInt(i as u128),
-                        Value::UInt(USTX_PER_HOLDER),
-                    ]),
+                    &symbols_from_values(vec![Value::UInt(i), Value::UInt(USTX_PER_HOLDER)]),
                 )
                 .unwrap()
                 .0;
@@ -3130,7 +3124,7 @@ fn test_vote_too_many_confirms() {
                     None,
                     COST_VOTING_CONTRACT_TESTNET.clone(),
                     "confirm-miners",
-                    &symbols_from_values(vec![Value::UInt(i as u128)])
+                    &symbols_from_values(vec![Value::UInt(i)])
                 )
                 .unwrap()
                 .0,

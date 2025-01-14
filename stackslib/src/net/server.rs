@@ -82,7 +82,7 @@ impl HttpPeer {
         }
     }
 
-    pub fn set_server_handle(&mut self, h: usize, addr: SocketAddr) -> () {
+    pub fn set_server_handle(&mut self, h: usize, addr: SocketAddr) {
         self.http_server_handle = h;
         self.http_server_addr = addr;
     }
@@ -287,7 +287,7 @@ impl HttpPeer {
 
     /// Deregister a socket/event pair
     #[cfg_attr(test, mutants::skip)]
-    pub fn deregister_http(&mut self, network_state: &mut NetworkState, event_id: usize) -> () {
+    pub fn deregister_http(&mut self, network_state: &mut NetworkState, event_id: usize) {
         test_debug!("Remove HTTP event {}", event_id);
         self.peers.remove(&event_id);
 
@@ -306,7 +306,7 @@ impl HttpPeer {
     }
 
     /// Remove slow/unresponsive peers
-    fn disconnect_unresponsive(&mut self, network_state: &mut NetworkState) -> () {
+    fn disconnect_unresponsive(&mut self, network_state: &mut NetworkState) {
         let now = get_epoch_time_secs();
         let mut to_remove = vec![];
         for (event_id, (socket, _, _, ts)) in self.connecting.iter() {
@@ -338,7 +338,7 @@ impl HttpPeer {
             }
         }
 
-        for event_id in to_remove.drain(0..) {
+        for event_id in to_remove.into_iter() {
             self.deregister_http(network_state, event_id);
         }
     }
@@ -522,7 +522,7 @@ impl HttpPeer {
         network_state: &mut NetworkState,
         node_state: &mut StacksNodeState,
         poll_state: &mut NetworkPollState,
-    ) -> () {
+    ) {
         for event_id in poll_state.ready.iter() {
             if self.connecting.contains_key(event_id) {
                 let (socket, data_url, initial_request_opt, _) =
@@ -779,7 +779,7 @@ mod test {
                 let mut resp = vec![];
                 match sock.read_to_end(&mut resp) {
                     Ok(_) => {
-                        if resp.len() == 0 {
+                        if resp.is_empty() {
                             test_debug!("Client {} did not receive any data", i);
                             client_sx.send(Err(net_error::PermanentlyDrained)).unwrap();
                             return;
@@ -1106,7 +1106,7 @@ mod test {
             },
             |client_id, http_response_bytes_res| {
                 match http_response_bytes_res {
-                    Ok(bytes) => bytes.len() == 0, // should not have gotten any data
+                    Ok(bytes) => bytes.is_empty(), // should not have gotten any data
                     Err(net_error::PermanentlyDrained) => true,
                     Err(err) => {
                         // should have failed

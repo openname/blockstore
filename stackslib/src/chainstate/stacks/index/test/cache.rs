@@ -99,14 +99,14 @@ fn test_marf_with_cache(
         if batch_size > 0 {
             for b in (0..block_data.len()).step_by(batch_size) {
                 let batch = &block_data[b..cmp::min(block_data.len(), b + batch_size)];
-                let keys = batch.iter().map(|(k, _)| k.clone()).collect();
+                let keys: Vec<_> = batch.iter().map(|(k, _)| k.clone()).collect();
                 let values = batch.iter().map(|(_, v)| v.clone()).collect();
                 marf.insert_batch(&keys, values).unwrap();
             }
         } else {
             for (key, value) in block_data.iter() {
                 let path = TrieHash::from_key(key);
-                let leaf = TrieLeaf::from_value(&vec![], value.clone());
+                let leaf = TrieLeaf::from_value(&[], value.clone());
                 marf.insert_raw(path, leaf).unwrap();
             }
         }
@@ -129,7 +129,7 @@ fn test_marf_with_cache(
         test_debug!("Read block {}", i);
         for (key, value) in block_data.iter() {
             let path = TrieHash::from_key(key);
-            let marf_leaf = TrieLeaf::from_value(&vec![], value.clone());
+            let marf_leaf = TrieLeaf::from_value(&[], value.clone());
 
             let read_time = SystemTime::now();
             let leaf = MARF::get_path(

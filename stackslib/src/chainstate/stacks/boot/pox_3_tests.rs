@@ -3278,7 +3278,7 @@ fn pox_3_getters() {
         .expect_optional()
         .unwrap();
     assert_eq!(bob_delegation_addr, charlie_address.to_account_principal());
-    assert_eq!(bob_delegation_amt, LOCKUP_AMT as u128);
+    assert_eq!(bob_delegation_amt, LOCKUP_AMT);
     assert!(bob_pox_addr_opt.is_none());
 
     let allowance = data
@@ -3326,7 +3326,7 @@ fn pox_3_getters() {
         .unwrap()
         .expect_u128()
         .unwrap();
-    assert_eq!(partial_stacked, LOCKUP_AMT as u128);
+    assert_eq!(partial_stacked, LOCKUP_AMT);
 
     let rejected = data
         .get("get-total-pox-rejection-now")
@@ -3334,7 +3334,7 @@ fn pox_3_getters() {
         .unwrap()
         .expect_u128()
         .unwrap();
-    assert_eq!(rejected, LOCKUP_AMT as u128);
+    assert_eq!(rejected, LOCKUP_AMT);
 
     let rejected = data
         .get("get-total-pox-rejection-next")
@@ -4430,7 +4430,7 @@ fn pox_3_delegate_stx_addr_validation() {
         alice_delegation_addr,
         charlie_address.to_account_principal()
     );
-    assert_eq!(alice_delegation_amt, LOCKUP_AMT as u128);
+    assert_eq!(alice_delegation_amt, LOCKUP_AMT);
     assert!(alice_pox_addr_opt.is_some());
 
     let alice_pox_addr = alice_pox_addr_opt.unwrap();

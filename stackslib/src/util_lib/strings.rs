@@ -58,7 +58,7 @@ pub struct StacksString(Vec<u8>);
 
 pub struct VecDisplay<'a, T: fmt::Display>(pub &'a [T]);
 
-impl<'a, T: fmt::Display> fmt::Display for VecDisplay<'a, T> {
+impl<T: fmt::Display> fmt::Display for VecDisplay<'_, T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "[")?;
         for (ix, val) in self.0.iter().enumerate() {
@@ -139,7 +139,7 @@ impl StacksMessageCodec for UrlString {
         }
 
         // must be a valid block URL, or empty string
-        if self.as_bytes().len() > 0 {
+        if !self.as_bytes().is_empty() {
             let _ = self.parse_to_block_url()?;
         }
 
@@ -172,7 +172,7 @@ impl StacksMessageCodec for UrlString {
         })?;
 
         // must be a valid block URL, or empty string
-        if url.len() > 0 {
+        if !url.is_empty() {
             let _ = url.parse_to_block_url()?;
         }
         Ok(url)
@@ -207,7 +207,7 @@ impl StacksString {
         // This is 0x20 through 0x7e, inclusive, as well as '\t' and '\n'
         // TODO: DRY up with vm::representations
         for c in s.as_bytes().iter() {
-            if (*c < 0x20 && *c != ('\t' as u8) && *c != ('\n' as u8)) || (*c > 0x7e) {
+            if (*c < 0x20 && *c != b'\t' && *c != b'\n') || *c > 0x7e {
                 return false;
             }
         }
@@ -254,7 +254,7 @@ impl UrlString {
             )));
         }
 
-        if url.username().len() > 0 || url.password().is_some() {
+        if !url.username().is_empty() || url.password().is_some() {
             return Err(codec_error::DeserializeError(
                 "Invalid URL: must not contain a username/password".to_string(),
             ));
@@ -367,10 +367,10 @@ mod test {
 
     #[test]
     fn test_contract_name_invalid() {
-        let s = vec![0u8];
+        let s = [0u8];
         assert!(ContractName::consensus_deserialize(&mut &s[..]).is_err());
 
-        let s = vec![5u8, 0x66, 0x6f, 0x6f, 0x6f, 0x6f]; // "foooo"
+        let s = [5u8, 0x66, 0x6f, 0x6f, 0x6f, 0x6f]; // "foooo"
         assert!(ContractName::consensus_deserialize(&mut &s[..]).is_ok());
 
         let s_body = [0x6fu8; CONTRACT_MAX_NAME_LENGTH + 1];

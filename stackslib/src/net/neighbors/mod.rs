@@ -118,7 +118,7 @@ impl PeerNetwork {
     fn new_outbound_or_pingback_walk(
         &self,
     ) -> Result<NeighborWalk<PeerDBNeighborWalk, PeerNetworkComms>, net_error> {
-        if self.get_walk_pingbacks().len() == 0 {
+        if self.get_walk_pingbacks().is_empty() {
             debug!(
                 "{:?}: no walk pingbacks, so instantiate a normal neighbor walk",
                 self.get_local_peer()

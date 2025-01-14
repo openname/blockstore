@@ -210,6 +210,7 @@ pub fn special_stx_transfer_memo(
     }
 }
 
+#[allow(clippy::unnecessary_fallible_conversions)]
 pub fn special_stx_account(
     args: &[SymbolicExpression],
     env: &mut Environment,
@@ -286,10 +287,7 @@ pub fn special_stx_burn(
         env.add_memory(TypeSignature::PrincipalType.size()? as u64)?;
         env.add_memory(STXBalance::unlocked_and_v1_size as u64)?;
 
-        let mut burner_snapshot = env
-            .global_context
-            .database
-            .get_stx_balance_snapshot(&from)?;
+        let mut burner_snapshot = env.global_context.database.get_stx_balance_snapshot(from)?;
         if !burner_snapshot.can_transfer(amount)? {
             return clarity_ecode!(StxErrorCodes::NOT_ENOUGH_BALANCE);
         }

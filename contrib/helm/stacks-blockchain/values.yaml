@@ -212,7 +212,7 @@ node:
 ##
 ## For more info, please reference our docs and example config files:
 ## https://docs.stacks.co/docs/nodes-and-miners/run-a-node
-## https://github.com/blockstack/stacks-blockchain/tree/master/testnet/stacks-node/conf
+## https://github.com/blockstack/stacks-blockchain/tree/master/sample/conf
 ##
 config:
   # More configs can be added than what's shown below.

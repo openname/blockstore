@@ -545,7 +545,7 @@ pub fn make_simple_block_commit(
 
         txid: next_txid(),
         vtxindex: 0,
-        block_height: block_height,
+        block_height,
         burn_parent_modulus: ((block_height - 1) % BURN_BLOCK_MINED_AT_MODULUS) as u8,
         burn_header_hash: burn_header.block_hash.clone(),
     };
@@ -602,14 +602,14 @@ fn test_get_commit_at() {
     for i in 0..5 {
         let hdr = BurnchainHeaderHash([(i + 1) as u8; 32]);
         let block_header = BurnchainBlockHeader {
-            block_height: (first_height + i) as u64,
+            block_height: first_height + i,
             block_hash: hdr,
             parent_block_hash: parent_block_header
                 .as_ref()
                 .map(|blk| blk.block_hash.clone())
                 .unwrap_or(first_block_header.block_hash.clone()),
             num_txs: 1,
-            timestamp: i as u64,
+            timestamp: i,
         };
 
         headers.push(block_header.clone());
@@ -656,13 +656,13 @@ fn test_get_commit_at() {
     assert_eq!(cmt, cmts[4]);
 
     // fork off the last stored commit block
-    let fork_hdr = BurnchainHeaderHash([90 as u8; 32]);
+    let fork_hdr = BurnchainHeaderHash([90; 32]);
     let fork_block_header = BurnchainBlockHeader {
         block_height: 5,
         block_hash: fork_hdr,
-        parent_block_hash: BurnchainHeaderHash([4 as u8; 32]),
+        parent_block_hash: BurnchainHeaderHash([4; 32]),
         num_txs: 1,
-        timestamp: 4 as u64,
+        timestamp: 4,
     };
 
     let mut fork_cmt = cmts[4].clone();
@@ -716,14 +716,14 @@ fn test_get_set_check_anchor_block() {
     for i in 0..5 {
         let hdr = BurnchainHeaderHash([(i + 1) as u8; 32]);
         let block_header = BurnchainBlockHeader {
-            block_height: (first_height + i) as u64,
+            block_height: first_height + i,
             block_hash: hdr,
             parent_block_hash: parent_block_header
                 .as_ref()
                 .map(|blk| blk.block_hash.clone())
                 .unwrap_or(first_block_header.block_hash.clone()),
             num_txs: 1,
-            timestamp: i as u64,
+            timestamp: i,
         };
 
         headers.push(block_header.clone());
@@ -802,14 +802,14 @@ fn test_update_block_descendancy() {
     for i in 0..5 {
         let hdr = BurnchainHeaderHash([(i + 1) as u8; 32]);
         let block_header = BurnchainBlockHeader {
-            block_height: (first_height + i) as u64,
+            block_height: first_height + i,
             block_hash: hdr,
             parent_block_hash: parent_block_header
                 .as_ref()
                 .map(|blk| blk.block_hash.clone())
                 .unwrap_or(first_block_header.block_hash.clone()),
             num_txs: 3,
-            timestamp: i as u64,
+            timestamp: i,
         };
 
         headers.push(block_header.clone());
@@ -926,14 +926,14 @@ fn test_update_block_descendancy_with_fork() {
     for i in 0..5 {
         let hdr = BurnchainHeaderHash([(i + 1) as u8; 32]);
         let block_header = BurnchainBlockHeader {
-            block_height: (first_height + i) as u64,
+            block_height: first_height + i,
             block_hash: hdr,
             parent_block_hash: parent_block_header
                 .as_ref()
                 .map(|blk| blk.block_hash.clone())
                 .unwrap_or(first_block_header.block_hash.clone()),
             num_txs: 3,
-            timestamp: i as u64,
+            timestamp: i,
         };
 
         headers.push(block_header.clone());
@@ -943,14 +943,14 @@ fn test_update_block_descendancy_with_fork() {
     for i in 0..5 {
         let hdr = BurnchainHeaderHash([(i + 128 + 1) as u8; 32]);
         let block_header = BurnchainBlockHeader {
-            block_height: (first_height + i) as u64,
+            block_height: first_height + i,
             block_hash: hdr,
             parent_block_hash: parent_block_header
                 .as_ref()
                 .map(|blk| blk.block_hash.clone())
                 .unwrap_or(first_block_header.block_hash.clone()),
             num_txs: 3,
-            timestamp: i as u64,
+            timestamp: i,
         };
 
         fork_headers.push(block_header.clone());

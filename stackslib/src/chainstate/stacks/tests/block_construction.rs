@@ -801,7 +801,7 @@ fn test_build_anchored_blocks_connected_by_microblocks_across_epoch() {
                 )
                 .unwrap();
 
-                if parent_mblock_stream.len() > 0 {
+                if !parent_mblock_stream.is_empty() {
                     if tenure_id != 5 {
                         assert_eq!(
                             anchored_block.0.header.parent_microblock,
@@ -823,7 +823,7 @@ fn test_build_anchored_blocks_connected_by_microblocks_across_epoch() {
 
         // should always succeed
         peer.next_burnchain_block(burn_ops.clone());
-        peer.process_stacks_epoch_at_tip_checked(&stacks_block, &vec![])
+        peer.process_stacks_epoch_at_tip_checked(&stacks_block, &[])
             .unwrap();
     }
 
@@ -1058,7 +1058,9 @@ fn test_build_anchored_blocks_connected_by_microblocks_across_epoch_invalid() {
                 )
                 .unwrap();
 
-                if parent_mblock_stream.len() > 0 {
+                if parent_mblock_stream.is_empty() {
+                    assert_eq!(tenure_id, 0);
+                } else {
                     // force the block to confirm a microblock stream, even if it would result in
                     // an invalid block.
                     test_debug!(
@@ -1074,8 +1076,6 @@ fn test_build_anchored_blocks_connected_by_microblocks_across_epoch_invalid() {
                         parent_mblock_stream.last().unwrap().block_hash()
                     );
                     test_debug!("New block hash is {}", &anchored_block.0.block_hash());
-                } else {
-                    assert_eq!(tenure_id, 0);
                 }
 
                 (anchored_block.0, parent_mblock_stream)
@@ -1089,12 +1089,12 @@ fn test_build_anchored_blocks_connected_by_microblocks_across_epoch_invalid() {
 
         if tenure_id != 5 {
             // should always succeed
-            peer.process_stacks_epoch_at_tip_checked(&stacks_block, &vec![])
+            peer.process_stacks_epoch_at_tip_checked(&stacks_block, &[])
                 .unwrap();
         } else {
             // should fail at first, since the block won't be available
             // (since validate_anchored_block_burnchain() will fail)
-            if let Err(e) = peer.process_stacks_epoch_at_tip_checked(&stacks_block, &vec![]) {
+            if let Err(e) = peer.process_stacks_epoch_at_tip_checked(&stacks_block, &[]) {
                 match e {
                     CoordinatorError::ChainstateError(ChainstateError::InvalidStacksBlock(_)) => {}
                     x => {
@@ -1126,7 +1126,7 @@ fn test_build_anchored_blocks_connected_by_microblocks_across_epoch_invalid() {
 
             // should run to completion, but the block should *not* be processed
             // (this tests append_block())
-            peer.process_stacks_epoch_at_tip_checked(&stacks_block, &vec![])
+            peer.process_stacks_epoch_at_tip_checked(&stacks_block, &[])
                 .unwrap();
         }
 
@@ -1256,7 +1256,7 @@ fn test_build_anchored_blocks_incrementing_nonces() {
                 &parent_tip,
                 tip.total_burn,
                 vrf_proof,
-                Hash160([0 as u8; 20]),
+                Hash160([0; 20]),
                 &coinbase_tx,
                 BlockBuilderSettings::limited(),
                 None,
@@ -1637,7 +1637,7 @@ fn test_build_anchored_blocks_mempool_fee_transaction_too_low() {
                 &parent_tip,
                 tip.total_burn,
                 vrf_proof,
-                Hash160([0 as u8; 20]),
+                Hash160([0; 20]),
                 &coinbase_tx,
                 BlockBuilderSettings::max_value(),
                 None,
@@ -1728,7 +1728,7 @@ fn test_build_anchored_blocks_zero_fee_transaction() {
                 &parent_tip,
                 vrf_proof,
                 tip.total_burn,
-                Hash160([0 as u8; 20]),
+                Hash160([0; 20]),
             )
             .unwrap();
 
@@ -2794,7 +2794,7 @@ fn test_build_microblock_stream_forks() {
                             forked_parent_microblock_stream[i].txs[0] = forked_mblock_tx;
 
                             // re-calculate merkle root
-                            let txid_vecs = forked_parent_microblock_stream[i].txs
+                            let txid_vecs: Vec<_> = forked_parent_microblock_stream[i].txs
                                 .iter()
                                 .map(|tx| tx.txid().as_bytes().to_vec())
                                 .collect();
@@ -3121,7 +3121,7 @@ fn test_build_microblock_stream_forks_with_descendants() {
                             forked_parent_microblock_stream[i].txs[0] = forked_mblock_tx;
 
                             // re-calculate merkle root
-                            let txid_vecs = forked_parent_microblock_stream[i].txs
+                            let txid_vecs: Vec<_> = forked_parent_microblock_stream[i].txs
                                 .iter()
                                 .map(|tx| tx.txid().as_bytes().to_vec())
                                 .collect();
@@ -3355,10 +3355,10 @@ fn test_build_microblock_stream_forks_with_descendants() {
         for burn_op in burn_ops.iter_mut() {
             if let BlockstackOperationType::LeaderBlockCommit(ref mut op) = burn_op {
                 // patch it up
-                op.parent_block_ptr = (*parent_block_ptrs
+                op.parent_block_ptr = *parent_block_ptrs
                     .borrow()
                     .get(&stacks_block.header.parent_block)
-                    .unwrap()) as u32;
+                    .unwrap();
             }
         }
 
@@ -3912,7 +3912,7 @@ fn test_contract_call_across_clarity_versions() {
 
         // should always succeed
         peer.next_burnchain_block(burn_ops.clone());
-        peer.process_stacks_epoch_at_tip_checked(&stacks_block, &vec![])
+        peer.process_stacks_epoch_at_tip_checked(&stacks_block, &[])
             .unwrap();
     }
 
@@ -4841,7 +4841,7 @@ fn test_fee_order_mismatch_nonce_order() {
                 &parent_tip,
                 tip.total_burn,
                 vrf_proof,
-                Hash160([0 as u8; 20]),
+                Hash160([0; 20]),
                 &coinbase_tx,
                 BlockBuilderSettings::max_value(),
                 None,

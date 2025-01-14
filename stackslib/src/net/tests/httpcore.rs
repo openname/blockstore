@@ -316,7 +316,7 @@ fn test_http_request_type_codec() {
             str::from_utf8(&expected_bytes).unwrap()
         );
 
-        if expected_http_body.len() > 0 {
+        if !expected_http_body.is_empty() {
             expected_http_preamble.set_content_type(HttpContentType::Bytes);
             expected_http_preamble.set_content_length(expected_http_body.len() as u32)
         }
@@ -767,11 +767,11 @@ fn test_http_response_type_codec() {
         match preamble {
             StacksHttpPreamble::Response(ref mut req) => {
                 assert_eq!(req.headers.len(), 5);
-                assert!(req.headers.get("access-control-allow-headers").is_some());
-                assert!(req.headers.get("access-control-allow-methods").is_some());
-                assert!(req.headers.get("access-control-allow-origin").is_some());
-                assert!(req.headers.get("server").is_some());
-                assert!(req.headers.get("date").is_some());
+                assert!(req.headers.contains_key("access-control-allow-headers"));
+                assert!(req.headers.contains_key("access-control-allow-methods"));
+                assert!(req.headers.contains_key("access-control-allow-origin"));
+                assert!(req.headers.contains_key("server"));
+                assert!(req.headers.contains_key("date"));
                 req.headers.clear();
             }
             StacksHttpPreamble::Request(_) => {
@@ -809,14 +809,14 @@ fn test_http_response_type_codec_err() {
         ("GET", "/v2/neighbors"),
         ("GET", "/v2/neighbors"),
     ];
-    let bad_request_payloads = vec![
+    let bad_request_payloads = [
         "HTTP/1.1 200 OK\r\nServer: stacks/v2.0\r\nX-Request-Id: 123\r\nContent-Type: application/json\r\nContent-length: 2\r\n\r\nab",
         "HTTP/1.1 200 OK\r\nServer: stacks/v2.0\r\nX-Request-Id: 123\r\nContent-Type: application/json\r\nContent-length: 4\r\n\r\n\"ab\"",
         "HTTP/1.1 200 OK\r\nServer: stacks/v2.0\r\nX-Request-Id: 123\r\nContent-Type: application/json\r\nContent-length: 1\r\n\r\n{",
         "HTTP/1.1 200 OK\r\nServer: stacks/v2.0\r\nX-Request-Id: 123\r\nContent-Type: application/json\r\nContent-length: 1\r\n\r\na",
         "HTTP/1.1 400 Bad Request\r\nServer: stacks/v2.0\r\nX-Request-Id: 123\r\nContent-Type: application/octet-stream\r\nContent-length: 2\r\n\r\n{}",
     ];
-    let expected_bad_request_payload_errors = vec![
+    let expected_bad_request_payload_errors = [
         "Invalid content-type",
         "bad length 2 for hex string",
         "Not enough bytes",

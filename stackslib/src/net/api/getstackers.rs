@@ -57,8 +57,8 @@ pub enum GetStackersErrors {
 }
 
 impl GetStackersErrors {
-    pub const NOT_AVAILABLE_ERR_TYPE: &'static str = "not_available_try_again";
-    pub const OTHER_ERR_TYPE: &'static str = "other";
+    pub const NOT_AVAILABLE_ERR_TYPE: &str = "not_available_try_again";
+    pub const OTHER_ERR_TYPE: &str = "other";
 
     pub fn error_type_string(&self) -> &'static str {
         match self {

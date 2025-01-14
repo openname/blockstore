@@ -114,8 +114,8 @@ impl BurnSamplePoint {
 
     fn sanity_check_window(
         miner_commitment_window: u8,
-        block_commits: &Vec<Vec<LeaderBlockCommitOp>>,
-        missed_commits: &Vec<Vec<MissedBlockCommit>>,
+        block_commits: &[Vec<LeaderBlockCommitOp>],
+        missed_commits: &[Vec<MissedBlockCommit>],
     ) {
         assert!(
             block_commits.len() <= usize::try_from(miner_commitment_window).expect("infallible")
@@ -365,8 +365,8 @@ impl BurnSamplePoint {
 
     /// Calculate the ranges between 0 and 2**256 - 1 over which each point in the burn sample
     /// applies, so we can later select which block to use.
-    fn make_sortition_ranges(burn_sample: &mut Vec<BurnSamplePoint>) -> () {
-        if burn_sample.len() == 0 {
+    fn make_sortition_ranges(burn_sample: &mut Vec<BurnSamplePoint>) {
+        if burn_sample.is_empty() {
             // empty sample
             return;
         }
@@ -818,7 +818,7 @@ mod tests {
                     .unwrap(),
             )
             .unwrap(),
-            memo: vec![01, 02, 03, 04, 05],
+            memo: vec![1, 2, 3, 4, 5],
 
             txid: Txid::from_bytes_be(
                 &hex_bytes("1bfa831b5fc56c858198acb8e77e5863c1e9d8ac26d49ddb914e24d8d4083562")
@@ -843,7 +843,7 @@ mod tests {
                     .unwrap(),
             )
             .unwrap(),
-            memo: vec![01, 02, 03, 04, 05],
+            memo: vec![1, 2, 3, 4, 5],
 
             txid: Txid::from_bytes_be(
                 &hex_bytes("9410df84e2b440055c33acb075a0687752df63fe8fe84aeec61abe469f0448c7")
@@ -868,7 +868,7 @@ mod tests {
                     .unwrap(),
             )
             .unwrap(),
-            memo: vec![01, 02, 03, 04, 05],
+            memo: vec![1, 2, 3, 4, 5],
 
             txid: Txid::from_bytes_be(
                 &hex_bytes("eb54704f71d4a2d1128d60ffccced547054b52250ada6f3e7356165714f44d4c")

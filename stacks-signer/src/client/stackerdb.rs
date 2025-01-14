@@ -270,7 +270,7 @@ mod tests {
             txs: vec![],
         };
         let tx_merkle_root = {
-            let txid_vecs = block
+            let txid_vecs: Vec<_> = block
                 .txs
                 .iter()
                 .map(|tx| tx.txid().as_bytes().to_vec())

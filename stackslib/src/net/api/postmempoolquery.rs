@@ -175,7 +175,7 @@ impl HttpChunkGenerator for StacksMemPoolStream {
             "max_txs" => self.max_txs
         );
 
-        if next_txs.len() > 0 {
+        if !next_txs.is_empty() {
             // have another tx to send
             let chunk = next_txs[0].serialize_to_vec();
             if let Some(next_last_randomized_txid) = next_last_randomized_txid_opt {

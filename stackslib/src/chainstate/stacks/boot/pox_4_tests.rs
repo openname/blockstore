@@ -2962,7 +2962,7 @@ fn pox_4_revoke_delegate_stx_events() {
 }
 
 fn verify_signer_key_sig(
-    signature: &Vec<u8>,
+    signature: &[u8],
     signing_key: &Secp256k1PublicKey,
     pox_addr: &PoxAddress,
     peer: &mut TestPeer,
@@ -6378,7 +6378,7 @@ fn stack_increase(use_nakamoto: bool) {
         &pox_addr,
         lock_period,
         &signing_pk,
-        block_height as u64,
+        block_height,
         Some(signature),
         u128::MAX,
         1,
@@ -8930,7 +8930,7 @@ pub fn tenure_with_txs(
             test_signers,
             |_miner, _chainstate, _sort_dbconn, _blocks| {
                 info!("Building nakamoto block. Blocks len {}", _blocks.len());
-                if _blocks.len() == 0 {
+                if _blocks.is_empty() {
                     txs.to_vec()
                 } else {
                     vec![]

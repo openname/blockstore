@@ -74,9 +74,9 @@ impl NetworkState {
         let events = mio::Events::with_capacity(event_capacity);
 
         Ok(NetworkState {
-            poll: poll,
-            events: events,
-            event_capacity: event_capacity,
+            poll,
+            events,
+            event_capacity,
             servers: vec![],
             count: 1,
             event_map: HashMap::new(),

@@ -162,10 +162,7 @@ impl VRFPublicKey {
         //  that's what the docs say to do!
 
         let checked_pubkey = CompressedEdwardsY(pubkey_slice);
-        if checked_pubkey.decompress().is_none() {
-            // invalid
-            return None;
-        }
+        checked_pubkey.decompress()?;
 
         let key = ed25519_dalek::VerifyingKey::from_bytes(&pubkey_slice).ok()?;
         Some(VRFPublicKey(key))
@@ -436,7 +433,7 @@ impl VRF {
     /// * its public key (an ed25519 curve point)
     /// * a new private key derived from the hash of the private key
     /// * a truncated hash of the private key
-    /// Idea borroed from Algorand (https://github.com/algorand/libsodium/blob/draft-irtf-cfrg-vrf-03/src/libsodium/crypto_vrf/ietfdraft03/prove.c)
+    ///   Idea borrowed from Algorand (https://github.com/algorand/libsodium/blob/draft-irtf-cfrg-vrf-03/src/libsodium/crypto_vrf/ietfdraft03/prove.c)
     fn expand_privkey(secret: &VRFPrivateKey) -> (VRFPublicKey, ed25519_Scalar, [u8; 32]) {
         let mut hasher = Sha512::new();
         let mut h = [0u8; 64];

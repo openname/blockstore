@@ -185,7 +185,7 @@ impl AssetMap {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct EventBatch {
     pub events: Vec<StacksTransactionEvent>,
 }
@@ -255,6 +255,12 @@ pub type StackTrace = Vec<FunctionIdentifier>;
 
 pub const TRANSIENT_CONTRACT_NAME: &str = "__transient";
 
+impl Default for AssetMap {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AssetMap {
     pub fn new() -> AssetMap {
         AssetMap {
@@ -288,11 +294,11 @@ impl AssetMap {
         asset: &AssetIdentifier,
         amount: u128,
     ) -> Result<u128> {
-        let current_amount = match self.token_map.get(principal) {
-            Some(principal_map) => *principal_map.get(asset).unwrap_or(&0),
-            None => 0,
-        };
-
+        let current_amount = self
+            .token_map
+            .get(principal)
+            .and_then(|x| x.get(asset))
+            .unwrap_or(&0);
         current_amount
             .checked_add(amount)
             .ok_or(RuntimeErrorType::ArithmeticOverflow.into())
@@ -405,17 +411,14 @@ impl AssetMap {
 
         for (principal, stx_amount) in self.stx_map.drain() {
             let output_map = map.entry(principal.clone()).or_default();
-            output_map.insert(
-                AssetIdentifier::STX(),
-                AssetMapEntry::STX(stx_amount as u128),
-            );
+            output_map.insert(AssetIdentifier::STX(), AssetMapEntry::STX(stx_amount));
         }
 
         for (principal, stx_burned_amount) in self.burn_map.drain() {
             let output_map = map.entry(principal.clone()).or_default();
             output_map.insert(
                 AssetIdentifier::STX_burned(),
-                AssetMapEntry::Burn(stx_burned_amount as u128),
+                AssetMapEntry::Burn(stx_burned_amount),
             );
         }
 
@@ -426,7 +429,7 @@ impl AssetMap {
             }
         }
 
-        return map;
+        map
     }
 
     pub fn get_stx(&self, principal: &PrincipalData) -> Option<u128> {
@@ -452,13 +455,8 @@ impl AssetMap {
         principal: &PrincipalData,
         asset_identifier: &AssetIdentifier,
     ) -> Option<u128> {
-        match self.token_map.get(principal) {
-            Some(ref assets) => match assets.get(asset_identifier) {
-                Some(value) => Some(*value),
-                None => None,
-            },
-            None => None,
-        }
+        let assets = self.token_map.get(principal)?;
+        assets.get(asset_identifier).copied()
     }
 
     pub fn get_nonfungible_tokens(
@@ -466,13 +464,8 @@ impl AssetMap {
         principal: &PrincipalData,
         asset_identifier: &AssetIdentifier,
     ) -> Option<&Vec<Value>> {
-        match self.asset_map.get(principal) {
-            Some(ref assets) => match assets.get(asset_identifier) {
-                Some(values) => Some(values),
-                None => None,
-            },
-            None => None,
-        }
+        let assets = self.asset_map.get(principal)?;
+        assets.get(asset_identifier)
     }
 }
 
@@ -481,23 +474,23 @@ impl fmt::Display for AssetMap {
         write!(f, "[")?;
         for (principal, principal_map) in self.token_map.iter() {
             for (asset, amount) in principal_map.iter() {
-                write!(f, "{} spent {} {}\n", principal, amount, asset)?;
+                writeln!(f, "{principal} spent {amount} {asset}")?;
             }
         }
         for (principal, principal_map) in self.asset_map.iter() {
             for (asset, transfer) in principal_map.iter() {
-                write!(f, "{} transfered [", principal)?;
+                write!(f, "{principal} transfered [")?;
                 for t in transfer {
-                    write!(f, "{}, ", t)?;
+                    write!(f, "{t}, ")?;
                 }
-                write!(f, "] {}\n", asset)?;
+                writeln!(f, "] {asset}")?;
             }
         }
         for (principal, stx_amount) in self.stx_map.iter() {
-            write!(f, "{} spent {} microSTX\n", principal, stx_amount)?;
+            writeln!(f, "{principal} spent {stx_amount} microSTX")?;
         }
         for (principal, stx_burn_amount) in self.burn_map.iter() {
-            write!(f, "{} burned {} microSTX\n", principal, stx_burn_amount)?;
+            writeln!(f, "{principal} burned {stx_burn_amount} microSTX")?;
         }
         write!(f, "]")
     }
@@ -505,7 +498,7 @@ impl fmt::Display for AssetMap {
 
 impl EventBatch {
     pub fn new() -> EventBatch {
-        EventBatch { events: vec![] }
+        EventBatch::default()
     }
 }
 
@@ -752,7 +745,7 @@ impl<'a> OwnedEnvironment<'a> {
                 let mut snapshot = env
                     .global_context
                     .database
-                    .get_stx_balance_snapshot(&recipient)
+                    .get_stx_balance_snapshot(recipient)
                     .unwrap();
 
                 snapshot.credit(amount).unwrap();
@@ -958,7 +951,7 @@ impl<'a, 'b> Environment<'a, 'b> {
         program: &str,
         rules: ast::ASTRules,
     ) -> Result<Value> {
-        let clarity_version = self.contract_context.clarity_version.clone();
+        let clarity_version = self.contract_context.clarity_version;
 
         let parsed = ast::build_ast_with_rules(
             contract_identifier,
@@ -970,7 +963,7 @@ impl<'a, 'b> Environment<'a, 'b> {
         )?
         .expressions;
 
-        if parsed.len() < 1 {
+        if parsed.is_empty() {
             return Err(RuntimeErrorType::ParseError(
                 "Expected a program of at least length 1".to_string(),
             )
@@ -990,7 +983,7 @@ impl<'a, 'b> Environment<'a, 'b> {
 
         let result = {
             let mut nested_env = Environment::new(
-                &mut self.global_context,
+                self.global_context,
                 &contract.contract_context,
                 self.call_stack,
                 self.sender.clone(),
@@ -1017,7 +1010,7 @@ impl<'a, 'b> Environment<'a, 'b> {
 
     pub fn eval_raw_with_rules(&mut self, program: &str, rules: ast::ASTRules) -> Result<Value> {
         let contract_id = QualifiedContractIdentifier::transient();
-        let clarity_version = self.contract_context.clarity_version.clone();
+        let clarity_version = self.contract_context.clarity_version;
 
         let parsed = ast::build_ast_with_rules(
             &contract_id,
@@ -1029,15 +1022,14 @@ impl<'a, 'b> Environment<'a, 'b> {
         )?
         .expressions;
 
-        if parsed.len() < 1 {
+        if parsed.is_empty() {
             return Err(RuntimeErrorType::ParseError(
                 "Expected a program of at least length 1".to_string(),
             )
             .into());
         }
         let local_context = LocalContext::new();
-        let result = { eval(&parsed[0], self, &local_context) };
-        result
+        eval(&parsed[0], self, &local_context)
     }
 
     #[cfg(any(test, feature = "testing"))]
@@ -1159,7 +1151,7 @@ impl<'a, 'b> Environment<'a, 'b> {
                 Ok(value) => {
                     if let Some(handler) = self.global_context.database.get_cc_special_cases_handler() {
                         handler(
-                            &mut self.global_context,
+                            self.global_context,
                             self.sender.as_ref(),
                             self.sponsor.as_ref(),
                             contract_identifier,
@@ -1409,7 +1401,7 @@ impl<'a, 'b> Environment<'a, 'b> {
                 contract_content,
                 contract_analysis,
                 self.sponsor.clone(),
-                &mut self.global_context,
+                self.global_context,
                 contract_version,
             );
             self.drop_memory(memory_use)?;
@@ -1676,7 +1668,7 @@ impl<'a> GlobalContext<'a> {
     }
 
     pub fn is_top_level(&self) -> bool {
-        self.asset_maps.len() == 0
+        self.asset_maps.is_empty()
     }
 
     fn get_asset_map(&mut self) -> Result<&mut AssetMap> {
@@ -1973,6 +1965,12 @@ impl ContractContext {
     }
 }
 
+impl Default for LocalContext<'_> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'a> LocalContext<'a> {
     pub fn new() -> LocalContext<'a> {
         LocalContext {
@@ -2030,6 +2028,12 @@ impl<'a> LocalContext<'a> {
     }
 }
 
+impl Default for CallStack {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CallStack {
     pub fn new() -> CallStack {
         CallStack {
@@ -2078,10 +2082,10 @@ impl CallStack {
             }
             Ok(())
         } else {
-            return Err(InterpreterError::InterpreterError(
+            Err(InterpreterError::InterpreterError(
                 "Tried to remove item from empty call stack.".to_string(),
             )
-            .into());
+            .into())
         }
     }
 
@@ -2281,8 +2285,8 @@ mod test {
         //  not simply rollback the tx and squelch the error as includable.
         let e = env
             .stx_transfer(
-                &PrincipalData::from(u1.clone()),
-                &PrincipalData::from(u2.clone()),
+                &PrincipalData::from(u1),
+                &PrincipalData::from(u2),
                 1000,
                 &BuffData::empty(),
             )

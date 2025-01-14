@@ -219,10 +219,10 @@ pub const BLOCK_LIMIT_MAINNET_21: ExecutionCost = ExecutionCost {
 
 // Block limit for the testnet in Stacks 2.0.
 pub const HELIUM_BLOCK_LIMIT_20: ExecutionCost = ExecutionCost {
-    write_length: 15_0_000_000,
-    write_count: 5_0_000,
+    write_length: 150_000_000,
+    write_count: 50_000,
     read_length: 1_000_000_000,
-    read_count: 5_0_000,
+    read_count: 50_000,
     // allow much more runtime in helium blocks than mainnet
     runtime: 100_000_000_000,
 };
@@ -496,7 +496,10 @@ pub static STACKS_EPOCH_3_0_MARKER: u8 = 0x0b;
 
 /// Stacks 3.1 epoch marker.  All block-commits in 3.1 must have a memo bitfield with this value
 /// *or greater*.
-pub static STACKS_EPOCH_3_1_MARKER: u8 = 0x0c;
+/// NOTE: it has to be 0x0d because a prior release of 3.1 with 0x0c before activation had a
+/// consensus bug. This forces miners with this buggy release off the network if they are still
+/// running it prior to 3.1 activation.
+pub static STACKS_EPOCH_3_1_MARKER: u8 = 0x0d;
 
 #[test]
 fn test_ord_for_stacks_epoch() {

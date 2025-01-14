@@ -170,7 +170,7 @@ impl MempoolSync {
                 continue;
             }
             // has a data URL?
-            if convo.data_url.len() == 0 {
+            if convo.data_url.is_empty() {
                 continue;
             }
             // already resolved?

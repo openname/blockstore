@@ -50,6 +50,7 @@ url = "2.1.0"
 clarity = { path = "../clarity", features = ["testing"] }
 serial_test = "3.0.0"
 polynomial = "0.2.6"
+stacks-common = { path = "../stacks-common", features = ["testing"] }
 num-traits = "0.2.18"
 
 [dependencies.rusqlite]

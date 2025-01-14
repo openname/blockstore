@@ -35,7 +35,7 @@ use crate::chainstate::stacks::index::{Error as MARFError, MARFValue, MarfTrieId
 use crate::core::INITIAL_MINING_BONUS_WINDOW;
 use crate::util_lib::db::Error as DBError;
 
-impl<'a> SortitionHandleTx<'a> {
+impl SortitionHandleTx<'_> {
     /// Run a blockstack operation's "check()" method and return the result.
     fn check_transaction(
         &mut self,
@@ -116,8 +116,8 @@ impl<'a> SortitionHandleTx<'a> {
         burnchain: &Burnchain,
         parent_snapshot: &BlockSnapshot,
         block_header: &BurnchainBlockHeader,
-        this_block_ops: &Vec<BlockstackOperationType>,
-        missed_commits: &Vec<MissedBlockCommit>,
+        this_block_ops: &[BlockstackOperationType],
+        missed_commits: &[MissedBlockCommit],
         next_pox_info: Option<RewardCycleInfo>,
         parent_pox: PoxId,
         reward_info: Option<&RewardSetInfo>,
@@ -379,7 +379,7 @@ mod tests {
                 "a366b51292bef4edd64063d9145c617fec373bceb0758e98cd72becd84d54c7a",
             )
             .unwrap(),
-            memo: vec![01, 02, 03, 04, 05],
+            memo: vec![1, 2, 3, 4, 5],
 
             txid: Txid::from_bytes_be(
                 &hex_bytes("1bfa831b5fc56c858198acb8e77e5863c1e9d8ac26d49ddb914e24d8d4083562")
@@ -428,7 +428,7 @@ mod tests {
         let snapshot = test_append_snapshot(
             &mut db,
             BurnchainHeaderHash([0x01; 32]),
-            &vec![BlockstackOperationType::LeaderKeyRegister(leader_key)],
+            &[BlockstackOperationType::LeaderKeyRegister(leader_key)],
         );
 
         let next_block_header = BurnchainBlockHeader {

@@ -94,7 +94,7 @@ use crate::util_lib::boot::boot_code_id;
 use crate::util_lib::db::Error as db_error;
 use crate::util_lib::strings::StacksString;
 
-impl<'a> NakamotoStagingBlocksConnRef<'a> {
+impl NakamotoStagingBlocksConnRef<'_> {
     pub fn get_all_blocks_in_tenure(
         &self,
         tenure_id_consensus_hash: &ConsensusHash,
@@ -616,7 +616,7 @@ pub fn test_load_store_update_nakamoto_blocks() {
 
     let epoch2_txs = vec![coinbase_tx.clone()];
     let epoch2_tx_merkle_root = {
-        let txid_vecs = epoch2_txs
+        let txid_vecs: Vec<_> = epoch2_txs
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -710,7 +710,7 @@ pub fn test_load_store_update_nakamoto_blocks() {
 
     let nakamoto_txs = vec![tenure_change_tx.clone(), coinbase_tx.clone()];
     let nakamoto_tx_merkle_root = {
-        let txid_vecs = nakamoto_txs
+        let txid_vecs: Vec<_> = nakamoto_txs
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -720,7 +720,7 @@ pub fn test_load_store_update_nakamoto_blocks() {
 
     let nakamoto_txs_2 = vec![stx_transfer_tx.clone()];
     let nakamoto_tx_merkle_root_2 = {
-        let txid_vecs = nakamoto_txs_2
+        let txid_vecs: Vec<_> = nakamoto_txs_2
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -730,7 +730,7 @@ pub fn test_load_store_update_nakamoto_blocks() {
 
     let nakamoto_txs_3 = vec![stx_transfer_tx_3.clone()];
     let nakamoto_tx_merkle_root_3 = {
-        let txid_vecs = nakamoto_txs_3
+        let txid_vecs: Vec<_> = nakamoto_txs_3
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -740,7 +740,7 @@ pub fn test_load_store_update_nakamoto_blocks() {
 
     let nakamoto_txs_4 = vec![stx_transfer_tx_4.clone()];
     let nakamoto_tx_merkle_root_4 = {
-        let txid_vecs = nakamoto_txs_4
+        let txid_vecs: Vec<_> = nakamoto_txs_4
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -1780,7 +1780,7 @@ fn test_nakamoto_block_static_verification() {
 
     let nakamoto_txs = vec![tenure_change_tx.clone(), coinbase_tx.clone()];
     let nakamoto_tx_merkle_root = {
-        let txid_vecs = nakamoto_txs
+        let txid_vecs: Vec<_> = nakamoto_txs
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -1790,7 +1790,7 @@ fn test_nakamoto_block_static_verification() {
 
     let nakamoto_recipient_txs = vec![tenure_change_tx.clone(), coinbase_recipient_tx.clone()];
     let nakamoto_recipient_tx_merkle_root = {
-        let txid_vecs = nakamoto_recipient_txs
+        let txid_vecs: Vec<_> = nakamoto_recipient_txs
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -1803,7 +1803,7 @@ fn test_nakamoto_block_static_verification() {
         coinbase_shadow_recipient_tx.clone(),
     ];
     let nakamoto_shadow_recipient_tx_merkle_root = {
-        let txid_vecs = nakamoto_shadow_recipient_txs
+        let txid_vecs: Vec<_> = nakamoto_shadow_recipient_txs
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -1813,7 +1813,7 @@ fn test_nakamoto_block_static_verification() {
 
     let nakamoto_txs_bad_ch = vec![tenure_change_tx_bad_ch.clone(), coinbase_tx.clone()];
     let nakamoto_tx_merkle_root_bad_ch = {
-        let txid_vecs = nakamoto_txs_bad_ch
+        let txid_vecs: Vec<_> = nakamoto_txs_bad_ch
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -1824,7 +1824,7 @@ fn test_nakamoto_block_static_verification() {
     let nakamoto_txs_bad_miner_sig =
         vec![tenure_change_tx_bad_miner_sig.clone(), coinbase_tx.clone()];
     let nakamoto_tx_merkle_root_bad_miner_sig = {
-        let txid_vecs = nakamoto_txs_bad_miner_sig
+        let txid_vecs: Vec<_> = nakamoto_txs_bad_miner_sig
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
             .collect();
@@ -2191,7 +2191,7 @@ fn test_make_miners_stackerdb_config() {
                 &last_snapshot,
                 &snapshot,
                 &winning_ops,
-                &vec![],
+                &[],
                 None,
                 None,
                 None,
@@ -2586,7 +2586,7 @@ fn valid_vote_transaction() {
         post_conditions: vec![],
         payload: TransactionPayload::ContractCall(TransactionContractCall {
             address: contract_addr,
-            contract_name: contract_name,
+            contract_name,
             function_name: SIGNERS_VOTING_FUNCTION_NAME.into(),
             function_args: valid_function_args,
         }),
@@ -3058,7 +3058,7 @@ pub mod nakamoto_block_signatures {
     use super::*;
 
     /// Helper function make a reward set with (PrivateKey, weight) tuples
-    fn make_reward_set(signers: Vec<(Secp256k1PrivateKey, u32)>) -> RewardSet {
+    fn make_reward_set(signers: &[(Secp256k1PrivateKey, u32)]) -> RewardSet {
         let mut reward_set = RewardSet::empty();
         reward_set.signers = Some(
             signers
@@ -3084,12 +3084,12 @@ pub mod nakamoto_block_signatures {
     #[test]
     // Test that signatures succeed with exactly 70% of the votes
     pub fn test_exactly_enough_votes() {
-        let signers = vec![
+        let signers = [
             (Secp256k1PrivateKey::default(), 35),
             (Secp256k1PrivateKey::default(), 35),
             (Secp256k1PrivateKey::default(), 30),
         ];
-        let reward_set = make_reward_set(signers.clone());
+        let reward_set = make_reward_set(&signers);
 
         let mut header = NakamotoBlockHeader::empty();
 
@@ -3111,12 +3111,12 @@ pub mod nakamoto_block_signatures {
     #[test]
     /// Test that signatures fail with just under 70% of the votes
     pub fn test_just_not_enough_votes() {
-        let signers = vec![
+        let signers = [
             (Secp256k1PrivateKey::default(), 3500),
             (Secp256k1PrivateKey::default(), 3499),
             (Secp256k1PrivateKey::default(), 3001),
         ];
-        let reward_set = make_reward_set(signers.clone());
+        let reward_set = make_reward_set(&signers);
 
         let mut header = NakamotoBlockHeader::empty();
 
@@ -3142,13 +3142,14 @@ pub mod nakamoto_block_signatures {
     #[test]
     /// Base success case - 3 signers of equal weight, all signing the block
     pub fn test_nakamoto_block_verify_signatures() {
-        let signers = vec![
+        let signers = [
             Secp256k1PrivateKey::default(),
             Secp256k1PrivateKey::default(),
             Secp256k1PrivateKey::default(),
         ];
 
-        let reward_set = make_reward_set(signers.iter().map(|s| (s.clone(), 100)).collect());
+        let reward_set =
+            make_reward_set(&signers.iter().map(|s| (s.clone(), 100)).collect::<Vec<_>>());
 
         let mut header = NakamotoBlockHeader::empty();
 
@@ -3171,12 +3172,12 @@ pub mod nakamoto_block_signatures {
     #[test]
     /// Fully signed block, but not in order
     fn test_out_of_order_signer_signatures() {
-        let signers = vec![
+        let signers = [
             (Secp256k1PrivateKey::default(), 100),
             (Secp256k1PrivateKey::default(), 100),
             (Secp256k1PrivateKey::default(), 100),
         ];
-        let reward_set = make_reward_set(signers.clone());
+        let reward_set = make_reward_set(&signers);
 
         let mut header = NakamotoBlockHeader::empty();
 
@@ -3202,12 +3203,12 @@ pub mod nakamoto_block_signatures {
     #[test]
     // Test with 3 equal signers, and only two sign
     fn test_insufficient_signatures() {
-        let signers = vec![
+        let signers = [
             (Secp256k1PrivateKey::default(), 100),
             (Secp256k1PrivateKey::default(), 100),
             (Secp256k1PrivateKey::default(), 100),
         ];
-        let reward_set = make_reward_set(signers.clone());
+        let reward_set = make_reward_set(&signers);
 
         let mut header = NakamotoBlockHeader::empty();
 
@@ -3234,13 +3235,13 @@ pub mod nakamoto_block_signatures {
     // Test with 4 signers, but one has 75% weight. Only the whale signs
     // and the block is valid
     fn test_single_signature_threshold() {
-        let signers = vec![
+        let signers = [
             (Secp256k1PrivateKey::default(), 75),
             (Secp256k1PrivateKey::default(), 10),
             (Secp256k1PrivateKey::default(), 5),
             (Secp256k1PrivateKey::default(), 10),
         ];
-        let reward_set = make_reward_set(signers.clone());
+        let reward_set = make_reward_set(&signers);
 
         let mut header = NakamotoBlockHeader::empty();
 
@@ -3262,9 +3263,9 @@ pub mod nakamoto_block_signatures {
     #[test]
     // Test with a signature that didn't come from the signer set
     fn test_invalid_signer() {
-        let signers = vec![(Secp256k1PrivateKey::default(), 100)];
+        let signers = [(Secp256k1PrivateKey::default(), 100)];
 
-        let reward_set = make_reward_set(signers.clone());
+        let reward_set = make_reward_set(&signers);
 
         let mut header = NakamotoBlockHeader::empty();
 
@@ -3295,12 +3296,12 @@ pub mod nakamoto_block_signatures {
 
     #[test]
     fn test_duplicate_signatures() {
-        let signers = vec![
+        let signers = [
             (Secp256k1PrivateKey::default(), 100),
             (Secp256k1PrivateKey::default(), 100),
             (Secp256k1PrivateKey::default(), 100),
         ];
-        let reward_set = make_reward_set(signers.clone());
+        let reward_set = make_reward_set(&signers);
 
         let mut header = NakamotoBlockHeader::empty();
 
@@ -3335,14 +3336,14 @@ pub mod nakamoto_block_signatures {
     #[test]
     // Test where a signature used a different message
     fn test_signature_invalid_message() {
-        let signers = vec![
+        let signers = [
             (Secp256k1PrivateKey::default(), 100),
             (Secp256k1PrivateKey::default(), 100),
             (Secp256k1PrivateKey::default(), 100),
             (Secp256k1PrivateKey::default(), 100),
         ];
 
-        let reward_set = make_reward_set(signers.clone());
+        let reward_set = make_reward_set(&signers);
 
         let mut header = NakamotoBlockHeader::empty();
 
@@ -3376,14 +3377,14 @@ pub mod nakamoto_block_signatures {
     #[test]
     // Test where a signature is not recoverable
     fn test_unrecoverable_signature() {
-        let signers = vec![
+        let signers = [
             (Secp256k1PrivateKey::default(), 100),
             (Secp256k1PrivateKey::default(), 100),
             (Secp256k1PrivateKey::default(), 100),
             (Secp256k1PrivateKey::default(), 100),
         ];
 
-        let reward_set = make_reward_set(signers.clone());
+        let reward_set = make_reward_set(&signers);
 
         let mut header = NakamotoBlockHeader::empty();
 

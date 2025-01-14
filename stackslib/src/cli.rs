@@ -40,6 +40,7 @@ use crate::chainstate::burn::db::sortdb::{
 };
 use crate::chainstate::burn::{BlockSnapshot, ConsensusHash};
 use crate::chainstate::coordinator::OnChainRewardSetProvider;
+use crate::chainstate::nakamoto::miner::{NakamotoBlockBuilder, NakamotoTenureInfo};
 use crate::chainstate::nakamoto::{NakamotoBlock, NakamotoChainState};
 use crate::chainstate::stacks::db::blocks::StagingBlock;
 use crate::chainstate::stacks::db::{StacksBlockHeaderTypes, StacksChainState, StacksHeaderInfo};
@@ -406,7 +407,7 @@ pub fn command_try_mine(argv: &[String], conf: Option<&Config>) {
         .map(|arg| arg.parse().expect("Could not parse max_time"))
         .unwrap_or(u64::MAX);
 
-    let start = get_epoch_time_ms();
+    let start = Instant::now();
 
     let conf = conf.unwrap_or(&DEFAULT_MAINNET_CONFIG);
 
@@ -417,7 +418,7 @@ pub fn command_try_mine(argv: &[String], conf: Option<&Config>) {
     let burnchain = conf.get_burnchain();
     let sort_db = SortitionDB::open(&sort_db_path, false, burnchain.pox_constants.clone())
         .unwrap_or_else(|e| panic!("Failed to open {sort_db_path}: {e}"));
-    let (chain_state, _) = StacksChainState::open(
+    let (chainstate, _) = StacksChainState::open(
         conf.is_mainnet(),
         conf.burnchain.chain_id,
         &chain_state_path,
@@ -439,93 +440,100 @@ pub fn command_try_mine(argv: &[String], conf: Option<&Config>) {
     )
     .unwrap_or_else(|e| panic!("Failed to open mempool db: {e}"));
 
-    let tip_header = NakamotoChainState::get_canonical_block_header(chain_state.db(), &sort_db)
-        .unwrap_or_else(|e| panic!("Error looking up chain tip: {e}"))
-        .expect("No chain tip found");
+    // Parent Stacks header for block we are going to mine
+    let parent_stacks_header =
+        NakamotoChainState::get_canonical_block_header(chainstate.db(), &sort_db)
+            .unwrap_or_else(|e| panic!("Error looking up chain tip: {e}"))
+            .expect("No chain tip found");
 
-    // Fail if Nakamoto chainstate detected. `try-mine` cannot mine Nakamoto blocks yet
-    // TODO: Add Nakamoto block support
-    if matches!(
-        &tip_header.anchored_header,
-        StacksBlockHeaderTypes::Nakamoto(..)
-    ) {
-        panic!("Attempting to mine Nakamoto block. Nakamoto blocks not supported yet!");
-    };
-
-    let sk = StacksPrivateKey::new();
-    let mut tx_auth = TransactionAuth::from_p2pkh(&sk).unwrap();
-    tx_auth.set_origin_nonce(0);
-
-    let mut coinbase_tx = StacksTransaction::new(
-        TransactionVersion::Mainnet,
-        tx_auth,
-        TransactionPayload::Coinbase(CoinbasePayload([0u8; 32]), None, None),
-    );
-
-    coinbase_tx.chain_id = conf.burnchain.chain_id;
-    coinbase_tx.anchor_mode = TransactionAnchorMode::OnChainOnly;
-    let mut tx_signer = StacksTransactionSigner::new(&coinbase_tx);
-    tx_signer.sign_origin(&sk).unwrap();
-    let coinbase_tx = tx_signer.get_tx().unwrap();
+    let burn_dbconn = sort_db.index_handle(&chain_tip.sortition_id);
 
     let mut settings = BlockBuilderSettings::limited();
     settings.max_miner_time_ms = max_time;
 
-    let result = StacksBlockBuilder::build_anchored_block(
-        &chain_state,
-        &sort_db.index_handle(&chain_tip.sortition_id),
-        &mut mempool_db,
-        &tip_header,
-        chain_tip.total_burn,
-        VRFProof::empty(),
-        Hash160([0; 20]),
-        &coinbase_tx,
-        settings,
-        None,
-        &Burnchain::new(
-            &burnchain_path,
-            &burnchain.chain_name,
-            &burnchain.network_name,
-        )
-        .unwrap(),
-    );
+    let result = match &parent_stacks_header.anchored_header {
+        StacksBlockHeaderTypes::Epoch2(..) => {
+            let sk = StacksPrivateKey::new();
+            let mut tx_auth = TransactionAuth::from_p2pkh(&sk).unwrap();
+            tx_auth.set_origin_nonce(0);
 
-    let stop = get_epoch_time_ms();
+            let mut coinbase_tx = StacksTransaction::new(
+                TransactionVersion::Mainnet,
+                tx_auth,
+                TransactionPayload::Coinbase(CoinbasePayload([0u8; 32]), None, None),
+            );
 
-    println!(
-        "{} mined block @ height = {} off of {} ({}/{}) in {}ms. Min-fee: {}, Max-time: {}",
-        if result.is_ok() {
-            "Successfully"
-        } else {
-            "Failed to"
-        },
-        tip_header.stacks_block_height + 1,
-        StacksBlockHeader::make_index_block_hash(
-            &tip_header.consensus_hash,
-            &tip_header.anchored_header.block_hash()
-        ),
-        &tip_header.consensus_hash,
-        &tip_header.anchored_header.block_hash(),
-        stop.saturating_sub(start),
-        min_fee,
-        max_time
-    );
+            coinbase_tx.chain_id = conf.burnchain.chain_id;
+            coinbase_tx.anchor_mode = TransactionAnchorMode::OnChainOnly;
+            let mut tx_signer = StacksTransactionSigner::new(&coinbase_tx);
+            tx_signer.sign_origin(&sk).unwrap();
+            let coinbase_tx = tx_signer.get_tx().unwrap();
 
-    if let Ok((block, execution_cost, size)) = result {
-        let mut total_fees = 0;
-        for tx in block.txs.iter() {
-            total_fees += tx.get_tx_fee();
+            StacksBlockBuilder::build_anchored_block(
+                &chainstate,
+                &burn_dbconn,
+                &mut mempool_db,
+                &parent_stacks_header,
+                chain_tip.total_burn,
+                VRFProof::empty(),
+                Hash160([0; 20]),
+                &coinbase_tx,
+                settings,
+                None,
+                &Burnchain::new(
+                    &burnchain_path,
+                    &burnchain.chain_name,
+                    &burnchain.network_name,
+                )
+                .unwrap_or_else(|e| panic!("Failed to instantiate burnchain: {e}")),
+            )
+            .map(|(block, cost, size)| (block.block_hash(), block.txs, cost, size))
         }
-        println!(
-            "Block {}: {} uSTX, {} bytes, cost {:?}",
-            block.block_hash(),
-            total_fees,
-            size,
-            &execution_cost
-        );
-    }
+        StacksBlockHeaderTypes::Nakamoto(..) => {
+            NakamotoBlockBuilder::build_nakamoto_block(
+                &chainstate,
+                &burn_dbconn,
+                &mut mempool_db,
+                &parent_stacks_header,
+                // tenure ID consensus hash of this block
+                &parent_stacks_header.consensus_hash,
+                // the burn so far on the burnchain (i.e. from the last burnchain block)
+                chain_tip.total_burn,
+                NakamotoTenureInfo::default(),
+                settings,
+                None,
+                0,
+            )
+            .map(|(block, cost, size, _)| (block.header.block_hash(), block.txs, cost, size))
+        }
+    };
 
-    process::exit(0);
+    let elapsed = start.elapsed();
+    let summary = format!(
+        "block @ height = {h} off of {pid} ({pch}/{pbh}) in {t}ms. Min-fee: {min_fee}, Max-time: {max_time}",
+        h=parent_stacks_header.stacks_block_height + 1,
+        pid=&parent_stacks_header.index_block_hash(),
+        pch=&parent_stacks_header.consensus_hash,
+        pbh=&parent_stacks_header.anchored_header.block_hash(),
+        t=elapsed.as_millis(),
+    );
+
+    let code = match result {
+        Ok((block_hash, txs, cost, size)) => {
+            let total_fees: u64 = txs.iter().map(|tx| tx.get_tx_fee()).sum();
+
+            println!("Successfully mined {summary}");
+            println!("Block {block_hash}: {total_fees} uSTX, {size} bytes, cost {cost:?}");
+            0
+        }
+        Err(e) => {
+            println!("Failed to mine {summary}");
+            println!("Error: {e}");
+            1
+        }
+    };
+
+    process::exit(code);
 }
 
 /// Fetch and process a `StagingBlock` from database and call `replay_block()` to validate

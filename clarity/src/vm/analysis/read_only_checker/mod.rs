@@ -50,7 +50,7 @@ pub struct ReadOnlyChecker<'a, 'b> {
     clarity_version: ClarityVersion,
 }
 
-impl<'a, 'b> AnalysisPass for ReadOnlyChecker<'a, 'b> {
+impl AnalysisPass for ReadOnlyChecker<'_, '_> {
     fn run_pass(
         epoch: &StacksEpochId,
         contract_analysis: &mut ContractAnalysis,
@@ -250,13 +250,12 @@ impl<'a, 'b> ReadOnlyChecker<'a, 'b> {
         Ok(result)
     }
 
-    /// Checks the native function application of the function named by the
-    /// string `function` to `args` to determine whether it is read-only
-    /// compliant.
+    /// Checks the native function application of the function named by the string `function`
+    /// to `args` to determine whether it is read-only compliant.
     ///
     /// - Returns `None` if there is no native function named `function`.
-    /// - If there is such a native function, returns `true` iff this function application is
-    /// read-only.
+    /// - If there is such a native function, returns `true` iff this function
+    ///   application is read-only.
     ///
     /// # Errors
     /// - Contract parsing errors
@@ -414,15 +413,15 @@ impl<'a, 'b> ReadOnlyChecker<'a, 'b> {
         }
     }
 
-    /// Checks the native and user-defined function applications implied by `expressions`. The
-    /// first expression is used as the function name, and the tail expressions are used as the
-    /// arguments.
+    /// Checks the native and user-defined function applications implied by `expressions`.
+    ///
+    /// The first expression is used as the function name, and the tail expressions are used as the arguments.
     ///
     /// Returns `true` iff the function application is read-only.
     ///
     /// # Errors
     /// - `CheckErrors::NonFunctionApplication` if there is no first expression, or if the first
-    /// expression is not a `ClarityName`.
+    ///   expression is not a `ClarityName`.
     /// - `CheckErrors::UnknownFunction` if the first expression does not name a known function.
     fn check_expression_application_is_read_only(
         &mut self,

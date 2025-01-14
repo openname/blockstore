@@ -84,7 +84,7 @@ pub struct BlockCommitMetadata {
 }
 
 impl FromColumn<AffirmationMap> for AffirmationMap {
-    fn from_column<'a>(row: &'a Row, col_name: &str) -> Result<AffirmationMap, DBError> {
+    fn from_column(row: &Row, col_name: &str) -> Result<AffirmationMap, DBError> {
         let txt: String = row.get_unwrap(col_name);
         let am = AffirmationMap::decode(&txt).ok_or(DBError::ParseError)?;
         Ok(am)
@@ -92,13 +92,13 @@ impl FromColumn<AffirmationMap> for AffirmationMap {
 }
 
 impl FromRow<AffirmationMap> for AffirmationMap {
-    fn from_row<'a>(row: &'a Row) -> Result<AffirmationMap, DBError> {
+    fn from_row(row: &Row) -> Result<AffirmationMap, DBError> {
         AffirmationMap::from_column(row, "affirmation_map")
     }
 }
 
 impl FromRow<BlockCommitMetadata> for BlockCommitMetadata {
-    fn from_row<'a>(row: &'a Row) -> Result<BlockCommitMetadata, DBError> {
+    fn from_row(row: &Row) -> Result<BlockCommitMetadata, DBError> {
         let burn_block_hash = BurnchainHeaderHash::from_column(row, "burn_block_hash")?;
         let txid = Txid::from_column(row, "txid")?;
         let block_height = u64::from_column(row, "block_height")?;
@@ -132,7 +132,7 @@ impl FromRow<BlockCommitMetadata> for BlockCommitMetadata {
             block_height,
             vtxindex,
             affirmation_id,
-            anchor_block: anchor_block,
+            anchor_block,
             anchor_block_descendant,
         })
     }
@@ -144,7 +144,7 @@ impl FromRow<BlockCommitMetadata> for BlockCommitMetadata {
 pub(crate) fn apply_blockstack_txs_safety_checks(
     block_height: u64,
     blockstack_txs: &mut Vec<BlockstackOperationType>,
-) -> () {
+) {
     test_debug!(
         "Apply safety checks on {} txs at burnchain height {}",
         blockstack_txs.len(),
@@ -207,9 +207,9 @@ impl FromRow<BlockstackOperationType> for BlockstackOperationType {
     }
 }
 
-pub const BURNCHAIN_DB_VERSION: &'static str = "2";
+pub const BURNCHAIN_DB_VERSION: &str = "2";
 
-const BURNCHAIN_DB_SCHEMA: &'static str = r#"
+const BURNCHAIN_DB_SCHEMA: &str = r#"
 CREATE TABLE burnchain_db_block_headers (
     -- height of the block (non-negative)
     block_height INTEGER NOT NULL,
@@ -299,9 +299,8 @@ CREATE TABLE db_config(version TEXT NOT NULL);
 INSERT INTO affirmation_maps(affirmation_id,weight,affirmation_map) VALUES (0,0,"");
 "#;
 
-const LAST_BURNCHAIN_DB_INDEX: &'static str =
-    "index_block_commit_metadata_burn_block_hash_anchor_block";
-const BURNCHAIN_DB_INDEXES: &'static [&'static str] = &[
+const LAST_BURNCHAIN_DB_INDEX: &str = "index_block_commit_metadata_burn_block_hash_anchor_block";
+const BURNCHAIN_DB_INDEXES: &[&str] = &[
     "CREATE INDEX IF NOT EXISTS index_burnchain_db_block_headers_height_hash ON burnchain_db_block_headers(block_height DESC, block_hash ASC);",
     "CREATE INDEX IF NOT EXISTS index_burnchain_db_block_hash ON burnchain_db_block_ops(block_hash);",
     "CREATE INDEX IF NOT EXISTS index_burnchain_db_txid ON burnchain_db_block_ops(txid);",
@@ -312,7 +311,7 @@ const BURNCHAIN_DB_INDEXES: &'static [&'static str] = &[
     "CREATE INDEX IF NOT EXISTS index_block_commit_metadata_burn_block_hash_anchor_block ON block_commit_metadata(burn_block_hash,anchor_block);",
 ];
 
-impl<'a> BurnchainDBTransaction<'a> {
+impl BurnchainDBTransaction<'_> {
     /// Store a burnchain block header into the burnchain database.
     /// Returns the row ID on success.
     pub(crate) fn store_burnchain_db_entry(
@@ -452,7 +451,7 @@ impl<'a> BurnchainDBTransaction<'a> {
                 })
                 .collect()
         };
-        if commits.len() == 0 {
+        if commits.is_empty() {
             test_debug!("No block-commits for block {}", hdr.block_height);
             return Ok(());
         }
@@ -1104,9 +1103,9 @@ impl BurnchainDB {
         &self.conn
     }
 
-    pub fn tx_begin<'a>(&'a mut self) -> Result<BurnchainDBTransaction<'a>, BurnchainError> {
+    pub fn tx_begin(&mut self) -> Result<BurnchainDBTransaction<'_>, BurnchainError> {
         let sql_tx = tx_begin_immediate(&mut self.conn)?;
-        Ok(BurnchainDBTransaction { sql_tx: sql_tx })
+        Ok(BurnchainDBTransaction { sql_tx })
     }
 
     fn inner_get_canonical_chain_tip(

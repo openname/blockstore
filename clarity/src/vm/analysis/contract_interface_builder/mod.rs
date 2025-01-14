@@ -276,7 +276,7 @@ impl ContractInterfaceFunction {
                     outputs: ContractInterfaceFunctionOutput {
                         type_f: match function_type {
                             FunctionType::Fixed(FixedFunction { returns, .. }) => {
-                                ContractInterfaceAtomType::from_type_signature(&returns)
+                                ContractInterfaceAtomType::from_type_signature(returns)
                             }
                             _ => return Err(CheckErrors::Expects(
                                 "Contract functions should only have fixed function return types!"
@@ -287,7 +287,7 @@ impl ContractInterfaceFunction {
                     },
                     args: match function_type {
                         FunctionType::Fixed(FixedFunction { args, .. }) => {
-                            ContractInterfaceFunctionArg::from_function_args(&args)
+                            ContractInterfaceFunctionArg::from_function_args(args)
                         }
                         _ => {
                             return Err(CheckErrors::Expects(

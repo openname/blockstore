@@ -120,7 +120,7 @@ impl MinerStatus {
     }
 
     pub fn is_blocked(&self) -> bool {
-        if self.blockers.len() > 0 {
+        if !self.blockers.is_empty() {
             debug!("Miner: blocked by {:?}", &self.blockers);
             true
         } else {
@@ -876,11 +876,11 @@ impl<'a> StacksMicroblockBuilder<'a> {
     ) -> Result<StacksMicroblock, Error> {
         let miner_pubkey_hash =
             Hash160::from_node_public_key(&StacksPublicKey::from_private(miner_key));
-        if txs.len() == 0 {
+        if txs.is_empty() {
             return Err(Error::NoTransactionsToMine);
         }
 
-        let txid_vecs = txs.iter().map(|tx| tx.txid().as_bytes().to_vec()).collect();
+        let txid_vecs: Vec<_> = txs.iter().map(|tx| tx.txid().as_bytes().to_vec()).collect();
 
         let merkle_tree = MerkleTree::<Sha512Trunc256Sum>::new(&txid_vecs);
         let tx_merkle_root = merkle_tree.root();
@@ -903,7 +903,7 @@ impl<'a> StacksMicroblockBuilder<'a> {
         next_microblock_header.verify(&miner_pubkey_hash).unwrap();
         Ok(StacksMicroblock {
             header: next_microblock_header,
-            txs: txs,
+            txs,
         })
     }
 
@@ -1387,7 +1387,7 @@ impl<'a> StacksMicroblockBuilder<'a> {
                     },
                 );
 
-                if to_drop_and_blacklist.len() > 0 {
+                if !to_drop_and_blacklist.is_empty() {
                     debug!(
                         "Dropping and blacklisting {} problematic transaction(s)",
                         &to_drop_and_blacklist.len()
@@ -1427,8 +1427,16 @@ impl<'a> StacksMicroblockBuilder<'a> {
         self.runtime.num_mined = num_txs;
 
         mem_pool.drop_txs(&invalidated_txs)?;
-        event_dispatcher.mempool_txs_dropped(invalidated_txs, MemPoolDropReason::TOO_EXPENSIVE);
-        event_dispatcher.mempool_txs_dropped(to_drop_and_blacklist, MemPoolDropReason::PROBLEMATIC);
+        event_dispatcher.mempool_txs_dropped(
+            invalidated_txs,
+            None,
+            MemPoolDropReason::TOO_EXPENSIVE,
+        );
+        event_dispatcher.mempool_txs_dropped(
+            to_drop_and_blacklist,
+            None,
+            MemPoolDropReason::PROBLEMATIC,
+        );
 
         if blocked {
             debug!(
@@ -1463,7 +1471,7 @@ impl<'a> StacksMicroblockBuilder<'a> {
     }
 }
 
-impl<'a> Drop for StacksMicroblockBuilder<'a> {
+impl Drop for StacksMicroblockBuilder<'_> {
     fn drop(&mut self) {
         debug!(
             "Drop StacksMicroblockBuilder";
@@ -1509,11 +1517,11 @@ impl StacksBlockBuilder {
             total_anchored_fees: 0,
             total_confirmed_streamed_fees: 0,
             total_streamed_fees: 0,
-            bytes_so_far: bytes_so_far,
+            bytes_so_far,
             anchored_done: false,
             parent_consensus_hash: parent_chain_tip.consensus_hash.clone(),
             parent_header_hash: header.parent_block.clone(),
-            header: header,
+            header,
             parent_microblock_hash: parent_chain_tip
                 .microblock_tail
                 .as_ref()
@@ -1524,7 +1532,7 @@ impl StacksBlockBuilder {
             ), // will be updated
             miner_privkey: StacksPrivateKey::new(), // caller should overwrite this, or refrain from mining microblocks
             miner_payouts: None,
-            miner_id: miner_id,
+            miner_id,
         }
     }
 
@@ -1610,7 +1618,7 @@ impl StacksBlockBuilder {
     }
 
     /// Assign the block parent
-    pub fn set_parent_block(&mut self, parent_block_hash: &BlockHeaderHash) -> () {
+    pub fn set_parent_block(&mut self, parent_block_hash: &BlockHeaderHash) {
         self.header.parent_block = parent_block_hash.clone();
     }
 
@@ -1619,7 +1627,7 @@ impl StacksBlockBuilder {
         &mut self,
         parent_mblock_hash: &BlockHeaderHash,
         parent_mblock_seq: u16,
-    ) -> () {
+    ) {
         self.header.parent_microblock = parent_mblock_hash.clone();
         self.header.parent_microblock_sequence = parent_mblock_seq;
     }
@@ -1641,7 +1649,7 @@ impl StacksBlockBuilder {
     }
 
     /// Reset measured costs and fees
-    pub fn reset_costs(&mut self) -> () {
+    pub fn reset_costs(&mut self) {
         self.total_anchored_fees = 0;
         self.total_confirmed_streamed_fees = 0;
         self.total_streamed_fees = 0;
@@ -1704,7 +1712,7 @@ impl StacksBlockBuilder {
 
     pub fn finalize_block(&mut self, clarity_tx: &mut ClarityTx) -> StacksBlock {
         // done!  Calculate state root and tx merkle root
-        let txid_vecs = self
+        let txid_vecs: Vec<_> = self
             .txs
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
@@ -1770,7 +1778,7 @@ impl StacksBlockBuilder {
 
     /// Cut the next microblock.
     pub fn mine_next_microblock<'a>(&mut self) -> Result<StacksMicroblock, Error> {
-        let txid_vecs = self
+        let txid_vecs: Vec<_> = self
             .micro_txs
             .iter()
             .map(|tx| tx.txid().as_bytes().to_vec())
@@ -1953,7 +1961,7 @@ impl StacksBlockBuilder {
             parent_microblocks.len()
         );
 
-        if parent_microblocks.len() == 0 {
+        if parent_microblocks.is_empty() {
             self.set_parent_microblock(&EMPTY_MICROBLOCK_PARENT_HASH, 0);
         } else {
             let num_mblocks = parent_microblocks.len();
@@ -2073,7 +2081,7 @@ impl StacksBlockBuilder {
         mut builder: StacksBlockBuilder,
         chainstate_handle: &StacksChainState,
         burn_dbconn: &SortitionHandleConn,
-        mut txs: Vec<StacksTransaction>,
+        txs: Vec<StacksTransaction>,
         mut mblock_txs: Vec<StacksTransaction>,
     ) -> Result<(StacksBlock, u64, ExecutionCost, Option<StacksMicroblock>), Error> {
         debug!("Build anchored block from {} transactions", txs.len());
@@ -2081,7 +2089,7 @@ impl StacksBlockBuilder {
         let mut miner_epoch_info = builder.pre_epoch_begin(&mut chainstate, burn_dbconn, true)?;
         let ast_rules = miner_epoch_info.ast_rules;
         let (mut epoch_tx, _) = builder.epoch_begin(burn_dbconn, &mut miner_epoch_info)?;
-        for tx in txs.drain(..) {
+        for tx in txs.into_iter() {
             match builder.try_mine_tx(&mut epoch_tx, &tx, ast_rules.clone()) {
                 Ok(_) => {
                     debug!("Included {}", &tx.txid());
@@ -2114,12 +2122,12 @@ impl StacksBlockBuilder {
         let block = builder.mine_anchored_block(&mut epoch_tx);
         let size = builder.bytes_so_far;
 
-        let mblock_opt = if mblock_txs.len() > 0 {
+        let mblock_opt = if mblock_txs.is_empty() {
+            None
+        } else {
             builder.micro_txs.append(&mut mblock_txs);
             let mblock = builder.mine_next_microblock()?;
             Some(mblock)
-        } else {
-            None
         };
 
         let cost = builder.epoch_finish(epoch_tx)?;
@@ -2513,7 +2521,7 @@ impl StacksBlockBuilder {
                     }
                 }
 
-                if to_drop_and_blacklist.len() > 0 {
+                if !to_drop_and_blacklist.is_empty() {
                     let _ = mempool.drop_and_blacklist_txs(&to_drop_and_blacklist);
                 }
 
@@ -2543,8 +2551,12 @@ impl StacksBlockBuilder {
         mempool.drop_txs(&invalidated_txs)?;
 
         if let Some(observer) = event_observer {
-            observer.mempool_txs_dropped(invalidated_txs, MemPoolDropReason::TOO_EXPENSIVE);
-            observer.mempool_txs_dropped(to_drop_and_blacklist, MemPoolDropReason::PROBLEMATIC);
+            observer.mempool_txs_dropped(invalidated_txs, None, MemPoolDropReason::TOO_EXPENSIVE);
+            observer.mempool_txs_dropped(
+                to_drop_and_blacklist,
+                None,
+                MemPoolDropReason::PROBLEMATIC,
+            );
         }
 
         if let Err(e) = result {

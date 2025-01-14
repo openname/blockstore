@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#![allow(clippy::result_large_err)]
 
 pub mod diagnostic;
 pub mod errors;
@@ -176,33 +177,31 @@ fn lookup_variable(name: &str, context: &LocalContext, env: &mut Environment) ->
             name
         ))
         .into())
+    } else if let Some(value) = variables::lookup_reserved_variable(name, context, env)? {
+        Ok(value)
     } else {
-        if let Some(value) = variables::lookup_reserved_variable(name, context, env)? {
+        runtime_cost(
+            ClarityCostFunction::LookupVariableDepth,
+            env,
+            context.depth(),
+        )?;
+        if let Some(value) = context.lookup_variable(name) {
+            runtime_cost(ClarityCostFunction::LookupVariableSize, env, value.size()?)?;
+            Ok(value.clone())
+        } else if let Some(value) = env.contract_context.lookup_variable(name).cloned() {
+            runtime_cost(ClarityCostFunction::LookupVariableSize, env, value.size()?)?;
+            let (value, _) =
+                Value::sanitize_value(env.epoch(), &TypeSignature::type_of(&value)?, value)
+                    .ok_or_else(|| CheckErrors::CouldNotDetermineType)?;
             Ok(value)
-        } else {
-            runtime_cost(
-                ClarityCostFunction::LookupVariableDepth,
-                env,
-                context.depth(),
-            )?;
-            if let Some(value) = context.lookup_variable(name) {
-                runtime_cost(ClarityCostFunction::LookupVariableSize, env, value.size()?)?;
-                Ok(value.clone())
-            } else if let Some(value) = env.contract_context.lookup_variable(name).cloned() {
-                runtime_cost(ClarityCostFunction::LookupVariableSize, env, value.size()?)?;
-                let (value, _) =
-                    Value::sanitize_value(env.epoch(), &TypeSignature::type_of(&value)?, value)
-                        .ok_or_else(|| CheckErrors::CouldNotDetermineType)?;
-                Ok(value)
-            } else if let Some(callable_data) = context.lookup_callable_contract(name) {
-                if env.contract_context.get_clarity_version() < &ClarityVersion::Clarity2 {
-                    Ok(callable_data.contract_identifier.clone().into())
-                } else {
-                    Ok(Value::CallableContract(callable_data.clone()))
-                }
+        } else if let Some(callable_data) = context.lookup_callable_contract(name) {
+            if env.contract_context.get_clarity_version() < &ClarityVersion::Clarity2 {
+                Ok(callable_data.contract_identifier.clone().into())
             } else {
-                Err(CheckErrors::UndefinedVariable(name.to_string()).into())
+                Ok(Value::CallableContract(callable_data.clone()))
             }
+        } else {
+            Err(CheckErrors::UndefinedVariable(name.to_string()).into())
         }
     }
 }
@@ -242,11 +241,7 @@ pub fn apply(
     //        only enough to do recursion detection.
 
     // do recursion check on user functions.
-    let track_recursion = match function {
-        CallableType::UserFunction(_) => true,
-        _ => false,
-    };
-
+    let track_recursion = matches!(function, CallableType::UserFunction(_));
     if track_recursion && env.call_stack.contains(&identifier) {
         return Err(CheckErrors::CircularReference(vec![identifier.to_string()]).into());
     }
@@ -315,9 +310,9 @@ pub fn apply(
     }
 }
 
-pub fn eval<'a>(
+pub fn eval(
     exp: &SymbolicExpression,
-    env: &'a mut Environment,
+    env: &mut Environment,
     context: &LocalContext,
 ) -> Result<Value> {
     use crate::vm::representations::SymbolicExpressionType::{
@@ -333,7 +328,7 @@ pub fn eval<'a>(
 
     let res = match exp.expr {
         AtomValue(ref value) | LiteralValue(ref value) => Ok(value.clone()),
-        Atom(ref value) => lookup_variable(&value, context, env),
+        Atom(ref value) => lookup_variable(value, context, env),
         List(ref children) => {
             let (function_variable, rest) = children
                 .split_first()
@@ -342,8 +337,8 @@ pub fn eval<'a>(
             let function_name = function_variable
                 .match_atom()
                 .ok_or(CheckErrors::BadFunctionName)?;
-            let f = lookup_function(&function_name, env)?;
-            apply(&f, &rest, env, context)
+            let f = lookup_function(function_name, env)?;
+            apply(&f, rest, env, context)
         }
         TraitReference(_, _) | Field(_) => {
             return Err(InterpreterError::BadSymbolicRepresentation(
@@ -364,13 +359,8 @@ pub fn eval<'a>(
 }
 
 pub fn is_reserved(name: &str, version: &ClarityVersion) -> bool {
-    if let Some(_result) = functions::lookup_reserved_functions(name, version) {
-        true
-    } else if variables::is_reserved_name(name, version) {
-        true
-    } else {
-        false
-    }
+    functions::lookup_reserved_functions(name, version).is_some()
+        || variables::is_reserved_name(name, version)
 }
 
 /// This function evaluates a list of expressions, sharing a global context.

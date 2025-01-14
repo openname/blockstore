@@ -66,13 +66,13 @@ impl HttpRequestPreamble {
         keep_alive: bool,
     ) -> HttpRequestPreamble {
         HttpRequestPreamble {
-            version: version,
-            verb: verb,
+            version,
+            verb,
             path_and_query_str,
             host: PeerHost::from_host_port(hostname, port),
             content_type: None,
             content_length: None,
-            keep_alive: keep_alive,
+            keep_alive,
             headers: BTreeMap::new(),
         }
     }
@@ -98,7 +98,7 @@ impl HttpRequestPreamble {
     ) -> HttpRequestPreamble {
         HttpRequestPreamble {
             version: HttpVersion::Http11,
-            verb: verb,
+            verb,
             path_and_query_str,
             host: peerhost,
             content_type: None,
@@ -443,14 +443,14 @@ impl StacksMessageCodec for HttpRequestPreamble {
                 };
 
                 Ok(HttpRequestPreamble {
-                    version: version,
-                    verb: verb,
+                    version,
+                    verb,
                     path_and_query_str,
                     host: peerhost.unwrap(),
-                    content_type: content_type,
-                    content_length: content_length,
-                    keep_alive: keep_alive,
-                    headers: headers,
+                    content_type,
+                    content_length,
+                    keep_alive,
+                    headers,
                 })
             }
         }

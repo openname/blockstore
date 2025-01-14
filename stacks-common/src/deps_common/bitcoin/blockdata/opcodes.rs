@@ -606,7 +606,7 @@ impl All {
             Class::PushBytes(*self as u32)
         // 60 opcodes
         } else {
-            Class::Ordinary(unsafe { transmute(*self) })
+            Class::Ordinary(unsafe { transmute::<All, Ordinary>(*self) })
         }
     }
 }

@@ -178,7 +178,7 @@ fn test_stream_mempool_txs() {
             txid.clone(),
             tx_bytes,
             tx_fee,
-            block_height as u64,
+            block_height,
             &origin_addr,
             origin_nonce,
             &sponsor_addr,

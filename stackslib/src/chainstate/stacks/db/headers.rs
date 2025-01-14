@@ -35,7 +35,7 @@ use crate::util_lib::db::{
 };
 
 impl FromRow<StacksBlockHeader> for StacksBlockHeader {
-    fn from_row<'a>(row: &'a Row) -> Result<StacksBlockHeader, db_error> {
+    fn from_row(row: &Row) -> Result<StacksBlockHeader, db_error> {
         let version: u8 = row.get_unwrap("version");
         let total_burn_str: String = row.get_unwrap("total_burn");
         let total_work_str: String = row.get_unwrap("total_work");
@@ -80,7 +80,7 @@ impl FromRow<StacksBlockHeader> for StacksBlockHeader {
 }
 
 impl FromRow<StacksMicroblockHeader> for StacksMicroblockHeader {
-    fn from_row<'a>(row: &'a Row) -> Result<StacksMicroblockHeader, db_error> {
+    fn from_row(row: &Row) -> Result<StacksMicroblockHeader, db_error> {
         let version: u8 = row.get_unwrap("version");
         let sequence: u16 = row.get_unwrap("sequence");
         let prev_block = BlockHeaderHash::from_column(row, "prev_block")?;

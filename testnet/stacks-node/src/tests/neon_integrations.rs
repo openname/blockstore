@@ -578,7 +578,7 @@ pub mod test_observer {
         PROPOSAL_RESPONSES.lock().unwrap().clear();
     }
 
-    /// Parse the StacksTransactions from a block (does not include burn ops)
+    /// Parse the StacksTransactions from a block (does not include burn ops or phantom txs)
     ///  panics on any failures to parse
     pub fn parse_transactions(block: &serde_json::Value) -> Vec<StacksTransaction> {
         block
@@ -588,15 +588,20 @@ pub mod test_observer {
             .unwrap()
             .iter()
             .filter_map(|tx_json| {
+                // Filter out burn ops
                 if let Some(burnchain_op_val) = tx_json.get("burnchain_op") {
                     if !burnchain_op_val.is_null() {
                         return None;
                     }
                 }
+                // Filter out phantom txs
                 let tx_hex = tx_json.get("raw_tx").unwrap().as_str().unwrap();
                 let tx_bytes = hex_bytes(&tx_hex[2..]).unwrap();
                 let tx =
                     StacksTransaction::consensus_deserialize(&mut tx_bytes.as_slice()).unwrap();
+                if tx.is_phantom() {
+                    return None;
+                }
                 Some(tx)
             })
             .collect()
@@ -3378,7 +3383,7 @@ fn make_signed_microblock(
 ) -> StacksMicroblock {
     let mut rng = rand::thread_rng();
 
-    let txid_vecs = txs.iter().map(|tx| tx.txid().as_bytes().to_vec()).collect();
+    let txid_vecs: Vec<_> = txs.iter().map(|tx| tx.txid().as_bytes().to_vec()).collect();
     let merkle_tree = MerkleTree::<Sha512Trunc256Sum>::new(&txid_vecs);
     let tx_merkle_root = merkle_tree.root();
 

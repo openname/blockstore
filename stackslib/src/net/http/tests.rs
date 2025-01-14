@@ -566,7 +566,7 @@ fn test_http_request_version_keep_alive() {
 
     // (have 'connection' header?, have 'keep-alive' value?)
     let requests_connection_expected =
-        vec![(true, true), (false, false), (false, false), (true, false)];
+        [(true, true), (false, false), (false, false), (true, false)];
 
     for (r, (has_connection, is_keep_alive)) in
         requests.iter().zip(requests_connection_expected.iter())
@@ -594,7 +594,7 @@ fn test_http_request_version_keep_alive() {
 #[test]
 fn test_http_response_version_keep_alive() {
     // (version, explicit keep-alive?)
-    let responses_args = vec![
+    let responses_args = [
         (HttpVersion::Http10, true),
         (HttpVersion::Http10, false),
         (HttpVersion::Http11, true),

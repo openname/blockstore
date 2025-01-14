@@ -26,6 +26,12 @@ struct CoverageFileInfo {
     coverage: HashMap<String, Vec<(u32, u64)>>,
 }
 
+impl Default for CoverageReporter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CoverageReporter {
     pub fn new() -> CoverageReporter {
         CoverageReporter {

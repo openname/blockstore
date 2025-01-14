@@ -201,7 +201,7 @@ impl<'a> Bech32Writer<'a> {
     }
 }
 
-impl<'a> WriteBase32 for Bech32Writer<'a> {
+impl WriteBase32 for Bech32Writer<'_> {
     type Err = fmt::Error;
 
     /// Writes a single 5 bit value of the data part
@@ -211,7 +211,7 @@ impl<'a> WriteBase32 for Bech32Writer<'a> {
     }
 }
 
-impl<'a> Drop for Bech32Writer<'a> {
+impl Drop for Bech32Writer<'_> {
     fn drop(&mut self) {
         self.write_checksum()
             .expect("Unhandled error writing the checksum on drop.")

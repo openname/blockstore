@@ -12,7 +12,7 @@ keywords = [ "stacks", "stx", "bitcoin", "crypto", "blockstack", "decentralized"
 readme = "README.md"
 resolver = "2"
 edition = "2021"
-rust-version = "1.61"
+rust-version = "1.80"
 
 [lib]
 name = "blockstack_lib"
@@ -96,7 +96,6 @@ features = ["std"]
 
 [dev-dependencies]
 assert-json-diff = "1.0.0"
-criterion = "0.3.5"
 stdext = "0.3.1"
 stx-genesis = { path = "../stx-genesis" }
 clarity = { path = "../clarity", features = ["default", "testing"] }

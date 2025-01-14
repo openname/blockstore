@@ -176,7 +176,7 @@ enum ProposedBy<'a> {
     CurrentSortition(&'a SortitionState),
 }
 
-impl<'a> ProposedBy<'a> {
+impl ProposedBy<'_> {
     pub fn state(&self) -> &SortitionState {
         match self {
             ProposedBy::LastSortition(x) => x,
@@ -505,7 +505,7 @@ impl SortitionsView {
 
     /// Get the last block from the given tenure
     /// Returns the last locally accepted block if it is not timed out, otherwise it will return the last globally accepted block.
-    fn get_tenure_last_block_info(
+    pub fn get_tenure_last_block_info(
         consensus_hash: &ConsensusHash,
         signer_db: &SignerDb,
         tenure_last_block_proposal_timeout: Duration,
@@ -517,7 +517,7 @@ impl SortitionsView {
 
         if let Some(local_info) = last_locally_accepted_block {
             if let Some(signed_over_time) = local_info.signed_self {
-                if signed_over_time + tenure_last_block_proposal_timeout.as_secs()
+                if signed_over_time.saturating_add(tenure_last_block_proposal_timeout.as_secs())
                     > get_epoch_time_secs()
                 {
                     // The last locally accepted block is not timed out, return it
@@ -539,7 +539,7 @@ impl SortitionsView {
     ///
     /// The rationale here is that the signer DB can be out-of-sync with the node.  For example,
     /// the signer may have been added to an already-running node.
-    fn check_tenure_change_confirms_parent(
+    pub fn check_tenure_change_confirms_parent(
         tenure_change: &TenureChangePayload,
         block: &NakamotoBlock,
         signer_db: &mut SignerDb,

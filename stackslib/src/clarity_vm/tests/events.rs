@@ -88,7 +88,7 @@ fn helper_execute_epoch(
             &FIRST_BURNCHAIN_CONSENSUS_HASH,
             &FIRST_STACKS_BLOCK_HASH,
         ),
-        &StacksBlockId([1 as u8; 32]),
+        &StacksBlockId([1; 32]),
     );
 
     let mut owned_env = OwnedEnvironment::new_max_limit(
@@ -110,7 +110,7 @@ fn helper_execute_epoch(
     owned_env.stx_faucet(&sender, 10);
 
     let (value, _, events) = owned_env
-        .execute_transaction(sender, None, contract_id, method, &vec![])
+        .execute_transaction(sender, None, contract_id, method, &[])
         .unwrap();
     (value, events)
 }

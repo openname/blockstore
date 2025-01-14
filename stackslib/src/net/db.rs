@@ -45,12 +45,12 @@ use crate::util_lib::db::{
 };
 use crate::util_lib::strings::UrlString;
 
-pub const PEERDB_VERSION: &'static str = "3";
+pub const PEERDB_VERSION: &str = "3";
 
 const NUM_SLOTS: usize = 8;
 
 impl FromColumn<PeerAddress> for PeerAddress {
-    fn from_column<'a>(row: &'a Row, column_name: &str) -> Result<PeerAddress, db_error> {
+    fn from_column(row: &Row, column_name: &str) -> Result<PeerAddress, db_error> {
         let addrbytes_bin: String = row.get_unwrap(column_name);
         if addrbytes_bin.len() != 128 {
             error!("Unparsable peer address {}", addrbytes_bin);
@@ -74,7 +74,7 @@ impl FromColumn<PeerAddress> for PeerAddress {
 }
 
 impl FromRow<QualifiedContractIdentifier> for QualifiedContractIdentifier {
-    fn from_row<'a>(row: &'a Row) -> Result<QualifiedContractIdentifier, db_error> {
+    fn from_row(row: &Row) -> Result<QualifiedContractIdentifier, db_error> {
         let cid_str: String = row.get_unwrap("smart_contract_id");
         let cid =
             QualifiedContractIdentifier::parse(&cid_str).map_err(|_e| db_error::ParseError)?;
@@ -157,20 +157,20 @@ impl LocalPeer {
         info!(
             "Will be authenticating p2p messages with the following";
             "public key" => &Secp256k1PublicKey::from_private(&pkey).to_hex(),
-            "services" => &to_hex(&(services as u16).to_be_bytes()),
+            "services" => &to_hex(&services.to_be_bytes()),
             "Stacker DBs" => stacker_dbs.iter().map(|cid| format!("{}", &cid)).collect::<Vec<String>>().join(",")
         );
 
         LocalPeer {
-            network_id: network_id,
-            parent_network_id: parent_network_id,
+            network_id,
+            parent_network_id,
             nonce: my_nonce,
             private_key: pkey,
             private_key_expire: key_expire,
             addrbytes: addr,
-            port: port,
-            services: services as u16,
-            data_url: data_url,
+            port,
+            services,
+            data_url,
             public_ip_address: None,
             stacker_dbs,
         }
@@ -203,7 +203,7 @@ impl LocalPeer {
 }
 
 impl FromRow<LocalPeer> for LocalPeer {
-    fn from_row<'a>(row: &'a Row) -> Result<LocalPeer, db_error> {
+    fn from_row(row: &Row) -> Result<LocalPeer, db_error> {
         let network_id: u32 = row.get_unwrap("network_id");
         let parent_network_id: u32 = row.get_unwrap("parent_network_id");
         let nonce_hex: String = row.get_unwrap("nonce");
@@ -237,15 +237,15 @@ impl FromRow<LocalPeer> for LocalPeer {
             };
 
         Ok(LocalPeer {
-            network_id: network_id,
-            parent_network_id: parent_network_id,
+            network_id,
+            parent_network_id,
             private_key: privkey,
             nonce: nonce_buf,
             private_key_expire: privkey_expire,
-            addrbytes: addrbytes,
-            port: port,
-            services: services,
-            data_url: data_url,
+            addrbytes,
+            port,
+            services,
+            data_url,
             public_ip_address: None,
             stacker_dbs,
         })
@@ -253,7 +253,7 @@ impl FromRow<LocalPeer> for LocalPeer {
 }
 
 impl FromRow<ASEntry4> for ASEntry4 {
-    fn from_row<'a>(row: &'a Row) -> Result<ASEntry4, db_error> {
+    fn from_row(row: &Row) -> Result<ASEntry4, db_error> {
         let prefix: u32 = row.get_unwrap("prefix");
         let mask: u8 = row.get_unwrap("mask");
         let asn: u32 = row.get_unwrap("asn");
@@ -269,7 +269,7 @@ impl FromRow<ASEntry4> for ASEntry4 {
 }
 
 impl FromRow<Neighbor> for Neighbor {
-    fn from_row<'a>(row: &'a Row) -> Result<Neighbor, db_error> {
+    fn from_row(row: &Row) -> Result<Neighbor, db_error> {
         let peer_version: u32 = row.get_unwrap("peer_version");
         let network_id: u32 = row.get_unwrap("network_id");
         let addrbytes: PeerAddress = PeerAddress::from_column(row, "addrbytes")?;
@@ -289,20 +289,20 @@ impl FromRow<Neighbor> for Neighbor {
 
         Ok(Neighbor {
             addr: NeighborKey {
-                peer_version: peer_version,
-                network_id: network_id,
-                addrbytes: addrbytes,
-                port: port,
+                peer_version,
+                network_id,
+                addrbytes,
+                port,
             },
-            public_key: public_key,
+            public_key,
             expire_block: expire_block_height,
-            last_contact_time: last_contact_time,
-            asn: asn,
-            org: org,
-            allowed: allowed,
-            denied: denied,
-            in_degree: in_degree,
-            out_degree: out_degree,
+            last_contact_time,
+            asn,
+            org,
+            allowed,
+            denied,
+            in_degree,
+            out_degree,
         })
     }
 }
@@ -316,7 +316,7 @@ impl FromRow<Neighbor> for Neighbor {
 // This is done to ensure that the frontier represents live, long-lived peers to the greatest
 // extent possible.
 
-const PEERDB_INITIAL_SCHEMA: &'static [&'static str] = &[
+const PEERDB_INITIAL_SCHEMA: &[&str] = &[
     r#"
     CREATE TABLE frontier(
         peer_version INTEGER NOT NULL,
@@ -374,10 +374,10 @@ const PEERDB_INITIAL_SCHEMA: &'static [&'static str] = &[
     );"#,
 ];
 
-const PEERDB_INDEXES: &'static [&'static str] =
+const PEERDB_INDEXES: &[&str] =
     &["CREATE INDEX IF NOT EXISTS peer_address_index ON frontier(network_id,addrbytes,port);"];
 
-const PEERDB_SCHEMA_2: &'static [&'static str] = &[
+const PEERDB_SCHEMA_2: &[&str] = &[
     r#"PRAGMA foreign_keys = ON;"#,
     r#"
     CREATE TABLE stackerdb_peers(
@@ -401,7 +401,7 @@ const PEERDB_SCHEMA_2: &'static [&'static str] = &[
     "#,
 ];
 
-const PEERDB_SCHEMA_3: &'static [&'static str] = &[
+const PEERDB_SCHEMA_3: &[&str] = &[
     r#"
     ALTER TABLE frontier ADD COLUMN public BOOL NOT NULL DEFAULT 0;
     "#,
@@ -668,10 +668,7 @@ impl PeerDB {
 
         let conn = sqlite_open(path, open_flags, false)?;
 
-        let mut db = PeerDB {
-            conn: conn,
-            readwrite: readwrite,
-        };
+        let mut db = PeerDB { conn, readwrite };
 
         if create_flag {
             // instantiate!
@@ -753,10 +750,7 @@ impl PeerDB {
 
         let conn = sqlite_open(path, open_flags, true)?;
 
-        let db = PeerDB {
-            conn: conn,
-            readwrite: readwrite,
-        };
+        let db = PeerDB { conn, readwrite };
         Ok(db)
     }
 
@@ -773,10 +767,7 @@ impl PeerDB {
         };
         let conn = sqlite_open(path, open_flags, true)?;
 
-        let db = PeerDB {
-            conn: conn,
-            readwrite: readwrite,
-        };
+        let db = PeerDB { conn, readwrite };
 
         Ok(db)
     }
@@ -794,7 +785,7 @@ impl PeerDB {
         let conn = Connection::open_in_memory().map_err(|e| db_error::SqliteError(e))?;
 
         let mut db = PeerDB {
-            conn: conn,
+            conn,
             readwrite: true,
         };
 
@@ -821,7 +812,7 @@ impl PeerDB {
         &self.conn
     }
 
-    pub fn tx_begin<'a>(&'a mut self) -> Result<Transaction<'a>, db_error> {
+    pub fn tx_begin(&mut self) -> Result<Transaction<'_>, db_error> {
         if !self.readwrite {
             return Err(db_error::ReadOnly);
         }
@@ -885,7 +876,7 @@ impl PeerDB {
 
     /// Re-key and return the new local peer
     pub fn rekey(&mut self, new_expire_block: u64) -> Result<LocalPeer, db_error> {
-        if new_expire_block > ((1 as u64) << 63) - 1 {
+        if new_expire_block > (1 << 63) - 1 {
             return Err(db_error::Overflow);
         }
 
@@ -1246,14 +1237,14 @@ impl PeerDB {
             // we're preemptively allowing
             let nk = NeighborKey {
                 peer_version: 0,
-                network_id: network_id,
+                network_id,
                 addrbytes: peer_addr.clone(),
                 port: peer_port,
             };
             let empty_key = StacksPublicKey::from_private(&StacksPrivateKey::new());
             let mut empty_neighbor = Neighbor::empty(&nk, &empty_key, 0);
 
-            empty_neighbor.allowed = allow_deadline as i64;
+            empty_neighbor.allowed = allow_deadline;
 
             debug!("Preemptively allow peer {:?}", &nk);
             if !PeerDB::try_insert_peer(tx, &empty_neighbor, &[])? {
@@ -1292,7 +1283,7 @@ impl PeerDB {
             // we're preemptively denying
             let nk = NeighborKey {
                 peer_version: 0,
-                network_id: network_id,
+                network_id,
                 addrbytes: peer_addr.clone(),
                 port: peer_port,
             };
@@ -1991,15 +1982,9 @@ mod test {
             out_degree: 1,
         };
 
-        let mut db = PeerDB::connect_memory(
-            0x9abcdef0,
-            12345,
-            0,
-            "http://foo.com".into(),
-            &vec![],
-            &vec![],
-        )
-        .unwrap();
+        let mut db =
+            PeerDB::connect_memory(0x9abcdef0, 12345, 0, "http://foo.com".into(), &[], &[])
+                .unwrap();
 
         let neighbor_before_opt = PeerDB::get_peer(
             db.conn(),
@@ -2051,15 +2036,9 @@ mod test {
     /// IDs. New peers' contract IDs get added, and dropped peers' contract IDs get removed.
     #[test]
     fn test_insert_or_replace_stacker_dbs() {
-        let mut db = PeerDB::connect_memory(
-            0x9abcdef0,
-            12345,
-            0,
-            "http://foo.com".into(),
-            &vec![],
-            &vec![],
-        )
-        .unwrap();
+        let mut db =
+            PeerDB::connect_memory(0x9abcdef0, 12345, 0, "http://foo.com".into(), &[], &[])
+                .unwrap();
 
         // the neighbors to whom this DB corresponds
         let neighbor_1 = Neighbor {
@@ -2219,15 +2198,9 @@ mod test {
             out_degree: 1,
         };
 
-        let mut db = PeerDB::connect_memory(
-            0x9abcdef0,
-            12345,
-            0,
-            "http://foo.com".into(),
-            &vec![],
-            &vec![],
-        )
-        .unwrap();
+        let mut db =
+            PeerDB::connect_memory(0x9abcdef0, 12345, 0, "http://foo.com".into(), &[], &[])
+                .unwrap();
 
         {
             let tx = db.tx_begin().unwrap();
@@ -2351,7 +2324,7 @@ mod test {
             PeerAddress::from_ipv4(127, 0, 0, 1),
             12345,
             UrlString::try_from("http://foo.com").unwrap(),
-            &vec![],
+            &[],
             None,
             &[],
         )
@@ -2552,7 +2525,7 @@ mod test {
             PeerAddress::from_ipv4(127, 0, 0, 1),
             12345,
             UrlString::try_from("http://foo.com").unwrap(),
-            &vec![],
+            &[],
             None,
             &[],
         )
@@ -2830,7 +2803,7 @@ mod test {
                 },
                 public_key: Secp256k1PublicKey::from_private(&Secp256k1PrivateKey::new()),
                 expire_block: (i + 23456) as u64,
-                last_contact_time: (1552509642 + (i as u64)) as u64,
+                last_contact_time: (1552509642 + (i as u64)),
                 allowed: (now_secs + 600) as i64,
                 denied: -1,
                 asn: (34567 + i) as u32,
@@ -2850,7 +2823,7 @@ mod test {
                 },
                 public_key: Secp256k1PublicKey::from_private(&Secp256k1PrivateKey::new()),
                 expire_block: (i + 23456) as u64,
-                last_contact_time: (1552509642 + (i as u64)) as u64,
+                last_contact_time: (1552509642 + (i as u64)),
                 allowed: 0,
                 denied: -1,
                 asn: (34567 + i) as u32,
@@ -2860,7 +2833,7 @@ mod test {
             });
         }
 
-        fn are_present(ne: &Vec<Neighbor>, nei: &Vec<Neighbor>) -> bool {
+        fn are_present(ne: &[Neighbor], nei: &[Neighbor]) -> bool {
             for n in ne {
                 let mut found = false;
                 for ni in nei {
@@ -2881,7 +2854,7 @@ mod test {
             12345,
             0,
             "http://foo.com".into(),
-            &vec![],
+            &[],
             &initial_neighbors,
         )
         .unwrap();
@@ -2934,7 +2907,7 @@ mod test {
                 },
                 public_key: Secp256k1PublicKey::from_private(&Secp256k1PrivateKey::new()),
                 expire_block: (i + 23456) as u64,
-                last_contact_time: (1552509642 + (i as u64)) as u64,
+                last_contact_time: (1552509642 + (i as u64)),
                 allowed: -1,
                 denied: -1,
                 asn: (34567 + i) as u32,
@@ -2955,7 +2928,7 @@ mod test {
                 },
                 public_key: Secp256k1PublicKey::from_private(&Secp256k1PrivateKey::new()),
                 expire_block: (i + 23456) as u64,
-                last_contact_time: (1552509642 + (i as u64)) as u64,
+                last_contact_time: (1552509642 + (i as u64)),
                 allowed: -1,
                 denied: -1,
                 asn: (34567 + i) as u32,
@@ -2965,7 +2938,7 @@ mod test {
             });
         }
 
-        fn are_present(ne: &Vec<Neighbor>, nei: &Vec<Neighbor>) -> bool {
+        fn are_present(ne: &[Neighbor], nei: &[Neighbor]) -> bool {
             for n in ne {
                 let mut found = false;
                 for ni in nei {
@@ -2987,7 +2960,7 @@ mod test {
             12345,
             0,
             "http://foo.com".into(),
-            &vec![],
+            &[],
             &initial_neighbors,
         )
         .unwrap();
@@ -3075,7 +3048,7 @@ mod test {
             0,
             "http://foo.com".into(),
             &asn4_table,
-            &vec![],
+            &[],
         )
         .unwrap();
 
@@ -3134,15 +3107,9 @@ mod test {
     /// `denied` and `allowed` columns appropriately.
     #[test]
     fn test_peer_preemptive_deny_allow() {
-        let mut db = PeerDB::connect_memory(
-            0x9abcdef0,
-            12345,
-            0,
-            "http://foo.com".into(),
-            &vec![],
-            &vec![],
-        )
-        .unwrap();
+        let mut db =
+            PeerDB::connect_memory(0x9abcdef0, 12345, 0, "http://foo.com".into(), &[], &[])
+                .unwrap();
         {
             let tx = db.tx_begin().unwrap();
             PeerDB::set_deny_peer(&tx, 0x9abcdef0, &PeerAddress([0x1; 16]), 12345, 10000000)
@@ -3167,15 +3134,9 @@ mod test {
     /// PeerDB::get_allowed_cidrs() correctly store and load CIDR prefixes
     #[test]
     fn test_peer_cidr_lists() {
-        let mut db = PeerDB::connect_memory(
-            0x9abcdef0,
-            12345,
-            0,
-            "http://foo.com".into(),
-            &vec![],
-            &vec![],
-        )
-        .unwrap();
+        let mut db =
+            PeerDB::connect_memory(0x9abcdef0, 12345, 0, "http://foo.com".into(), &[], &[])
+                .unwrap();
         {
             let tx = db.tx_begin().unwrap();
             PeerDB::add_cidr_prefix(&tx, "denied_prefixes", &PeerAddress([0x1; 16]), 64).unwrap();
@@ -3194,15 +3155,9 @@ mod test {
     /// Tests PeerDB::is_address_denied()
     #[test]
     fn test_peer_is_denied() {
-        let mut db = PeerDB::connect_memory(
-            0x9abcdef0,
-            12345,
-            0,
-            "http://foo.com".into(),
-            &vec![],
-            &vec![],
-        )
-        .unwrap();
+        let mut db =
+            PeerDB::connect_memory(0x9abcdef0, 12345, 0, "http://foo.com".into(), &[], &[])
+                .unwrap();
         {
             let tx = db.tx_begin().unwrap();
             PeerDB::add_deny_cidr(
@@ -3334,8 +3289,8 @@ mod test {
             12345,
             0,
             "http://foo.com".into(),
-            &vec![],
-            &vec![neighbor_1.clone(), neighbor_2.clone()],
+            &[],
+            &[neighbor_1.clone(), neighbor_2.clone()],
         )
         .unwrap();
 
@@ -3483,8 +3438,8 @@ mod test {
             12345,
             0,
             "http://foo.com".into(),
-            &vec![],
-            &vec![neighbor_1.clone(), neighbor_2.clone()],
+            &[],
+            &[neighbor_1.clone(), neighbor_2.clone()],
         )
         .unwrap();
         {
@@ -3570,7 +3525,7 @@ mod test {
             PeerAddress::from_ipv4(127, 0, 0, 1),
             12345,
             UrlString::try_from("http://foo.com").unwrap(),
-            &vec![],
+            &[],
             None,
             &[],
         )
@@ -3590,7 +3545,7 @@ mod test {
             PeerAddress::from_ipv4(127, 0, 0, 1),
             12345,
             UrlString::try_from("http://foo.com").unwrap(),
-            &vec![],
+            &[],
             None,
             &[],
         )
@@ -3608,7 +3563,7 @@ mod test {
             PeerAddress::from_ipv4(127, 0, 0, 1),
             12345,
             UrlString::try_from("http://foo.com").unwrap(),
-            &vec![],
+            &[],
             None,
             &[],
         )
@@ -3637,7 +3592,7 @@ mod test {
             PeerAddress::from_ipv4(127, 0, 0, 1),
             12345,
             UrlString::try_from("http://foo.com").unwrap(),
-            &vec![],
+            &[],
             None,
             &[],
         )
@@ -3663,13 +3618,13 @@ mod test {
             PeerAddress::from_ipv4(127, 0, 0, 1),
             12345,
             UrlString::try_from("http://foo.com").unwrap(),
-            &vec![],
+            &[],
             None,
             &[],
         )
         .unwrap();
 
-        let private_addrbytes = vec![
+        let private_addrbytes = [
             PeerAddress::from_ipv4(127, 0, 0, 1),
             PeerAddress::from_ipv4(192, 168, 0, 1),
             PeerAddress::from_ipv4(172, 16, 0, 1),
@@ -3684,7 +3639,7 @@ mod test {
             ]),
         ];
 
-        let public_addrbytes = vec![
+        let public_addrbytes = [
             PeerAddress::from_ipv4(1, 2, 3, 4),
             PeerAddress([
                 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee,
@@ -3810,7 +3765,7 @@ mod test {
             PeerAddress::from_ipv4(127, 0, 0, 1),
             12345,
             UrlString::try_from("http://foo.com").unwrap(),
-            &vec![],
+            &[],
             None,
             &[],
         )

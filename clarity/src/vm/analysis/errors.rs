@@ -207,10 +207,10 @@ impl CheckErrors {
     /// Does this check error indicate that the transaction should be
     /// rejected?
     pub fn rejectable(&self) -> bool {
-        match &self {
-            CheckErrors::SupertypeTooLarge | CheckErrors::Expects(_) => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            CheckErrors::SupertypeTooLarge | CheckErrors::Expects(_)
+        )
     }
 }
 
@@ -323,7 +323,7 @@ pub fn check_arguments_at_most<T>(expected: usize, args: &[T]) -> Result<(), Che
     }
 }
 
-fn formatted_expected_types(expected_types: &Vec<TypeSignature>) -> String {
+fn formatted_expected_types(expected_types: &[TypeSignature]) -> String {
     let mut expected_types_joined = format!("'{}'", expected_types[0]);
 
     if expected_types.len() > 2 {

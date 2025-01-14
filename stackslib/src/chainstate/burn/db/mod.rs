@@ -53,7 +53,7 @@ impl_byte_array_from_column_only!(TrieHash);
 impl_byte_array_from_column_only!(MessageSignature);
 
 impl FromColumn<VRFPublicKey> for VRFPublicKey {
-    fn from_column<'a>(row: &'a Row, column_name: &str) -> Result<VRFPublicKey, db_error> {
+    fn from_column(row: &Row, column_name: &str) -> Result<VRFPublicKey, db_error> {
         let pubkey_hex: String = row.get_unwrap(column_name);
         match VRFPublicKey::from_hex(&pubkey_hex) {
             Some(pubk) => Ok(pubk),
@@ -63,7 +63,7 @@ impl FromColumn<VRFPublicKey> for VRFPublicKey {
 }
 
 impl FromColumn<StacksAddress> for StacksAddress {
-    fn from_column<'a>(row: &'a Row, column_name: &str) -> Result<Self, db_error> {
+    fn from_column(row: &Row, column_name: &str) -> Result<Self, db_error> {
         let address_str: String = row.get_unwrap(column_name);
         match Self::from_string(&address_str) {
             Some(a) => Ok(a),
@@ -73,14 +73,14 @@ impl FromColumn<StacksAddress> for StacksAddress {
 }
 
 impl FromColumn<PrincipalData> for PrincipalData {
-    fn from_column<'a>(row: &'a Row, column_name: &str) -> Result<Self, db_error> {
+    fn from_column(row: &Row, column_name: &str) -> Result<Self, db_error> {
         let address_str: String = row.get_unwrap(column_name);
         Self::parse(&address_str).map_err(|_| db_error::ParseError)
     }
 }
 
 impl FromColumn<PoxAddress> for PoxAddress {
-    fn from_column<'a>(row: &'a Row, column_name: &str) -> Result<Self, db_error> {
+    fn from_column(row: &Row, column_name: &str) -> Result<Self, db_error> {
         let address_str: String = row.get_unwrap(column_name);
         match Self::from_db_string(&address_str) {
             Some(a) => Ok(a),
@@ -90,7 +90,7 @@ impl FromColumn<PoxAddress> for PoxAddress {
 }
 
 impl FromColumn<BitcoinAddress> for BitcoinAddress {
-    fn from_column<'a>(row: &'a Row, column_name: &str) -> Result<Self, db_error> {
+    fn from_column(row: &Row, column_name: &str) -> Result<Self, db_error> {
         let address_str: String = row.get_unwrap(column_name);
         match Self::from_string(&address_str) {
             Some(a) => Ok(a),

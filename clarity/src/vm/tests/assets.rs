@@ -1006,7 +1006,7 @@ fn test_simple_naming_system(
         _ => panic!(),
     };
 
-    let mut placeholder_context =
+    let placeholder_context =
         ContractContext::new(QualifiedContractIdentifier::transient(), version);
 
     let tokens_contract_id =
@@ -1107,7 +1107,7 @@ fn test_simple_naming_system(
     assert!(is_committed(&result));
 
     {
-        let mut env = owned_env.get_exec_environment(None, None, &mut placeholder_context);
+        let mut env = owned_env.get_exec_environment(None, None, &placeholder_context);
         assert_eq!(
             env.eval_read_only(&names_contract_id.clone(), "(nft-get-owner? names 1)")
                 .unwrap(),
@@ -1378,7 +1378,7 @@ fn test_simple_naming_system(
     assert_eq!(asset_map.to_table().len(), 0);
 
     {
-        let mut env = owned_env.get_exec_environment(None, None, &mut placeholder_context);
+        let mut env = owned_env.get_exec_environment(None, None, &placeholder_context);
         assert_eq!(
             env.eval_read_only(&names_contract_id.clone(), "(nft-get-owner? names 5)")
                 .unwrap(),

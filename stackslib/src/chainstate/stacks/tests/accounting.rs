@@ -337,7 +337,7 @@ fn test_bad_microblock_fees_pre_v210() {
 
         // should always succeed
         let (_, _, consensus_hash) = peer.next_burnchain_block(burn_ops.clone());
-        peer.process_stacks_epoch_at_tip_checked(&stacks_block, &vec![])
+        peer.process_stacks_epoch_at_tip_checked(&stacks_block, &[])
             .unwrap();
 
         block_ids.push(StacksBlockHeader::make_index_block_hash(
@@ -660,7 +660,7 @@ fn test_bad_microblock_fees_fix_transition() {
 
         // should always succeed
         let (_, _, consensus_hash) = peer.next_burnchain_block(burn_ops.clone());
-        peer.process_stacks_epoch_at_tip_checked(&stacks_block, &vec![])
+        peer.process_stacks_epoch_at_tip_checked(&stacks_block, &[])
             .unwrap();
 
         block_ids.push(StacksBlockHeader::make_index_block_hash(
@@ -1016,7 +1016,7 @@ fn test_get_block_info_v210() {
 
         // should always succeed
         peer.next_burnchain_block(burn_ops.clone());
-        peer.process_stacks_epoch_at_tip_checked(&stacks_block, &vec![])
+        peer.process_stacks_epoch_at_tip_checked(&stacks_block, &[])
             .unwrap();
     }
 
@@ -1320,7 +1320,7 @@ fn test_get_block_info_v210_no_microblocks() {
 
         // should always succeed
         peer.next_burnchain_block(burn_ops.clone());
-        peer.process_stacks_epoch_at_tip_checked(&stacks_block, &vec![])
+        peer.process_stacks_epoch_at_tip_checked(&stacks_block, &[])
             .unwrap();
     }
 
@@ -1787,7 +1787,7 @@ fn test_coinbase_pay_to_alt_recipient_v210(pay_to_contract: bool) {
 
         // should always succeed
         peer.next_burnchain_block(burn_ops.clone());
-        peer.process_stacks_epoch_at_tip_checked(&stacks_block, &vec![])
+        peer.process_stacks_epoch_at_tip_checked(&stacks_block, &[])
             .unwrap();
     }
 

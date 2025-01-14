@@ -382,9 +382,11 @@ pub struct MerklePathPoint<H: MerkleHashFunc> {
 pub type MerklePath<H> = Vec<MerklePathPoint<H>>;
 
 /// Merkle tree implementation with tagged nodes:
-/// * a leaf hash is H(0x00 + data)
-/// * a node hash is H(0x01 + left.hash + right.hash)
-/// An empty tree has root hash 0x00000...00000
+///
+/// * A leaf hash is `H(0x00 + data)`
+/// * A node hash is `H(0x01 + left.hash + right.hash)`
+///
+/// An empty tree has a root hash of `0x00000...00000`.
 ///
 /// NOTE: This is consensus-critical code, because it is used to generate the transaction Merkle
 /// tree roots in Stacks blocks.
@@ -396,7 +398,7 @@ where
         MerkleTree { nodes: vec![] }
     }
 
-    pub fn new(data: &Vec<Vec<u8>>) -> MerkleTree<H> {
+    pub fn new(data: &[Vec<u8>]) -> MerkleTree<H> {
         if data.is_empty() {
             return MerkleTree { nodes: vec![] };
         }

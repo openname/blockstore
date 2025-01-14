@@ -686,6 +686,22 @@ impl BlockResponse {
             BlockResponse::Rejected(rejection) => rejection.signer_signature_hash,
         }
     }
+
+    /// Get the block accept data from the block response
+    pub fn as_block_accepted(&self) -> Option<&BlockAccepted> {
+        match self {
+            BlockResponse::Accepted(accepted) => Some(accepted),
+            _ => None,
+        }
+    }
+
+    /// Get the block accept data from the block response
+    pub fn as_block_rejection(&self) -> Option<&BlockRejection> {
+        match self {
+            BlockResponse::Rejected(rejection) => Some(rejection),
+            _ => None,
+        }
+    }
 }
 
 impl StacksMessageCodec for BlockResponse {
@@ -1237,7 +1253,7 @@ mod test {
             txs: vec![],
         };
         let tx_merkle_root = {
-            let txid_vecs = block
+            let txid_vecs: Vec<_> = block
                 .txs
                 .iter()
                 .map(|tx| tx.txid().as_bytes().to_vec())

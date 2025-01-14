@@ -72,7 +72,7 @@ impl LeaderKeyRegisterOp {
     /// Interpret the first 20 bytes of the key registration's memo field as the Hash160 of
     ///  of the public key that will sign this miner's nakamoto blocks.
     pub fn interpret_nakamoto_signing_key(&self) -> Option<Hash160> {
-        self.memo.get(0..20).map(Hash160::from_bytes).flatten()
+        self.memo.get(0..20).and_then(Hash160::from_bytes)
     }
 
     /// Set the miner public key hash160 for block-signing
@@ -85,7 +85,7 @@ impl LeaderKeyRegisterOp {
         self.memo[0..20].copy_from_slice(&pubkey_hash160.0);
     }
 
-    fn parse_data(data: &Vec<u8>) -> Option<ParsedData> {
+    fn parse_data(data: &[u8]) -> Option<ParsedData> {
         /*
             Wire format:
 
@@ -163,7 +163,7 @@ impl LeaderKeyRegisterOp {
 
             txid: tx.txid(),
             vtxindex: tx.vtxindex(),
-            block_height: block_height,
+            block_height,
             burn_header_hash: block_hash.clone(),
         })
     }
@@ -284,11 +284,11 @@ pub mod tests {
                 result: Some(LeaderKeyRegisterOp {
                     consensus_hash: ConsensusHash::from_bytes(&hex_bytes("2222222222222222222222222222222222222222").unwrap()).unwrap(),
                     public_key: VRFPublicKey::from_bytes(&hex_bytes("a366b51292bef4edd64063d9145c617fec373bceb0758e98cd72becd84d54c7a").unwrap()).unwrap(),
-                    memo: vec![01, 02, 03, 04, 05],
+                    memo: vec![1, 2, 3, 4, 5],
 
                     txid: Txid::from_bytes_be(&hex_bytes("1bfa831b5fc56c858198acb8e77e5863c1e9d8ac26d49ddb914e24d8d4083562").unwrap()).unwrap(),
-                    vtxindex: vtxindex,
-                    block_height: block_height,
+                    vtxindex,
+                    block_height,
                     burn_header_hash: burn_header_hash.clone(),
                 })
             },
@@ -301,9 +301,9 @@ pub mod tests {
                     memo: vec![],
 
                     txid: Txid::from_bytes_be(&hex_bytes("2fbf8d5be32dce49790d203ba59acbb0929d5243413174ff5d26a5c6f23dea65").unwrap()).unwrap(),
-                    vtxindex: vtxindex,
-                    block_height: block_height,
-                    burn_header_hash: burn_header_hash,
+                    vtxindex,
+                    block_height,
+                    burn_header_hash,
                 })
             },
             OpFixture {
@@ -491,7 +491,7 @@ pub mod tests {
                     .unwrap(),
             )
             .unwrap(),
-            memo: vec![01, 02, 03, 04, 05],
+            memo: vec![1, 2, 3, 4, 5],
 
             txid: Txid::from_bytes_be(
                 &hex_bytes("1bfa831b5fc56c858198acb8e77e5863c1e9d8ac26d49ddb914e24d8d4083562")
@@ -503,7 +503,7 @@ pub mod tests {
             burn_header_hash: block_123_hash.clone(),
         };
 
-        let block_ops = vec![
+        let block_ops = [
             // 122
             vec![],
             // 123
@@ -598,7 +598,7 @@ pub mod tests {
                         &prev_snapshot,
                         &snapshot_row,
                         &block_ops[i as usize],
-                        &vec![],
+                        &[],
                         None,
                         None,
                         None,
@@ -627,7 +627,7 @@ pub mod tests {
                         .unwrap(),
                     )
                     .unwrap(),
-                    memo: vec![01, 02, 03, 04, 05],
+                    memo: vec![1, 2, 3, 4, 5],
 
                     txid: Txid::from_bytes_be(
                         &hex_bytes(
@@ -656,7 +656,7 @@ pub mod tests {
                         .unwrap(),
                     )
                     .unwrap(),
-                    memo: vec![01, 02, 03, 04, 05],
+                    memo: vec![1, 2, 3, 4, 5],
 
                     txid: Txid::from_bytes_be(
                         &hex_bytes(

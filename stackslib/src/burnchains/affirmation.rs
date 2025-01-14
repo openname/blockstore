@@ -378,6 +378,10 @@ impl AffirmationMap {
         self.affirmations.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.affirmations.is_empty()
+    }
+
     pub fn as_slice(&self) -> &[AffirmationMapEntry] {
         &self.affirmations
     }
@@ -876,7 +880,7 @@ fn inner_find_heaviest_block_commit_ptr(
     test_debug!("ancestors = {:?}", &ancestors);
     test_debug!("ancestor_confirmations = {:?}", &ancestor_confirmations);
 
-    if ancestor_confirmations.len() == 0 {
+    if ancestor_confirmations.is_empty() {
         // empty prepare phase
         test_debug!("Prepare-phase has no block-commits");
         return None;
@@ -933,7 +937,7 @@ fn inner_find_heaviest_block_commit_ptr(
 pub fn find_heaviest_block_commit<B: BurnchainHeaderReader>(
     burnchain_tx: &BurnchainDBTransaction,
     indexer: &B,
-    prepare_phase_ops: &Vec<Vec<LeaderBlockCommitOp>>,
+    prepare_phase_ops: &[Vec<LeaderBlockCommitOp>],
     anchor_threshold: u32,
 ) -> Result<Option<(LeaderBlockCommitOp, Vec<Vec<bool>>, u64, u64)>, DBError> {
     let (pox_anchor_ptr, ancestors) =

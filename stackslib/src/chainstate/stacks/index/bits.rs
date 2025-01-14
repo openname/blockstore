@@ -36,7 +36,7 @@ use crate::chainstate::stacks::index::{BlockMap, Error, MarfTrieId, TrieLeaf};
 
 /// Get the size of a Trie path (note that a Trie path is 32 bytes long, and can definitely _not_
 /// be over 255 bytes).
-pub fn get_path_byte_len(p: &Vec<u8>) -> usize {
+pub fn get_path_byte_len(p: &[u8]) -> usize {
     assert!(p.len() < 255);
     let path_len_byte_len = 1;
     path_len_byte_len + p.len()
@@ -157,7 +157,7 @@ pub fn ptrs_from_bytes<R: Read>(
 /// Calculate the hash of a TrieNode, given its childrens' hashes.
 pub fn get_node_hash<M, T: ConsensusSerializable<M> + std::fmt::Debug>(
     node: &T,
-    child_hashes: &Vec<TrieHash>,
+    child_hashes: &[TrieHash],
     map: &mut M,
 ) -> TrieHash {
     let mut hasher = TrieHasher::new();
@@ -200,7 +200,7 @@ pub fn get_leaf_hash(node: &TrieLeaf) -> TrieHash {
 
 pub fn get_nodetype_hash_bytes<T: MarfTrieId, M: BlockMap>(
     node: &TrieNodeType,
-    child_hash_bytes: &Vec<TrieHash>,
+    child_hash_bytes: &[TrieHash],
     map: &mut M,
 ) -> TrieHash {
     match node {

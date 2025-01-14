@@ -757,7 +757,7 @@ fn test_walk_inbound_line(peer_configs: &mut Vec<TestPeerConfig>) -> Vec<TestPee
 
     run_topology_test_ex(
         &mut peers,
-        |peers: &Vec<TestPeer>| {
+        |peers: &[TestPeer]| {
             let mut done = true;
             for i in 0..peer_count {
                 // only check "public" peers
@@ -840,7 +840,7 @@ fn test_walk_inbound_line_15() {
     })
 }
 
-fn dump_peers(peers: &Vec<TestPeer>) -> () {
+fn dump_peers(peers: &[TestPeer]) {
     test_debug!("\n=== PEER DUMP ===");
     for i in 0..peers.len() {
         let mut neighbor_index = vec![];
@@ -870,7 +870,7 @@ fn dump_peers(peers: &Vec<TestPeer>) -> () {
     test_debug!("\n");
 }
 
-fn dump_peer_histograms(peers: &Vec<TestPeer>) -> () {
+fn dump_peer_histograms(peers: &[TestPeer]) {
     let mut outbound_hist: HashMap<usize, usize> = HashMap::new();
     let mut inbound_hist: HashMap<usize, usize> = HashMap::new();
     let mut all_hist: HashMap<usize, usize> = HashMap::new();
@@ -933,7 +933,7 @@ fn dump_peer_histograms(peers: &Vec<TestPeer>) -> () {
     test_debug!("\n");
 }
 
-fn run_topology_test(peers: &mut Vec<TestPeer>) -> () {
+fn run_topology_test(peers: &mut Vec<TestPeer>) {
     run_topology_test_ex(peers, |_| false, false)
 }
 
@@ -941,9 +941,8 @@ fn run_topology_test_ex<F>(
     peers: &mut Vec<TestPeer>,
     mut finished_check: F,
     use_finished_check: bool,
-) -> ()
-where
-    F: FnMut(&Vec<TestPeer>) -> bool,
+) where
+    F: FnMut(&[TestPeer]) -> bool,
 {
     let peer_count = peers.len();
 

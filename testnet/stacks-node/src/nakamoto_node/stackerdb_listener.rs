@@ -35,16 +35,16 @@ use stacks::types::PublicKey;
 use stacks::util::get_epoch_time_secs;
 use stacks::util::hash::{MerkleHashFunc, Sha512Trunc256Sum};
 use stacks::util::secp256k1::MessageSignature;
+#[cfg(test)]
+use stacks_common::util::tests::TestFlag;
 
 use super::Error as NakamotoNodeError;
 use crate::event_dispatcher::StackerDBChannel;
-#[cfg(test)]
-use crate::neon::TestFlag;
 
 #[cfg(test)]
 /// Fault injection flag to prevent the miner from seeing enough signer signatures.
 /// Used to test that the signers will broadcast a block if it gets enough signatures
-pub static TEST_IGNORE_SIGNERS: LazyLock<TestFlag> = LazyLock::new(TestFlag::default);
+pub static TEST_IGNORE_SIGNERS: LazyLock<TestFlag<bool>> = LazyLock::new(TestFlag::default);
 
 /// How long should the coordinator poll on the event receiver before
 /// waking up to check timeouts?

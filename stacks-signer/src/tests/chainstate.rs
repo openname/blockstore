@@ -452,8 +452,12 @@ fn check_sortition_timeout() {
     fs::create_dir_all(signer_db_dir).unwrap();
     let mut signer_db = SignerDb::new(signer_db_path).unwrap();
 
+    let block_sk = StacksPrivateKey::from_seed(&[0, 1]);
+    let block_pk = StacksPublicKey::from_private(&block_sk);
+    let block_pkh = Hash160::from_node_public_key(&block_pk);
+
     let mut sortition = SortitionState {
-        miner_pkh: Hash160([0; 20]),
+        miner_pkh: block_pkh,
         miner_pubkey: None,
         prior_sortition: ConsensusHash([0; 20]),
         parent_tenure_id: ConsensusHash([0; 20]),

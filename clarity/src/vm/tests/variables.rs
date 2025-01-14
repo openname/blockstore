@@ -36,13 +36,13 @@ fn test_block_height(
 ) {
     let contract = "(define-read-only (test-func) block-height)";
 
-    let mut placeholder_context =
+    let placeholder_context =
         ContractContext::new(QualifiedContractIdentifier::transient(), version);
 
     let mut owned_env = tl_env_factory.get_env(epoch);
     let contract_identifier = QualifiedContractIdentifier::local("test-contract").unwrap();
 
-    let mut exprs = parse(&contract_identifier, &contract, version, epoch).unwrap();
+    let mut exprs = parse(&contract_identifier, contract, version, epoch).unwrap();
     let mut marf = MemoryBackingStore::new();
     let mut db = marf.as_analysis_db();
     let analysis = db.execute(|db| {
@@ -70,7 +70,7 @@ fn test_block_height(
         ASTRules::PrecheckSize,
     );
 
-    let mut env = owned_env.get_exec_environment(None, None, &mut placeholder_context);
+    let mut env = owned_env.get_exec_environment(None, None, &placeholder_context);
 
     // Call the function
     let eval_result = env.eval_read_only(&contract_identifier, "(test-func)");
@@ -94,13 +94,13 @@ fn test_stacks_block_height(
 ) {
     let contract = "(define-read-only (test-func) stacks-block-height)";
 
-    let mut placeholder_context =
+    let placeholder_context =
         ContractContext::new(QualifiedContractIdentifier::transient(), version);
 
     let mut owned_env = tl_env_factory.get_env(epoch);
     let contract_identifier = QualifiedContractIdentifier::local("test-contract").unwrap();
 
-    let mut exprs = parse(&contract_identifier, &contract, version, epoch).unwrap();
+    let mut exprs = parse(&contract_identifier, contract, version, epoch).unwrap();
     let mut marf = MemoryBackingStore::new();
     let mut db = marf.as_analysis_db();
     let analysis = db.execute(|db| {
@@ -128,7 +128,7 @@ fn test_stacks_block_height(
         ASTRules::PrecheckSize,
     );
 
-    let mut env = owned_env.get_exec_environment(None, None, &mut placeholder_context);
+    let mut env = owned_env.get_exec_environment(None, None, &placeholder_context);
 
     // Call the function
     let eval_result = env.eval_read_only(&contract_identifier, "(test-func)");
@@ -154,13 +154,13 @@ fn test_tenure_height(
 ) {
     let contract = "(define-read-only (test-func) tenure-height)";
 
-    let mut placeholder_context =
+    let placeholder_context =
         ContractContext::new(QualifiedContractIdentifier::transient(), version);
 
     let mut owned_env = tl_env_factory.get_env(epoch);
     let contract_identifier = QualifiedContractIdentifier::local("test-contract").unwrap();
 
-    let mut exprs = parse(&contract_identifier, &contract, version, epoch).unwrap();
+    let mut exprs = parse(&contract_identifier, contract, version, epoch).unwrap();
     let mut marf = MemoryBackingStore::new();
     let mut db = marf.as_analysis_db();
     let analysis = db.execute(|db| {
@@ -188,7 +188,7 @@ fn test_tenure_height(
         ASTRules::PrecheckSize,
     );
 
-    let mut env = owned_env.get_exec_environment(None, None, &mut placeholder_context);
+    let mut env = owned_env.get_exec_environment(None, None, &placeholder_context);
 
     // Call the function
     let eval_result = env.eval_read_only(&contract_identifier, "(test-func)");
@@ -213,6 +213,7 @@ enum WhenError {
 }
 
 #[cfg(test)]
+#[allow(clippy::type_complexity)]
 fn expect_contract_error(
     version: ClarityVersion,
     epoch: StacksEpochId,
@@ -226,13 +227,13 @@ fn expect_contract_error(
     )],
     expected_success: Value,
 ) {
-    let mut placeholder_context =
+    let placeholder_context =
         ContractContext::new(QualifiedContractIdentifier::local(name).unwrap(), version);
 
     let mut owned_env = tl_env_factory.get_env(epoch);
     let contract_identifier = QualifiedContractIdentifier::local(name).unwrap();
 
-    let mut exprs = parse(&contract_identifier, &contract, version, epoch).unwrap();
+    let mut exprs = parse(&contract_identifier, contract, version, epoch).unwrap();
     let mut marf = MemoryBackingStore::new();
     let mut db = marf.as_analysis_db();
     let analysis = db.execute(|db| {
@@ -280,7 +281,7 @@ fn expect_contract_error(
         }
     }
 
-    let mut env = owned_env.get_exec_environment(None, None, &mut placeholder_context);
+    let mut env = owned_env.get_exec_environment(None, None, &placeholder_context);
 
     // Call the function
     let eval_result = env.eval_read_only(&contract_identifier, "(test-func)");

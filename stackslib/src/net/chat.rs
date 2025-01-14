@@ -136,7 +136,7 @@ pub struct NeighborStats {
 impl NeighborStats {
     pub fn new(outbound: bool) -> NeighborStats {
         NeighborStats {
-            outbound: outbound,
+            outbound,
             first_contact_time: 0,
             last_contact_time: 0,
             last_send_time: 0,
@@ -162,9 +162,9 @@ impl NeighborStats {
     /// Add a neighbor health point for this peer.
     /// This updates the recent list of instances where this peer either successfully replied to a
     /// message, or failed to do so (indicated by `success`).
-    pub fn add_healthpoint(&mut self, success: bool) -> () {
+    pub fn add_healthpoint(&mut self, success: bool) {
         let hp = NeighborHealthPoint {
-            success: success,
+            success,
             time: get_epoch_time_secs(),
         };
         self.healthpoints.push_back(hp);
@@ -176,7 +176,7 @@ impl NeighborStats {
     /// Record that we recently received a block of the given size.
     /// Keeps track of the last `NUM_BANDWIDTH_POINTS` such events, so we can estimate the current
     /// bandwidth consumed by block pushes.
-    pub fn add_block_push(&mut self, message_size: u64) -> () {
+    pub fn add_block_push(&mut self, message_size: u64) {
         self.block_push_rx_counts
             .push_back((get_epoch_time_secs(), message_size));
         while self.block_push_rx_counts.len() > NUM_BANDWIDTH_POINTS {
@@ -187,7 +187,7 @@ impl NeighborStats {
     /// Record that we recently received a microblock of the given size.
     /// Keeps track of the last `NUM_BANDWIDTH_POINTS` such events, so we can estimate the current
     /// bandwidth consumed by microblock pushes.
-    pub fn add_microblocks_push(&mut self, message_size: u64) -> () {
+    pub fn add_microblocks_push(&mut self, message_size: u64) {
         self.microblocks_push_rx_counts
             .push_back((get_epoch_time_secs(), message_size));
         while self.microblocks_push_rx_counts.len() > NUM_BANDWIDTH_POINTS {
@@ -198,7 +198,7 @@ impl NeighborStats {
     /// Record that we recently received a transaction of the given size.
     /// Keeps track of the last `NUM_BANDWIDTH_POINTS` such events, so we can estimate the current
     /// bandwidth consumed by transaction pushes.
-    pub fn add_transaction_push(&mut self, message_size: u64) -> () {
+    pub fn add_transaction_push(&mut self, message_size: u64) {
         self.transaction_push_rx_counts
             .push_back((get_epoch_time_secs(), message_size));
         while self.transaction_push_rx_counts.len() > NUM_BANDWIDTH_POINTS {
@@ -209,7 +209,7 @@ impl NeighborStats {
     /// Record that we recently received a stackerdb chunk push of the given size.
     /// Keeps track of the last `NUM_BANDWIDTH_POINTS` such events, so we can estimate the current
     /// bandwidth consumed by stackerdb chunk pushes.
-    pub fn add_stackerdb_push(&mut self, message_size: u64) -> () {
+    pub fn add_stackerdb_push(&mut self, message_size: u64) {
         self.stackerdb_push_rx_counts
             .push_back((get_epoch_time_secs(), message_size));
         while self.stackerdb_push_rx_counts.len() > NUM_BANDWIDTH_POINTS {
@@ -220,7 +220,7 @@ impl NeighborStats {
     /// Record that we recently received a Nakamoto blcok push of the given size.
     /// Keeps track of the last `NUM_BANDWIDTH_POINTS` such events, so we can estimate the current
     /// bandwidth consumed by Nakamoto block pushes
-    pub fn add_nakamoto_block_push(&mut self, message_size: u64) -> () {
+    pub fn add_nakamoto_block_push(&mut self, message_size: u64) {
         self.nakamoto_block_push_rx_counts
             .push_back((get_epoch_time_secs(), message_size));
         while self.nakamoto_block_push_rx_counts.len() > NUM_BANDWIDTH_POINTS {
@@ -228,7 +228,7 @@ impl NeighborStats {
         }
     }
 
-    pub fn add_relayer(&mut self, addr: &NeighborAddress, num_bytes: u64) -> () {
+    pub fn add_relayer(&mut self, addr: &NeighborAddress, num_bytes: u64) {
         if let Some(stats) = self.relayed_messages.get_mut(addr) {
             stats.num_messages += 1;
             stats.num_bytes += num_bytes;
@@ -236,7 +236,7 @@ impl NeighborStats {
         } else {
             let info = RelayStats {
                 num_messages: 1,
-                num_bytes: num_bytes,
+                num_bytes,
                 last_seen: get_epoch_time_secs(),
             };
             self.relayed_messages.insert(addr.clone(), info);
@@ -427,8 +427,8 @@ impl NeighborKey {
         handshake_data: &HandshakeData,
     ) -> NeighborKey {
         NeighborKey {
-            peer_version: peer_version,
-            network_id: network_id,
+            peer_version,
+            network_id,
             addrbytes: handshake_data.addrbytes.clone(),
             port: handshake_data.port,
         }
@@ -436,8 +436,8 @@ impl NeighborKey {
 
     pub fn from_socketaddr(peer_version: u32, network_id: u32, addr: &SocketAddr) -> NeighborKey {
         NeighborKey {
-            peer_version: peer_version,
-            network_id: network_id,
+            peer_version,
+            network_id,
             addrbytes: PeerAddress::from_socketaddr(addr),
             port: addr.port(),
         }
@@ -613,7 +613,7 @@ impl ConversationP2P {
         get_epoch_time_secs().saturating_sub(self.instantiated)
     }
 
-    pub fn set_public_key(&mut self, pubkey_opt: Option<Secp256k1PublicKey>) -> () {
+    pub fn set_public_key(&mut self, pubkey_opt: Option<Secp256k1PublicKey>) {
         self.connection.set_public_key(pubkey_opt);
     }
 
@@ -1181,7 +1181,8 @@ impl ConversationP2P {
         &mut self,
         stacker_db_data: &StackerDBHandshakeData,
     ) {
-        self.db_smart_contracts = stacker_db_data.smart_contracts.clone();
+        self.db_smart_contracts
+            .clone_from(&stacker_db_data.smart_contracts);
     }
 
     /// Forget about this peer's stacker DB replication state
@@ -1202,7 +1203,7 @@ impl ConversationP2P {
         let natpunch_data = NatPunchData {
             addrbytes: self.peer_addrbytes.clone(),
             port: self.peer_port,
-            nonce: nonce,
+            nonce,
         };
         let msg = StacksMessage::from_chain_view(
             self.version,
@@ -1442,7 +1443,7 @@ impl ConversationP2P {
             peer_dbconn,
             self.network_id,
             epoch.network_epoch,
-            (get_epoch_time_secs() as u64).saturating_sub(self.connection.options.max_neighbor_age),
+            get_epoch_time_secs().saturating_sub(self.connection.options.max_neighbor_age),
             MAX_NEIGHBORS_DATA_LEN,
             chain_view.burn_block_height,
             false,
@@ -2138,7 +2139,7 @@ impl ConversationP2P {
             );
             return self
                 .reply_nack(local_peer, chain_view, preamble, NackErrorCodes::Throttled)
-                .and_then(|handle| Ok(Some(handle)));
+                .map(|handle| Some(handle));
         }
         Ok(None)
     }
@@ -2176,7 +2177,7 @@ impl ConversationP2P {
             debug!("{:?}: Neighbor {:?} exceeded max microblocks-push bandwidth of {} bytes/sec (currently at {})", self, &self.to_neighbor_key(), self.connection.options.max_microblocks_push_bandwidth, self.stats.get_microblocks_push_bandwidth());
             return self
                 .reply_nack(local_peer, chain_view, preamble, NackErrorCodes::Throttled)
-                .and_then(|handle| Ok(Some(handle)));
+                .map(|handle| Some(handle));
         }
         Ok(None)
     }
@@ -2213,7 +2214,7 @@ impl ConversationP2P {
             debug!("{:?}: Neighbor {:?} exceeded max transaction-push bandwidth of {} bytes/sec (currently at {})", self, &self.to_neighbor_key(), self.connection.options.max_transaction_push_bandwidth, self.stats.get_transaction_push_bandwidth());
             return self
                 .reply_nack(local_peer, chain_view, preamble, NackErrorCodes::Throttled)
-                .and_then(|handle| Ok(Some(handle)));
+                .map(|handle| Some(handle));
         }
         Ok(None)
     }
@@ -2251,7 +2252,7 @@ impl ConversationP2P {
             debug!("{:?}: Neighbor {:?} exceeded max stackerdb-push bandwidth of {} bytes/sec (currently at {})", self, &self.to_neighbor_key(), self.connection.options.max_stackerdb_push_bandwidth, self.stats.get_stackerdb_push_bandwidth());
             return self
                 .reply_nack(local_peer, chain_view, preamble, NackErrorCodes::Throttled)
-                .and_then(|handle| Ok(Some(handle)));
+                .map(|handle| Some(handle));
         }
 
         Ok(None)
@@ -2290,7 +2291,7 @@ impl ConversationP2P {
             debug!("{:?}: Neighbor {:?} exceeded max Nakamoto block push bandwidth of {} bytes/sec (currently at {})", self, &self.to_neighbor_key(), self.connection.options.max_nakamoto_block_push_bandwidth, self.stats.get_nakamoto_block_push_bandwidth());
             return self
                 .reply_nack(local_peer, chain_view, preamble, NackErrorCodes::Throttled)
-                .and_then(|handle| Ok(Some(handle)));
+                .map(|handle| Some(handle));
         }
 
         Ok(None)
@@ -2568,7 +2569,7 @@ impl ConversationP2P {
             StacksMessageType::HandshakeAccept(ref data) => {
                 debug!("{:?}: Got HandshakeAccept", &self);
                 self.handle_handshake_accept(network.get_chain_view(), &msg.preamble, data, None)
-                    .and_then(|_| Ok(None))
+                    .map(|_| None)
             }
             StacksMessageType::StackerDBHandshakeAccept(ref data, ref db_data) => {
                 debug!("{:?}: Got StackerDBHandshakeAccept", &self);
@@ -2578,7 +2579,7 @@ impl ConversationP2P {
                     data,
                     Some(db_data),
                 )
-                .and_then(|_| Ok(None))
+                .map(|_| None)
             }
             StacksMessageType::Ping(_) => {
                 debug!("{:?}: Got Ping", &self);
@@ -2652,7 +2653,7 @@ impl ConversationP2P {
                         data,
                         None,
                     )
-                    .and_then(|_| Ok(None))
+                    .map(|_| None)
                 } else {
                     debug!("{:?}: Unsolicited unauthenticated HandshakeAccept", &self);
 
@@ -2670,7 +2671,7 @@ impl ConversationP2P {
                         data,
                         Some(db_data),
                     )
-                    .and_then(|_| Ok(None))
+                    .map(|_| None)
                 } else {
                     debug!(
                         "{:?}: Unsolicited unauthenticated StackerDBHandshakeAccept",
@@ -2851,8 +2852,8 @@ impl ConversationP2P {
             match dns_client.poll_lookup(&dns_request.host, dns_request.port) {
                 Ok(query_result_opt) => {
                     // just take one of the addresses, if there are any
-                    self.data_ip = query_result_opt
-                        .map(|query_result| match query_result.result {
+                    self.data_ip =
+                        query_result_opt.and_then(|query_result| match query_result.result {
                             Ok(mut ips) => ips.pop(),
                             Err(e) => {
                                 warn!(
@@ -2864,8 +2865,7 @@ impl ConversationP2P {
                                 self.dns_deadline = u128::MAX;
                                 None
                             }
-                        })
-                        .flatten();
+                        });
                     if let Some(ip) = self.data_ip.as_ref() {
                         debug!("{}: Resolved data URL {} to {}", &self, &self.data_url, &ip);
                     } else {
@@ -3044,7 +3044,7 @@ impl ConversationP2P {
     }
 
     /// Remove all timed-out messages, and ding the remote peer as unhealthy
-    pub fn clear_timeouts(&mut self) -> () {
+    pub fn clear_timeouts(&mut self) {
         let num_drained = self.connection.drain_timeouts();
         for _ in 0..num_drained {
             self.stats.add_healthpoint(false);
@@ -3106,8 +3106,8 @@ mod test {
         network_id: u32,
         key_expires: u64,
         data_url: UrlString,
-        asn4_entries: &Vec<ASEntry4>,
-        initial_neighbors: &Vec<Neighbor>,
+        asn4_entries: &[ASEntry4],
+        initial_neighbors: &[Neighbor],
         services: u16,
     ) -> (PeerDB, SortitionDB, StackerDBs, PoxId, StacksChainState) {
         let test_path = format!("/tmp/stacks-test-databases-{}", testname);
@@ -3139,9 +3139,7 @@ mod test {
             data_url.clone(),
             &asn4_entries,
             Some(&initial_neighbors),
-            &vec![
-                QualifiedContractIdentifier::parse("SP000000000000000000002Q6VF78.sbtc").unwrap(),
-            ],
+            &[QualifiedContractIdentifier::parse("SP000000000000000000002Q6VF78.sbtc").unwrap()],
         )
         .unwrap();
         let sortdb = SortitionDB::connect(
@@ -3190,7 +3188,7 @@ mod test {
         sender: &mut ConversationP2P,
         mut sender_handles: Vec<&mut ReplyHandleP2P>,
         receiver: &mut ConversationP2P,
-    ) -> () {
+    ) {
         let (mut pipe_read, mut pipe_write) = Pipe::new();
         pipe_read.set_nonblocking(true);
 
@@ -3252,7 +3250,7 @@ mod test {
         for i in prev_snapshot.block_height..chain_view.burn_block_height + 1 {
             let mut next_snapshot = prev_snapshot.clone();
 
-            let big_i = Uint256::from_u64(i as u64);
+            let big_i = Uint256::from_u64(i);
             let mut big_i_bytes_32 = [0u8; 32];
             let mut big_i_bytes_20 = [0u8; 20];
             big_i_bytes_32.copy_from_slice(&big_i.to_u8_slice());
@@ -3287,8 +3285,8 @@ mod test {
                 .append_chain_tip_snapshot(
                     &prev_snapshot,
                     &next_snapshot,
-                    &vec![],
-                    &vec![],
+                    &[],
+                    &[],
                     None,
                     None,
                     None,
@@ -3347,7 +3345,7 @@ mod test {
             network_id: 0,
             chain_name: "bitcoin".to_string(),
             network_name: "testnet".to_string(),
-            working_dir: format!("/tmp/stacks-test-databases-{}", test_name),
+            working_dir: format!("/tmp/stacks-test-databases-{test_name}"),
             consensus_hash_lifetime: 24,
             stable_confirmations: 7,
             first_block_height: 12300,
@@ -3410,8 +3408,8 @@ mod test {
                     0x9abcdef0,
                     12350,
                     "http://peer1.com".into(),
-                    &vec![],
-                    &vec![],
+                    &[],
+                    &[],
                     peer_1_services,
                 );
             let (mut peerdb_2, mut sortdb_2, stackerdbs_2, pox_id_2, mut chainstate_2) =
@@ -3421,8 +3419,8 @@ mod test {
                     0x9abcdef0,
                     12351,
                     "http://peer2.com".into(),
-                    &vec![],
-                    &vec![],
+                    &[],
+                    &[],
                     peer_2_services,
                 );
 
@@ -3737,8 +3735,8 @@ mod test {
                     0x9abcdef0,
                     12350,
                     "http://peer1.com".into(),
-                    &vec![],
-                    &vec![],
+                    &[],
+                    &[],
                     DEFAULT_SERVICES,
                 );
             let (mut peerdb_2, mut sortdb_2, stackerdbs_2, pox_id_2, mut chainstate_2) =
@@ -3748,8 +3746,8 @@ mod test {
                     0x9abcdef0,
                     12351,
                     "http://peer2.com".into(),
-                    &vec![],
-                    &vec![],
+                    &[],
+                    &[],
                     DEFAULT_SERVICES,
                 );
 
@@ -3917,8 +3915,8 @@ mod test {
                 0x9abcdef0,
                 12350,
                 "http://peer1.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
         let (mut peerdb_2, mut sortdb_2, stackerdbs_2, pox_id_2, mut chainstate_2) =
@@ -3928,8 +3926,8 @@ mod test {
                 0x9abcdef0,
                 12351,
                 "http://peer2.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
 
@@ -4062,8 +4060,8 @@ mod test {
                 0x9abcdef0,
                 12350,
                 "http://peer1.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
         let (mut peerdb_2, mut sortdb_2, stackerdbs_2, pox_id_2, mut chainstate_2) =
@@ -4073,8 +4071,8 @@ mod test {
                 0x9abcdef0,
                 12351,
                 "http://peer2.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
 
@@ -4206,8 +4204,8 @@ mod test {
                 0x9abcdef0,
                 12350,
                 "http://peer1.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
         let (mut peerdb_2, mut sortdb_2, stackerdbs_2, pox_id_2, mut chainstate_2) =
@@ -4217,8 +4215,8 @@ mod test {
                 0x9abcdef0,
                 12351,
                 "http://peer2.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
 
@@ -4363,8 +4361,8 @@ mod test {
                 0x9abcdef0,
                 12350,
                 "http://peer1.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
         let (mut peerdb_2, mut sortdb_2, stackerdbs_2, pox_id_2, mut chainstate_2) =
@@ -4374,8 +4372,8 @@ mod test {
                 0x9abcdef0,
                 12351,
                 "http://peer2.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
 
@@ -4562,8 +4560,8 @@ mod test {
                 0x9abcdef0,
                 12350,
                 "http://peer1.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
         let (mut peerdb_2, mut sortdb_2, stackerdbs_2, pox_id_2, mut chainstate_2) =
@@ -4573,8 +4571,8 @@ mod test {
                 0x9abcdef0,
                 12351,
                 "http://peer2.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
 
@@ -4706,8 +4704,8 @@ mod test {
                 0x9abcdef0,
                 12350,
                 "http://peer1.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
         let (mut peerdb_2, mut sortdb_2, stackerdbs_2, pox_id_2, mut chainstate_2) =
@@ -4717,8 +4715,8 @@ mod test {
                 0x9abcdef0,
                 12351,
                 "http://peer2.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
 
@@ -4882,8 +4880,8 @@ mod test {
                 0x9abcdef0,
                 12350,
                 "http://peer1.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
         let (mut peerdb_2, mut sortdb_2, stackerdbs_2, pox_id_2, mut chainstate_2) =
@@ -4893,8 +4891,8 @@ mod test {
                 0x9abcdef0,
                 12351,
                 "http://peer2.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
 
@@ -5109,8 +5107,8 @@ mod test {
                 0x9abcdef0,
                 12350,
                 "http://peer1.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
         let (mut peerdb_2, mut sortdb_2, stackerdbs_2, pox_id_2, mut chainstate_2) =
@@ -5120,8 +5118,8 @@ mod test {
                 0x9abcdef0,
                 12351,
                 "http://peer2.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
 
@@ -5259,8 +5257,8 @@ mod test {
                 0x9abcdef0,
                 12350,
                 "http://peer1.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
         let (mut peerdb_2, mut sortdb_2, stackerdbs_2, pox_id_2, mut chainstate_2) =
@@ -5270,8 +5268,8 @@ mod test {
                 0x9abcdef0,
                 12351,
                 "http://peer2.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
 
@@ -5430,8 +5428,8 @@ mod test {
                     0x9abcdef0,
                     12350,
                     "http://peer1.com".into(),
-                    &vec![],
-                    &vec![],
+                    &[],
+                    &[],
                     DEFAULT_SERVICES,
                 );
             let (mut peerdb_2, mut sortdb_2, stackerdbs_2, pox_id_2, mut chainstate_2) =
@@ -5441,8 +5439,8 @@ mod test {
                     0x9abcdef0,
                     12351,
                     "http://peer2.com".into(),
-                    &vec![],
-                    &vec![],
+                    &[],
+                    &[],
                     DEFAULT_SERVICES,
                 );
 
@@ -5575,7 +5573,7 @@ mod test {
 
             let getblocksdata_1 = GetBlocksInv {
                 consensus_hash: convo_1_ancestor.consensus_hash,
-                num_blocks: 10 as u16,
+                num_blocks: 10,
             };
             let getblocksdata_1_msg = convo_1
                 .sign_message(
@@ -5709,8 +5707,8 @@ mod test {
                     0x9abcdef0,
                     12350,
                     "http://peer1.com".into(),
-                    &vec![],
-                    &vec![],
+                    &[],
+                    &[],
                     DEFAULT_SERVICES,
                 );
             let (mut peerdb_2, mut sortdb_2, stackerdbs_2, pox_id_2, mut chainstate_2) =
@@ -5720,8 +5718,8 @@ mod test {
                     0x9abcdef0,
                     12351,
                     "http://peer2.com".into(),
-                    &vec![],
-                    &vec![],
+                    &[],
+                    &[],
                     DEFAULT_SERVICES,
                 );
 
@@ -5989,8 +5987,8 @@ mod test {
                 0x9abcdef0,
                 12352,
                 "http://peer1.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
         let (mut peerdb_2, mut sortdb_2, stackerdbs_2, pox_id_2, mut chainstate_2) =
@@ -6000,8 +5998,8 @@ mod test {
                 0x9abcdef0,
                 12353,
                 "http://peer2.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
 
@@ -6124,8 +6122,8 @@ mod test {
                 0x9abcdef0,
                 12352,
                 "http://peer1.com".into(),
-                &vec![],
-                &vec![],
+                &[],
+                &[],
                 DEFAULT_SERVICES,
             );
 
@@ -6792,8 +6790,8 @@ mod test {
             0x9abcdef0,
             12352,
             "http://peer1.com".into(),
-            &vec![],
-            &vec![],
+            &[],
+            &[],
             DEFAULT_SERVICES,
         );
 
@@ -6910,8 +6908,8 @@ mod test {
             0x9abcdef0,
             12352,
             "http://peer1.com".into(),
-            &vec![],
-            &vec![],
+            &[],
+            &[],
             DEFAULT_SERVICES,
         );
 
@@ -6977,8 +6975,8 @@ mod test {
             0x9abcdef0,
             12352,
             "http://peer1.com".into(),
-            &vec![],
-            &vec![],
+            &[],
+            &[],
             DEFAULT_SERVICES,
         );
 
@@ -7111,8 +7109,8 @@ mod test {
             0x9abcdef0,
             12352,
             "http://peer1.com".into(),
-            &vec![],
-            &vec![],
+            &[],
+            &[],
             DEFAULT_SERVICES,
         );
 
@@ -7245,8 +7243,8 @@ mod test {
             0x9abcdef0,
             12352,
             "http://peer1.com".into(),
-            &vec![],
-            &vec![],
+            &[],
+            &[],
             DEFAULT_SERVICES,
         );
 
@@ -7379,8 +7377,8 @@ mod test {
             0x9abcdef0,
             12352,
             "http://peer1.com".into(),
-            &vec![],
-            &vec![],
+            &[],
+            &[],
             DEFAULT_SERVICES,
         );
 

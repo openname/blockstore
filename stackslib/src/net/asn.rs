@@ -214,9 +214,9 @@ impl ASEntry4 {
         let asn = asn_opt.unwrap();
 
         Ok(Some(ASEntry4 {
-            prefix: prefix,
-            mask: mask,
-            asn: asn,
+            prefix,
+            mask,
+            asn,
             org: 0, // TODO
         }))
     }

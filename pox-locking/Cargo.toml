@@ -30,3 +30,4 @@ mutants = "0.0.3"
 default = ["stacks-common/default", "clarity/default"]
 slog_json = ["stacks-common/slog_json", "clarity/slog_json"]
 wasm = ["stacks-common/wasm", "clarity/wasm"]
+testing = []

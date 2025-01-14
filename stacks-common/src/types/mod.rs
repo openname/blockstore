@@ -18,6 +18,7 @@ use std::cell::LazyCell;
 use std::cmp::Ordering;
 use std::fmt;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
+use std::sync::LazyLock;
 
 #[cfg(feature = "canonical")]
 pub mod sqlite;
@@ -121,22 +122,21 @@ pub struct CoinbaseInterval {
     pub effective_start_height: u64,
 }
 
-/// From SIP-029:
-///
-/// | Coinbase Interval  | Bitcoin Height | Offset Height       | Approx. Supply   | STX Reward | Annual Inflation |
-/// |--------------------|----------------|---------------------|------------------|------------|------------------|
-/// | Current            | -              | -                   | 1,552,452,847    | 1000       | -                |
-/// | 1st                |   945,000      |   278,950           | 1,627,352,847    | 500 (50%)  | 3.23%            |
-/// | 2nd                | 1,050,000      |   383,950           | 1,679,852,847    | 250 (50%)  | 1.57%            |
-/// | 3rd                | 1,260,000      |   593,950           | 1,732,352,847    | 125 (50%)  | 0.76%            |
-/// | 4th                | 1,470,000      |   803,950           | 1,758,602,847    | 62.5 (50%) | 0.37%            |
-/// | -                  | 2,197,560      | 1,531,510           | 1,804,075,347    | 62.5 (0%)  | 0.18%            |
-///
-/// The above is for mainnet, which has a burnchain year of 52596 blocks and starts at burnchain height 666050.
-/// The `Offset Height` column is simply the difference between `Bitcoin Height` and 666050.
+// From SIP-029:
+//
+// | Coinbase Interval  | Bitcoin Height | Offset Height       | Approx. Supply   | STX Reward | Annual Inflation |
+// |--------------------|----------------|---------------------|------------------|------------|------------------|
+// | Current            | -              | -                   | 1,552,452,847    | 1000       | -                |
+// | 1st                |   945,000      |   278,950           | 1,627,352,847    | 500 (50%)  | 3.23%            |
+// | 2nd                | 1,050,000      |   383,950           | 1,679,852,847    | 250 (50%)  | 1.57%            |
+// | 3rd                | 1,260,000      |   593,950           | 1,732,352,847    | 125 (50%)  | 0.76%            |
+// | 4th                | 1,470,000      |   803,950           | 1,758,602,847    | 62.5 (50%) | 0.37%            |
+// | -                  | 2,197,560      | 1,531,510           | 1,804,075,347    | 62.5 (0%)  | 0.18%            |
+//
+// The above is for mainnet, which has a burnchain year of 52596 blocks and starts at burnchain height 666050.
 
 /// Mainnet coinbase intervals, as of SIP-029
-pub const COINBASE_INTERVALS_MAINNET: LazyCell<[CoinbaseInterval; 5]> = LazyCell::new(|| {
+pub static COINBASE_INTERVALS_MAINNET: LazyLock<[CoinbaseInterval; 5]> = LazyLock::new(|| {
     let emissions_schedule = [
         CoinbaseInterval {
             coinbase: 1_000 * u128::from(MICROSTACKS_PER_STACKS),
@@ -164,7 +164,7 @@ pub const COINBASE_INTERVALS_MAINNET: LazyCell<[CoinbaseInterval; 5]> = LazyCell
 });
 
 /// Testnet coinbase intervals, as of SIP-029
-pub const COINBASE_INTERVALS_TESTNET: LazyCell<[CoinbaseInterval; 5]> = LazyCell::new(|| {
+pub static COINBASE_INTERVALS_TESTNET: LazyLock<[CoinbaseInterval; 5]> = LazyLock::new(|| {
     let emissions_schedule = [
         CoinbaseInterval {
             coinbase: 1_000 * u128::from(MICROSTACKS_PER_STACKS),
@@ -245,11 +245,11 @@ impl CoinbaseInterval {
         }
 
         let mut ht = intervals[0].effective_start_height;
-        for i in 1..intervals.len() {
-            if intervals[i].effective_start_height < ht {
+        for interval in intervals.iter().skip(1) {
+            if interval.effective_start_height < ht {
                 return false;
             }
-            ht = intervals[i].effective_start_height;
+            ht = interval.effective_start_height;
         }
         true
     }
@@ -537,14 +537,11 @@ impl StacksEpochId {
             | StacksEpochId::Epoch30 => {
                 self.coinbase_reward_pre_sip029(first_burnchain_height, current_burnchain_height)
             }
-            StacksEpochId::Epoch31 => {
-                let cb = self.coinbase_reward_sip029(
-                    mainnet,
-                    first_burnchain_height,
-                    current_burnchain_height,
-                );
-                cb
-            }
+            StacksEpochId::Epoch31 => self.coinbase_reward_sip029(
+                mainnet,
+                first_burnchain_height,
+                current_burnchain_height,
+            ),
         }
     }
 }

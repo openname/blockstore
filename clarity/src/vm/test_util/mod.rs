@@ -70,7 +70,7 @@ pub fn execute_on_network(s: &str, use_mainnet: bool) -> Value {
 
 pub fn symbols_from_values(vec: Vec<Value>) -> Vec<SymbolicExpression> {
     vec.into_iter()
-        .map(|value| SymbolicExpression::atom_value(value))
+        .map(SymbolicExpression::atom_value)
         .collect()
 }
 

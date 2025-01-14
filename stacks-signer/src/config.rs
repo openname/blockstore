@@ -21,6 +21,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use blockstack_lib::chainstate::stacks::TransactionVersion;
+use blockstack_lib::net::connection::DEFAULT_BLOCK_PROPOSAL_MAX_AGE_SECS;
 use clarity::util::hash::to_hex;
 use libsigner::SignerEntries;
 use serde::Deserialize;
@@ -39,7 +40,6 @@ const BLOCK_PROPOSAL_VALIDATION_TIMEOUT_MS: u64 = 120_000;
 const DEFAULT_FIRST_PROPOSAL_BURN_BLOCK_TIMING_SECS: u64 = 60;
 const DEFAULT_TENURE_LAST_BLOCK_PROPOSAL_TIMEOUT_SECS: u64 = 30;
 const TENURE_IDLE_TIMEOUT_SECS: u64 = 300;
-const DEFAULT_BLOCK_PROPOSAL_MAX_AGE_SECS: u64 = 600;
 
 #[derive(thiserror::Error, Debug)]
 /// An error occurred parsing the provided configuration

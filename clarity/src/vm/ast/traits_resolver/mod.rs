@@ -51,7 +51,7 @@ impl TraitsResolver {
 
         for exp in contract_ast.pre_expressions.iter() {
             // Top-level comment nodes have been filtered from `args` by `try_parse_pre_expr`.
-            let Some((define_type, args)) = self.try_parse_pre_expr(&exp) else {
+            let Some((define_type, args)) = self.try_parse_pre_expr(exp) else {
                 continue;
             };
 
@@ -154,7 +154,7 @@ impl TraitsResolver {
                 | DefineFunctions::NonFungibleToken => {
                     if !args.is_empty() {
                         self.probe_for_generics(
-                            args[1..].to_vec().into_iter(),
+                            args[1..].iter().copied(),
                             &mut referenced_traits,
                             false,
                         )?;

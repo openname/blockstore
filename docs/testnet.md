@@ -1,6 +1,6 @@
 # Stacks testnet
 
-[`testnet-follower-conf.toml`](../testnet/stacks-node/conf/testnet-follower-conf.toml) is a configuration file that you can use for setting genesis balances or configuring event observers. You can grant an address an initial account balance by adding the following entries:
+[`testnet-follower-conf.toml`](../sample/conf/testnet-follower-conf.toml) is a configuration file that you can use for setting genesis balances or configuring event observers. You can grant an address an initial account balance by adding the following entries:
 
 ```
 [[ustx_balance]]
@@ -27,7 +27,7 @@ cargo run --bin blockstack-cli generate-sk --testnet
 # }
 ```
 
-This keypair is already registered in the [`testnet-follower-conf.toml`](../testnet/stacks-node/conf/testnet-follower-conf.toml) file, so it can be used as presented here.
+This keypair is already registered in the [`testnet-follower-conf.toml`](../sample/conf/testnet-follower-conf.toml) file, so it can be used as presented here.
 
 We will interact with the following simple contract `kv-store`. In our examples, we will assume this contract is saved locally to `./kv-store.clar`:
 

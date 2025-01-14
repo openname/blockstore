@@ -95,7 +95,7 @@ mod postmicroblock;
 mod poststackerdbchunk;
 mod posttransaction;
 
-const TEST_CONTRACT: &'static str = "
+const TEST_CONTRACT: &str = "
     (define-trait test-trait
         (
             (do-test () (response uint uint))
@@ -149,7 +149,7 @@ const TEST_CONTRACT: &'static str = "
         }))
 ";
 
-const TEST_CONTRACT_UNCONFIRMED: &'static str = "
+const TEST_CONTRACT_UNCONFIRMED: &str = "
 (define-read-only (ro-test) (ok 1))
 (define-constant cst-unconfirmed 456)
 (define-data-var bar-unconfirmed uint u1)
@@ -159,7 +159,7 @@ const TEST_CONTRACT_UNCONFIRMED: &'static str = "
 ";
 
 /// This helper function drives I/O between a sender and receiver Http conversation.
-fn convo_send_recv(sender: &mut ConversationHttp, receiver: &mut ConversationHttp) -> () {
+fn convo_send_recv(sender: &mut ConversationHttp, receiver: &mut ConversationHttp) {
     let (mut pipe_read, mut pipe_write) = Pipe::new();
     pipe_read.set_nonblocking(true);
 
@@ -487,8 +487,8 @@ impl<'a> TestRPC<'a> {
         let (_, _, consensus_hash) = peer_1.next_burnchain_block(burn_ops.clone());
         peer_2.next_burnchain_block(burn_ops.clone());
 
-        peer_1.process_stacks_epoch_at_tip(&stacks_block, &vec![]);
-        peer_2.process_stacks_epoch_at_tip(&stacks_block, &vec![]);
+        peer_1.process_stacks_epoch_at_tip(&stacks_block, &[]);
+        peer_2.process_stacks_epoch_at_tip(&stacks_block, &[]);
 
         // build 1-block microblock stream with the contract-call and the unconfirmed contract
         let microblock = {

@@ -1,7 +1,7 @@
 # Stacks Mining
 
 Stacks tokens (STX) are mined by transferring BTC via PoX. To run as a miner,
-you should make sure to add the following config fields to your [config file](../testnet/stacks-node/conf/mainnet-miner-conf.toml):
+you should make sure to add the following config fields to your [config file](../sample/conf/mainnet-miner-conf.toml):
 
 ```toml
 [node]

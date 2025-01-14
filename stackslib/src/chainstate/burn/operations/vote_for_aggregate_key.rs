@@ -53,7 +53,7 @@ impl VoteForAggregateKeyOp {
         )
     }
 
-    fn parse_data(data: &Vec<u8>) -> Option<ParsedData> {
+    fn parse_data(data: &[u8]) -> Option<ParsedData> {
         /*
            Wire format:
 
@@ -340,7 +340,7 @@ mod tests {
 
         assert_eq!(vote_op.signer_index, signer_index);
         assert_eq!(&vote_op.aggregate_key, &aggregate_key);
-        assert_eq!(vote_op.round, round as u32);
+        assert_eq!(vote_op.round, round);
         assert_eq!(vote_op.reward_cycle, reward_cycle);
     }
 

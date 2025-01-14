@@ -138,7 +138,7 @@ impl ExitedPeer {
         self.mempool = Some(mempool);
         self.indexer = Some(indexer);
 
-        receipts_res.and_then(|receipts| Ok((net_result, receipts)))
+        receipts_res.map(|receipts| (net_result, receipts))
     }
 }
 

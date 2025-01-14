@@ -34,11 +34,11 @@ use crate::util_lib::test::*;
 #[test]
 fn peerblocksinv_has_ith_block() {
     let peer_inv = PeerBlocksInv::new(vec![0x55, 0x77], vec![0x11, 0x22], vec![0x01], 16, 1, 12345);
-    let has_blocks = vec![
+    let has_blocks = [
         true, false, true, false, true, false, true, false, true, true, true, false, true, true,
         true, false,
     ];
-    let has_microblocks = vec![
+    let has_microblocks = [
         true, false, false, false, true, false, false, false, false, true, false, false, false,
         true, false, false,
     ];
@@ -1248,7 +1248,7 @@ fn test_inv_sync_start_reward_cycle() {
 
     let mut peer_1 = TestPeer::new(peer_1_config);
 
-    let num_blocks = (GETPOXINV_MAX_BITLEN * 2) as u64;
+    let num_blocks = GETPOXINV_MAX_BITLEN * 2;
     for i in 0..num_blocks {
         let (burn_ops, stacks_block, microblocks) = peer_1.make_default_tenure();
         peer_1.next_burnchain_block(burn_ops.clone());
@@ -1298,7 +1298,7 @@ fn test_inv_sync_check_peer_epoch2x_synced() {
 
     let mut peer_1 = TestPeer::new(peer_1_config);
 
-    let num_blocks = (GETPOXINV_MAX_BITLEN * 2) as u64;
+    let num_blocks = GETPOXINV_MAX_BITLEN * 2;
     for i in 0..num_blocks {
         let (burn_ops, stacks_block, microblocks) = peer_1.make_default_tenure();
         peer_1.next_burnchain_block(burn_ops.clone());
@@ -1340,7 +1340,7 @@ fn test_sync_inv_2_peers_plain() {
         peer_1.add_neighbor(&mut peer_2.to_neighbor(), None, true);
         peer_2.add_neighbor(&mut peer_1.to_neighbor(), None, true);
 
-        let num_blocks = (GETPOXINV_MAX_BITLEN * 2) as u64;
+        let num_blocks = GETPOXINV_MAX_BITLEN * 2;
         let first_stacks_block_height = {
             let sn =
                 SortitionDB::get_canonical_burn_chain_tip(&peer_1.sortdb.as_ref().unwrap().conn())
@@ -1517,7 +1517,7 @@ fn test_sync_inv_2_peers_stale() {
         peer_1.add_neighbor(&mut peer_2.to_neighbor(), None, true);
         peer_2.add_neighbor(&mut peer_1.to_neighbor(), None, true);
 
-        let num_blocks = (GETPOXINV_MAX_BITLEN * 2) as u64;
+        let num_blocks = GETPOXINV_MAX_BITLEN * 2;
         let first_stacks_block_height = {
             let sn =
                 SortitionDB::get_canonical_burn_chain_tip(&peer_1.sortdb.as_ref().unwrap().conn())
@@ -1625,7 +1625,7 @@ fn test_sync_inv_2_peers_unstable() {
         peer_1.add_neighbor(&mut peer_2.to_neighbor(), None, true);
         peer_2.add_neighbor(&mut peer_1.to_neighbor(), None, true);
 
-        let num_blocks = (GETPOXINV_MAX_BITLEN * 2) as u64;
+        let num_blocks = GETPOXINV_MAX_BITLEN * 2;
 
         let first_stacks_block_height = {
             let sn =
@@ -1838,7 +1838,7 @@ fn test_sync_inv_2_peers_different_pox_vectors() {
         peer_1.add_neighbor(&mut peer_2.to_neighbor(), None, true);
         peer_2.add_neighbor(&mut peer_1.to_neighbor(), None, true);
 
-        let num_blocks = (GETPOXINV_MAX_BITLEN * 3) as u64;
+        let num_blocks = GETPOXINV_MAX_BITLEN * 3;
 
         let first_stacks_block_height = {
             let sn =
