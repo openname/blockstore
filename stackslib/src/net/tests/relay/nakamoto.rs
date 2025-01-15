@@ -212,9 +212,6 @@ impl SeedNode {
         let test_stackers = peer.config.test_stackers.take().unwrap();
 
         let mut all_blocks: Vec<NakamotoBlock> = vec![];
-        let mut all_burn_ops = vec![];
-        let mut rc_blocks = vec![];
-        let mut rc_burn_ops = vec![];
 
         // have the peer mine some blocks for two reward cycles
         for i in 0..(2 * rc_len) {
@@ -330,15 +327,10 @@ impl SeedNode {
                 .burnchain
                 .is_reward_cycle_start(tip.block_height)
             {
-                rc_blocks.push(all_blocks.clone());
-                rc_burn_ops.push(all_burn_ops.clone());
-
-                all_burn_ops.clear();
                 all_blocks.clear();
             }
 
             all_blocks.append(&mut blocks);
-            all_burn_ops.push(burn_ops);
         }
 
         peer.config.test_signers = Some(test_signers);

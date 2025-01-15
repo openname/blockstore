@@ -1045,7 +1045,6 @@ fn transition_adds_get_pox_addr_recipients() {
     );
 
     let mut spender_sks = vec![];
-    let mut spender_addrs = vec![];
     let mut initial_balances = vec![];
     let mut expected_pox_addrs = HashSet::new();
 
@@ -1056,7 +1055,6 @@ fn transition_adds_get_pox_addr_recipients() {
         let spender_addr: PrincipalData = to_addr(&spender_sk).into();
 
         spender_sks.push(spender_sk);
-        spender_addrs.push(spender_addr.clone());
         initial_balances.push(InitialBalance {
             address: spender_addr.clone(),
             amount: stacked + 100_000,
@@ -1353,8 +1351,6 @@ fn transition_adds_mining_from_segwit() {
         u32::MAX,
     );
 
-    let mut spender_sks = vec![];
-    let mut spender_addrs = vec![];
     let mut initial_balances = vec![];
 
     let stacked = 100_000_000_000 * (core::MICROSTACKS_PER_STACKS as u64);
@@ -1363,8 +1359,6 @@ fn transition_adds_mining_from_segwit() {
         let spender_sk = StacksPrivateKey::new();
         let spender_addr: PrincipalData = to_addr(&spender_sk).into();
 
-        spender_sks.push(spender_sk);
-        spender_addrs.push(spender_addr.clone());
         initial_balances.push(InitialBalance {
             address: spender_addr.clone(),
             amount: stacked + 100_000,

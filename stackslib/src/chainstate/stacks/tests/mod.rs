@@ -839,7 +839,6 @@ pub fn check_mining_reward(
     block_height: u64,
     prev_block_rewards: &[Vec<MinerPaymentSchedule>],
 ) -> bool {
-    let mut block_rewards = HashMap::new();
     let mut stream_rewards = HashMap::new();
     let mut heights = HashMap::new();
     let mut confirmed = HashSet::new();
@@ -849,9 +848,6 @@ pub fn check_mining_reward(
                 &reward.consensus_hash,
                 &reward.block_hash,
             );
-            if reward.coinbase > 0 {
-                block_rewards.insert(ibh.clone(), reward.clone());
-            }
             if let MinerPaymentTxFees::Epoch2 { streamed, .. } = &reward.tx_fees {
                 if *streamed > 0 {
                     stream_rewards.insert(ibh.clone(), reward.clone());

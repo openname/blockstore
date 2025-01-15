@@ -685,20 +685,15 @@ fn test_downloader_context_attachment_requests() {
     let peer_url_3 = request_3.get_url().clone();
     let request_4 = inventories_requests.pop().unwrap();
     let peer_url_4 = request_4.get_url().clone();
-    let mut responses = HashMap::new();
 
     let response_1 =
         new_attachments_inventory_response(vec![(0, vec![1, 1, 1]), (1, vec![0, 0, 0])]);
-    responses.insert(peer_url_1.clone(), Some(response_1.clone()));
 
     let response_2 =
         new_attachments_inventory_response(vec![(0, vec![1, 1, 1]), (1, vec![0, 0, 0])]);
-    responses.insert(peer_url_2.clone(), Some(response_2.clone()));
 
     let response_3 =
         new_attachments_inventory_response(vec![(0, vec![0, 1, 1]), (1, vec![1, 0, 0])]);
-    responses.insert(peer_url_3.clone(), Some(response_3.clone()));
-    responses.insert(peer_url_4, None);
 
     inventories_results
         .succeeded

@@ -928,6 +928,8 @@ fn pox_lock_unlock() {
 
     assert_eq!(burnchain.pox_constants.reward_slots(), 6);
     let mut coinbase_nonce = 0;
+    // Stores the result of a function with side effects, so have Clippy ignore it
+    #[allow(clippy::collection_is_never_read)]
     let mut latest_block = None;
 
     // Advance into pox4
@@ -2685,6 +2687,8 @@ fn pox_4_delegate_stack_increase_events() {
 
     assert_eq!(burnchain.pox_constants.reward_slots(), 6);
     let mut coinbase_nonce = 0;
+    // Stores the result of a function with side effects, so have Clippy ignore it
+    #[allow(clippy::collection_is_never_read)]
     let mut latest_block = None;
 
     let alice_key = keys.pop().unwrap();

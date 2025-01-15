@@ -765,7 +765,6 @@ fn test_mempool_sync_2_peers_problematic() {
     let stacks_tip_bhh = peer_1.network.stacks_tip.block_hash.clone();
 
     // fill peer 1 with lots of transactions
-    let mut txs = HashMap::new();
     let mut peer_1_mempool = peer_1.mempool.take().unwrap();
     let mut mempool_tx = peer_1_mempool.tx_begin().unwrap();
     for i in 0..num_txs {
@@ -792,8 +791,6 @@ fn test_mempool_sync_2_peers_problematic() {
         let sponsor_nonce = tx.get_sponsor_nonce().unwrap_or(origin_nonce);
         let tx_fee = tx.get_tx_fee();
 
-        txs.insert(tx.txid(), tx.clone());
-
         // should succeed
         MemPoolDB::try_add_tx(
             &mut mempool_tx,
@@ -813,7 +810,7 @@ fn test_mempool_sync_2_peers_problematic() {
         )
         .unwrap();
 
-        eprintln!("Added {} {}", i, &txid);
+        eprintln!("Added {i} {txid}");
     }
     mempool_tx.commit().unwrap();
     peer_1.mempool = Some(peer_1_mempool);

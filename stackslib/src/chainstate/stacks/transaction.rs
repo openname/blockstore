@@ -3418,9 +3418,6 @@ mod test {
         let function_name = ClarityName::try_from("hello-function-name").unwrap();
         let function_args = vec![Value::Int(0)];
 
-        let mut contract_name_bytes = vec![contract_name.len() as u8];
-        contract_name_bytes.extend_from_slice(contract_name.as_bytes());
-
         let mut contract_call_bytes = vec![];
         address
             .consensus_serialize(&mut contract_call_bytes)

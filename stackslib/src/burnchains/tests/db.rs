@@ -919,8 +919,6 @@ fn test_update_block_descendancy_with_fork() {
     let mut cmts_genesis = vec![];
     let mut cmts_invalid = vec![];
 
-    let mut fork_parent = None;
-    let mut fork_parent_block_header: Option<BurnchainBlockHeader> = None;
     let mut fork_cmts = vec![];
 
     for i in 0..5 {
@@ -954,7 +952,6 @@ fn test_update_block_descendancy_with_fork() {
         };
 
         fork_headers.push(block_header.clone());
-        fork_parent_block_header = Some(block_header);
     }
 
     let mut am_id = 0;
@@ -1018,7 +1015,6 @@ fn test_update_block_descendancy_with_fork() {
         fork_cmts.push(fork_cmt.clone());
 
         parent = Some(cmt);
-        fork_parent = Some(fork_cmt);
 
         if i == 0 {
             am_id = {

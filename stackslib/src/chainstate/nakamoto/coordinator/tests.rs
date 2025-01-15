@@ -112,6 +112,8 @@ fn advance_to_nakamoto(
     let default_pox_addr =
         PoxAddress::from_legacy(AddressHashMode::SerializeP2PKH, addr.bytes.clone());
 
+    // Stores the result of a function with side effects, so have Clippy ignore it
+    #[allow(clippy::collection_is_never_read)]
     let mut tip = None;
     for sortition_height in 0..11 {
         // stack to pox-3 in cycle 7
@@ -346,9 +348,6 @@ fn replay_reward_cycle(
     let reward_cycle_indices: Vec<usize> = (0..stacks_blocks.len())
         .step_by(reward_cycle_length)
         .collect();
-
-    let mut indexes: Vec<_> = (0..stacks_blocks.len()).collect();
-    indexes.shuffle(&mut thread_rng());
 
     for burn_ops in burn_ops.iter() {
         let (_, _, consensus_hash) = peer.next_burnchain_block(burn_ops.clone());
@@ -845,7 +844,6 @@ fn block_descendant() {
     boot_plan.pox_constants = pox_constants;
 
     let mut peer = boot_plan.boot_into_nakamoto_peer(vec![], None);
-    let mut blocks = vec![];
     let pox_constants = peer.sortdb().pox_constants.clone();
     let first_burn_height = peer.sortdb().first_block_height;
 
@@ -854,7 +852,6 @@ fn block_descendant() {
     loop {
         let (block, burn_height, ..) =
             peer.single_block_tenure(&private_key, |_| {}, |_| {}, |_| true);
-        blocks.push(block);
 
         if pox_constants.is_in_prepare_phase(first_burn_height, burn_height + 1) {
             info!("At prepare phase start"; "burn_height" => burn_height);
@@ -3206,9 +3203,6 @@ fn test_stacks_on_burnchain_ops() {
     );
 
     let mut all_blocks: Vec<NakamotoBlock> = vec![];
-    let mut all_burn_ops = vec![];
-    let mut consensus_hashes = vec![];
-    let mut fee_counts = vec![];
     let stx_miner_key = peer.miner.nakamoto_miner_key();
 
     let mut extra_burn_ops = vec![];
@@ -3406,8 +3400,6 @@ fn test_stacks_on_burnchain_ops() {
             })
             .sum::<u128>();
 
-        consensus_hashes.push(consensus_hash);
-        fee_counts.push(fees);
         let mut blocks: Vec<NakamotoBlock> = blocks_and_sizes
             .into_iter()
             .map(|(block, _, _)| block)
@@ -3449,7 +3441,6 @@ fn test_stacks_on_burnchain_ops() {
         );
 
         all_blocks.append(&mut blocks);
-        all_burn_ops.push(burn_ops);
     }
 
     // check receipts for burn ops

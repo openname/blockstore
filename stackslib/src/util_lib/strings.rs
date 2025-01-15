@@ -353,7 +353,7 @@ mod test {
 
         let mut contract_bytes = vec![s.len() as u8];
         contract_bytes.extend_from_slice(contract_str.as_bytes());
-        check_codec_and_corruption::<ContractName>(&contract_str, &clarity_bytes);
+        check_codec_and_corruption::<ContractName>(&contract_str, &contract_bytes);
     }
 
     #[test]

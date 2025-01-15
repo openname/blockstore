@@ -2692,7 +2692,6 @@ fn test_filter_txs_by_type() {
         version: 1,
         bytes: Hash160([0xff; 20]),
     };
-    let mut txs = vec![];
     let block_height = 10;
     let mut total_len = 0;
 
@@ -2756,8 +2755,7 @@ fn test_filter_txs_by_type() {
         )
         .unwrap();
 
-        eprintln!("Added {} {}", i, &txid);
-        txs.push(tx);
+        eprintln!("Added {i} {txid}");
     }
     mempool_tx.commit().unwrap();
 

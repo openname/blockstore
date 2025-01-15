@@ -2529,8 +2529,6 @@ fn parse_vote_for_aggregate_public_key_invalid() {
     };
     invalid_function_arg_reward_cycle.set_origin_nonce(1);
 
-    let mut account_nonces = std::collections::HashMap::new();
-    account_nonces.insert(invalid_contract_name.origin_address(), 1);
     for (i, tx) in vec![
         invalid_contract_address,
         invalid_contract_name,

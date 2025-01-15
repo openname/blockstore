@@ -2944,6 +2944,8 @@ fn block_proposal_api_endpoint() {
     let http_origin = format!("http://{}", &conf.node.rpc_bind);
     let path = format!("{http_origin}/v3/block_proposal");
 
+    // Clippy thinks this is unused, but it seems to be holding a lock
+    #[allow(clippy::collection_is_never_read)]
     let mut hold_proposal_mutex = Some(test_observer::PROPOSAL_RESPONSES.lock().unwrap());
     for (ix, (test_description, block_proposal, expected_http_code, _)) in
         test_cases.iter().enumerate()
@@ -10408,7 +10410,6 @@ fn clarity_cost_spend_down() {
             .get_stacks_blocks_processed();
         // Pause mining so we can add all our transactions to the mempool at once.
         TEST_MINE_STALL.lock().unwrap().replace(true);
-        let mut submitted_txs = vec![];
         for _nmb_tx in 0..nmb_txs_per_signer {
             for sender_sk in sender_sks.iter() {
                 let sender_nonce = get_and_increment_nonce(&sender_sk, &mut sender_nonces);
@@ -10424,9 +10425,7 @@ fn clarity_cost_spend_down() {
                     &[],
                 );
                 match submit_tx_fallible(&http_origin, &contract_tx) {
-                    Ok(txid) => {
-                        submitted_txs.push(txid);
-                    }
+                    Ok(_txid) => {}
                     Err(_e) => {
                         // If we fail to submit a tx, we need to make sure we don't
                         // increment the nonce for this sender, so we don't end up

@@ -698,18 +698,13 @@ fn test_burn_snapshot_sequence() {
         initial_reward_start_block: first_block_height,
     };
 
-    let mut leader_private_keys = vec![];
     let mut leader_public_keys = vec![];
     let mut leader_bitcoin_public_keys = vec![];
-    let mut leader_bitcoin_addresses = vec![];
 
     for i in 0..32 {
         let mut csprng: ThreadRng = thread_rng();
         let vrf_privkey = VRFPrivateKey(ed25519_dalek::SigningKey::generate(&mut csprng));
         let vrf_pubkey = VRFPublicKey::from_private(&vrf_privkey);
-
-        let privkey_hex = vrf_privkey.to_hex();
-        leader_private_keys.push(privkey_hex);
 
         let pubkey_hex = vrf_pubkey.to_hex();
         leader_public_keys.push(pubkey_hex);
@@ -718,12 +713,6 @@ fn test_burn_snapshot_sequence() {
         let bitcoin_publickey = BitcoinPublicKey::from_private(&bitcoin_privkey);
 
         leader_bitcoin_public_keys.push(to_hex(&bitcoin_publickey.to_bytes()));
-
-        leader_bitcoin_addresses.push(BitcoinAddress::from_bytes_legacy(
-            BitcoinNetworkType::Testnet,
-            LegacyBitcoinAddressType::PublicKeyHash,
-            &Hash160::from_data(&bitcoin_publickey.to_bytes()).0,
-        ));
     }
 
     let mut expected_burn_total: u64 = 0;
@@ -732,7 +721,6 @@ fn test_burn_snapshot_sequence() {
     let mut db = SortitionDB::connect_test(first_block_height, &first_burn_hash).unwrap();
     let mut prev_snapshot =
         BlockSnapshot::initial(first_block_height, &first_burn_hash, first_block_height);
-    let mut all_stacks_block_hashes = vec![];
 
     for i in 0..32 {
         let mut block_ops = vec![];
@@ -823,7 +811,6 @@ fn test_burn_snapshot_sequence() {
                 burn_header_hash: burn_block_hash.clone(),
             };
 
-            all_stacks_block_hashes.push(next_block_commit.block_header_hash.clone());
             block_ops.push(BlockstackOperationType::LeaderBlockCommit(
                 next_block_commit,
             ));

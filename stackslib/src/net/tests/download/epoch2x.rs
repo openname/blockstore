@@ -477,10 +477,9 @@ where
 
     info!("Completed walk round {} step(s)", round);
 
-    let mut peer_invs = vec![];
     for peer in peers.iter_mut() {
-        let peer_inv = get_blocks_inventory(peer, 0, num_burn_blocks);
-        peer_invs.push(peer_inv);
+        // TODO: Remove if this function has no side effects
+        let _ = get_blocks_inventory(peer, 0, num_burn_blocks);
 
         let availability = get_peer_availability(
             peer,

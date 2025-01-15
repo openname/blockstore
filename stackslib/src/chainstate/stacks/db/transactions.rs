@@ -72,8 +72,9 @@ impl TryFrom<Value> for HashableClarityValue {
 
 impl std::hash::Hash for HashableClarityValue {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::unwrap_used, clippy::collection_is_never_read)]
         // this unwrap is safe _as long as_ TryFrom<Value> was used as a constructor
+        // Also, this function has side effects, which cause Clippy to wrongly think `bytes` is unused
         let bytes = self.0.serialize_to_vec().unwrap();
         bytes.hash(state);
     }
