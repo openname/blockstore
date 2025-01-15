@@ -207,6 +207,9 @@ pub struct ChainsCoordinatorConfig {
     /// true: always wait for canonical anchor blocks, even if it stalls the chain
     /// false: proceed to process new chain history even if we're missing an anchor block.
     pub require_affirmed_anchor_blocks: bool,
+    /// true: enable transactions indexing
+    /// false: no transactions indexing
+    pub txindex: bool,
 }
 
 impl ChainsCoordinatorConfig {
@@ -215,6 +218,7 @@ impl ChainsCoordinatorConfig {
             always_use_affirmation_maps: true,
             require_affirmed_anchor_blocks: true,
             assume_present_anchor_blocks: true,
+            txindex: false,
         }
     }
 
@@ -223,6 +227,7 @@ impl ChainsCoordinatorConfig {
             always_use_affirmation_maps: false,
             require_affirmed_anchor_blocks: false,
             assume_present_anchor_blocks: false,
+            txindex: false,
         }
     }
 }
@@ -248,7 +253,7 @@ pub struct ChainsCoordinator<
     pub reward_set_provider: R,
     pub notifier: N,
     pub atlas_config: AtlasConfig,
-    config: ChainsCoordinatorConfig,
+    pub config: ChainsCoordinatorConfig,
     burnchain_indexer: B,
     /// Used to tell the P2P thread that the stackerdb
     ///  needs to be refreshed.

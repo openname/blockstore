@@ -620,6 +620,7 @@ impl RunLoop {
                     require_affirmed_anchor_blocks: moved_config
                         .node
                         .require_affirmed_anchor_blocks,
+                    txindex: false,
                 };
                 ChainsCoordinator::run(
                     coord_config,

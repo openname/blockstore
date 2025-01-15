@@ -41,6 +41,7 @@ use crate::burnchains::bitcoin::BitcoinNetworkType;
 use crate::burnchains::{Burnchain, MagicBytes, PoxConstants, BLOCKSTACK_MAGIC_MAINNET};
 use crate::chainstate::nakamoto::signer_set::NakamotoSigners;
 use crate::chainstate::stacks::boot::MINERS_NAME;
+use crate::chainstate::stacks::db::TRANSACTION_LOG;
 use crate::chainstate::stacks::index::marf::MARFOpenOpts;
 use crate::chainstate::stacks::index::storage::TrieHashCalculationMode;
 use crate::chainstate::stacks::miner::{BlockBuilderSettings, MinerStatus};
@@ -1661,6 +1662,8 @@ pub struct NodeConfig {
     pub chain_liveness_poll_time_secs: u64,
     /// stacker DBs we replicate
     pub stacker_dbs: Vec<QualifiedContractIdentifier>,
+    /// enable transactions indexing
+    pub txindex: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -1939,6 +1942,7 @@ impl Default for NodeConfig {
             fault_injection_hide_blocks: false,
             chain_liveness_poll_time_secs: 300,
             stacker_dbs: vec![],
+            txindex: false,
         }
     }
 }
@@ -2436,6 +2440,8 @@ pub struct NodeConfigFile {
     pub stacker_dbs: Option<Vec<String>>,
     /// fault injection: fail to push blocks with this probability (0-100)
     pub fault_injection_block_push_fail_probability: Option<u8>,
+    /// enable transactions indexing
+    pub txindex: bool,
 }
 
 impl NodeConfigFile {
@@ -2533,6 +2539,14 @@ impl NodeConfigFile {
                 self.fault_injection_block_push_fail_probability
             } else {
                 default_node_config.fault_injection_block_push_fail_probability
+            },
+            txindex: if self.txindex && *TRANSACTION_LOG {
+                return Err(
+                    "STACKS_TRANSACTION_LOG is deprecated and cannot be used with txindex."
+                        .to_string(),
+                );
+            } else {
+                self.txindex
             },
         };
         Ok(node_config)

@@ -1384,7 +1384,11 @@ impl TestPeer<'_> {
         proof
     }
 
-    pub fn try_process_block(&mut self, block: &NakamotoBlock) -> Result<bool, ChainstateError> {
+    pub fn try_process_block(
+        &mut self,
+        block: &NakamotoBlock,
+        txindex: bool,
+    ) -> Result<bool, ChainstateError> {
         let mut sort_handle = self.sortdb.as_ref().unwrap().index_handle_at_tip();
         let stacks_tip = sort_handle.get_nakamoto_tip_block_id().unwrap().unwrap();
         let accepted = Relayer::process_new_nakamoto_block(
@@ -1407,6 +1411,7 @@ impl TestPeer<'_> {
                 self.sortdb.as_mut().unwrap(),
                 &sort_tip,
                 None,
+                txindex,
             )?
         else {
             return Ok(false);

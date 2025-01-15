@@ -643,16 +643,8 @@ impl<'a> ChainstateTx<'a> {
         events: &[StacksTransactionReceipt],
     ) {
         if *TRANSACTION_LOG {
-            let insert =
-                "INSERT INTO transactions (txid, index_block_hash, tx_hex, result) VALUES (?, ?, ?, ?)";
             for tx_event in events.iter() {
-                let txid = tx_event.transaction.txid();
-                let tx_hex = tx_event.transaction.serialize_to_dbstring();
-                let result = tx_event.result.to_string();
-                let params = params![txid, block_id, tx_hex, result];
-                if let Err(e) = self.tx.tx().execute(insert, params) {
-                    warn!("Failed to log TX: {}", e);
-                }
+                NakamotoChainState::record_transaction(&self.tx, block_id, tx_event);
             }
         }
         for tx_event in events.iter() {
