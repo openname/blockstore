@@ -1227,16 +1227,15 @@ impl BlockMinerThread {
 
         // process earlier tips, back to max_depth
         for cur_height in end_height.saturating_sub(max_depth)..end_height {
-            let stacks_tips: Vec<_> = chain_state
+            let stacks_tips = chain_state
                 .get_stacks_chain_tips_at_height(cur_height)
                 .expect("FATAL: could not query chain tips at height")
                 .into_iter()
                 .filter(|candidate| {
                     Self::is_on_canonical_burnchain_fork(candidate, &sortdb_tip_handle)
-                })
-                .collect();
+                });
 
-            for tip in stacks_tips.into_iter() {
+            for tip in stacks_tips {
                 let index_block_hash =
                     StacksBlockId::new(&tip.consensus_hash, &tip.anchored_block_hash);
 
