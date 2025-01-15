@@ -372,7 +372,7 @@ impl NakamotoChainState {
         let matured_coinbase_height = coinbase_height - MINER_REWARD_MATURITY;
         let matured_tenure_block_header = Self::get_header_by_coinbase_height(
             chainstate_tx.deref_mut(),
-            &tip_index_hash,
+            tip_index_hash,
             matured_coinbase_height,
         )?
         .ok_or_else(|| {

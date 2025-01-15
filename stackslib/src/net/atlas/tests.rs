@@ -71,7 +71,7 @@ fn new_attachments_batch_from(
 ) -> AttachmentsBatch {
     let mut attachments_batch = AttachmentsBatch::new();
     for attachment_instance in attachment_instances.iter() {
-        attachments_batch.track_attachment(&attachment_instance);
+        attachments_batch.track_attachment(attachment_instance);
     }
     for _ in 0..retry_count {
         attachments_batch.bump_retry_count();
@@ -287,7 +287,7 @@ fn test_attachment_instance_parsing() {
 
     for value in values.iter() {
         assert!(AttachmentInstance::try_new_from_value(
-            &value,
+            value,
             &contract_id,
             index_block_hash.clone(),
             stacks_block_height,

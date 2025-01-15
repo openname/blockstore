@@ -192,7 +192,7 @@ pub mod prefix_opt_hex {
                 &"at least length 2 string",
             ));
         };
-        let val = T::try_from(&hex_str).map_err(serde::de::Error::custom)?;
+        let val = T::try_from(hex_str).map_err(serde::de::Error::custom)?;
         Ok(Some(val))
     }
 }
@@ -218,7 +218,7 @@ pub mod prefix_hex {
                 &"at least length 2 string",
             ));
         };
-        T::try_from(&hex_str).map_err(serde::de::Error::custom)
+        T::try_from(hex_str).map_err(serde::de::Error::custom)
     }
 }
 

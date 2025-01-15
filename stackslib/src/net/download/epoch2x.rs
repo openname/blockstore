@@ -455,7 +455,7 @@ impl BlockDownloader {
                             self.requested_blocks.remove(&block_key.index_block_hash);
 
                             let is_always_allowed = match PeerDB::get_peer(
-                                &network.peerdb.conn(),
+                                network.peerdb.conn(),
                                 block_key.neighbor.network_id,
                                 &block_key.neighbor.addrbytes,
                                 block_key.neighbor.port,
@@ -582,7 +582,7 @@ impl BlockDownloader {
                                 .remove(&block_key.index_block_hash);
 
                             let is_always_allowed = match PeerDB::get_peer(
-                                &network.peerdb.conn(),
+                                network.peerdb.conn(),
                                 block_key.neighbor.network_id,
                                 &block_key.neighbor.addrbytes,
                                 block_key.neighbor.port,
@@ -1058,8 +1058,8 @@ impl PeerNetwork {
     /// Get the data URL for a neighbor
     pub fn get_data_url(&self, neighbor_key: &NeighborKey) -> Option<UrlString> {
         match self.events.get(neighbor_key) {
-            Some(ref event_id) => match self.peers.get(event_id) {
-                Some(ref convo) => {
+            Some(event_id) => match self.peers.get(event_id) {
+                Some(convo) => {
                     if convo.data_url.is_empty() {
                         None
                     } else {
@@ -1107,9 +1107,9 @@ impl PeerNetwork {
         // if the child is processed, then we have all the microblocks we need.
         // this is the overwhelmingly likely case.
         if let Ok(Some(true)) = StacksChainState::get_staging_block_status(
-            &chainstate.db(),
-            &child_consensus_hash,
-            &child_block_hash,
+            chainstate.db(),
+            child_consensus_hash,
+            child_block_hash,
         ) {
             test_debug!(
                 "{:?}: Already processed block {}/{}, so must have stream between it and {}/{}",
@@ -1167,7 +1167,7 @@ impl PeerNetwork {
         // try and load the connecting stream.  If we have it, then we're good to go.
         // SLOW
         match StacksChainState::load_microblock_stream_fork(
-            &chainstate.db(),
+            chainstate.db(),
             parent_consensus_hash,
             parent_block_hash,
             &child_header.parent_microblock,
@@ -1337,7 +1337,7 @@ impl PeerNetwork {
                 // does this anchor block _confirm_ a microblock stream that we don't know about?
                 let parent_header_opt = {
                     let child_block_info = match StacksChainState::load_staging_block_info(
-                        &chainstate.db(),
+                        chainstate.db(),
                         &index_block_hash,
                     )? {
                         Some(hdr) => hdr,
@@ -1444,7 +1444,7 @@ impl PeerNetwork {
                 neighbors.len()
             );
 
-            (&mut neighbors[..]).shuffle(&mut thread_rng());
+            neighbors[..].shuffle(&mut thread_rng());
 
             let mut requests = VecDeque::new();
             for nk in neighbors.into_iter() {
@@ -1731,7 +1731,7 @@ impl PeerNetwork {
                             &requests.front().as_ref().unwrap().consensus_hash,
                             &requests.front().as_ref().unwrap().anchor_block_hash,
                             &index_block_hash,
-                            requests.iter().map(|ref r| &r.data_url).collect::<Vec<_>>()
+                            requests.iter().map(|r| &r.data_url).collect::<Vec<_>>()
                         );
 
                         downloader.blocks_to_try.insert(height, requests);
@@ -1795,7 +1795,7 @@ impl PeerNetwork {
 
                         debug!("{:?}: will request microblock stream confirmed by sortition {}: {}/{} ({}) from {:?}", 
                                &network.local_peer, mblock_height, &requests.front().as_ref().unwrap().consensus_hash, &requests.front().as_ref().unwrap().anchor_block_hash, &index_block_hash,
-                                requests.iter().map(|ref r| &r.data_url).collect::<Vec<_>>()
+                                requests.iter().map(|r| &r.data_url).collect::<Vec<_>>()
                                );
 
                         downloader

@@ -71,7 +71,7 @@ fn test_at_block_mutations(#[case] version: ClarityVersion, #[case] epoch: Stack
 
         eprintln!("Initializing contract...");
         owned_env
-            .initialize_contract(c.clone(), &contract, None, ASTRules::PrecheckSize)
+            .initialize_contract(c.clone(), contract, None, ASTRules::PrecheckSize)
             .unwrap();
     }
 
@@ -150,7 +150,7 @@ fn test_at_block_good(#[case] version: ClarityVersion, #[case] epoch: StacksEpoc
 
         eprintln!("Initializing contract...");
         owned_env
-            .initialize_contract(c.clone(), &contract, None, ASTRules::PrecheckSize)
+            .initialize_contract(c.clone(), contract, None, ASTRules::PrecheckSize)
             .unwrap();
     }
 
@@ -224,7 +224,7 @@ fn test_at_block_missing_defines(#[case] version: ClarityVersion, #[case] epoch:
 
         eprintln!("Initializing contract...");
         owned_env
-            .initialize_contract(c_a.clone(), &contract, None, ASTRules::PrecheckSize)
+            .initialize_contract(c_a.clone(), contract, None, ASTRules::PrecheckSize)
             .unwrap();
     }
 
@@ -239,7 +239,7 @@ fn test_at_block_missing_defines(#[case] version: ClarityVersion, #[case] epoch:
 
         eprintln!("Initializing contract...");
         let e = owned_env
-            .initialize_contract(c_b.clone(), &contract, None, ASTRules::PrecheckSize)
+            .initialize_contract(c_b.clone(), contract, None, ASTRules::PrecheckSize)
             .unwrap_err();
         e
     }

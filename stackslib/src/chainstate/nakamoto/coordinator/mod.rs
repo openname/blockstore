@@ -694,7 +694,7 @@ impl<
             if !self.in_nakamoto_epoch {
                 debug!("Check to see if the system has entered the Nakamoto epoch");
                 if let Ok(Some(canonical_header)) = NakamotoChainState::get_canonical_block_header(
-                    &self.chain_state_db.db(),
+                    self.chain_state_db.db(),
                     &self.sortition_db,
                 ) {
                     if canonical_header.is_nakamoto_block() {
@@ -902,7 +902,7 @@ impl<
             }
 
             let stacks_sn = SortitionDB::get_block_snapshot_consensus(
-                &self.sortition_db.conn(),
+                self.sortition_db.conn(),
                 &canonical_stacks_consensus_hash,
             )?
             .unwrap_or_else(|| {
@@ -932,7 +932,7 @@ impl<
 
             let last_processed_reward_cycle = {
                 let canonical_sn = SortitionDB::get_block_snapshot(
-                    &self.sortition_db.conn(),
+                    self.sortition_db.conn(),
                     &canonical_sortition_tip,
                 )?
                 .ok_or(DBError::NotFoundError)?;
@@ -1013,7 +1013,7 @@ impl<
             }
 
             let current_block =
-                BurnchainDB::get_burnchain_block(&self.burnchain_blocks_db.conn(), &cursor)
+                BurnchainDB::get_burnchain_block(self.burnchain_blocks_db.conn(), &cursor)
                     .map_err(|e| {
                         warn!(
                             "ChainsCoordinator: could not retrieve block burnhash={}",
@@ -1115,7 +1115,7 @@ impl<
                 // canonical tip, it's guaranteed to be the canonical one.
                 let canonical_sortition_tip = self.canonical_sortition_tip.clone().unwrap_or(
                     // should be unreachable
-                    SortitionDB::get_canonical_burn_chain_tip(&self.sortition_db.conn())?
+                    SortitionDB::get_canonical_burn_chain_tip(self.sortition_db.conn())?
                         .sortition_id,
                 );
 

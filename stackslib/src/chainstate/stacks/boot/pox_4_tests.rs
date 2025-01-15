@@ -93,7 +93,7 @@ const ERR_REUSED_SIGNER_KEY: i128 = 33;
 /// Return the BlockSnapshot for the latest sortition in the provided
 ///  SortitionDB option-reference. Panics on any errors.
 pub fn get_tip(sortdb: Option<&SortitionDB>) -> BlockSnapshot {
-    SortitionDB::get_canonical_burn_chain_tip(&sortdb.unwrap().conn()).unwrap()
+    SortitionDB::get_canonical_burn_chain_tip(sortdb.unwrap().conn()).unwrap()
 }
 
 /// Helper rstest template for running tests in both 2.5
@@ -112,7 +112,7 @@ fn make_simple_pox_4_lock(
 ) -> StacksTransaction {
     let addr = key_to_stacks_addr(key);
     let pox_addr = PoxAddress::from_legacy(AddressHashMode::SerializeP2PKH, addr.bytes.clone());
-    let signer_pk = StacksPublicKey::from_private(&key);
+    let signer_pk = StacksPublicKey::from_private(key);
     let tip = get_tip(peer.sortdb.as_ref());
     let next_reward_cycle = peer
         .config
@@ -124,7 +124,7 @@ fn make_simple_pox_4_lock(
 
     let signature = make_signer_key_signature(
         &pox_addr,
-        &key,
+        key,
         next_reward_cycle.into(),
         &Pox4SignatureTopic::StackStx,
         lock_period,
@@ -313,7 +313,7 @@ fn pox_extend_transition() {
         let cur_reward_cycle = burnchain
             .block_height_to_reward_cycle(tip_burn_block_height)
             .unwrap() as u128;
-        let (min_ustx, reward_addrs, total_stacked) = with_sortdb(peer, |ref mut c, ref sortdb| {
+        let (min_ustx, reward_addrs, total_stacked) = with_sortdb(peer, |ref mut c, sortdb| {
             (
                 c.get_stacking_minimum(sortdb, &tip_index_block).unwrap(),
                 get_reward_addresses_with_par_tip(c, &burnchain, sortdb, &tip_index_block).unwrap(),
@@ -354,7 +354,7 @@ fn pox_extend_transition() {
         let cur_reward_cycle = burnchain
             .block_height_to_reward_cycle(tip_burn_block_height)
             .unwrap() as u128;
-        let (min_ustx, reward_addrs, total_stacked) = with_sortdb(peer, |ref mut c, ref sortdb| {
+        let (min_ustx, reward_addrs, total_stacked) = with_sortdb(peer, |ref mut c, sortdb| {
             (
                 c.get_stacking_minimum(sortdb, &tip_index_block).unwrap(),
                 get_reward_addresses_with_par_tip(c, &burnchain, sortdb, &tip_index_block).unwrap(),
@@ -965,7 +965,7 @@ fn pox_lock_unlock() {
             let signer_key = key;
             let signature = make_signer_key_signature(
                 &pox_addr,
-                &signer_key,
+                signer_key,
                 reward_cycle,
                 &Pox4SignatureTopic::StackStx,
                 lock_period.into(),
@@ -978,7 +978,7 @@ fn pox_lock_unlock() {
                 1024 * POX_THRESHOLD_STEPS_USTX,
                 &pox_addr,
                 lock_period,
-                &StacksPublicKey::from_private(&signer_key),
+                &StacksPublicKey::from_private(signer_key),
                 tip_height,
                 Some(signature),
                 u128::MAX,
@@ -2976,7 +2976,7 @@ fn verify_signer_key_sig(
 ) -> Value {
     let result: Value = with_sortdb(peer, |ref mut chainstate, ref mut sortdb| {
         chainstate
-            .with_read_only_clarity_tx(&sortdb.index_handle_at_tip(), &latest_block, |clarity_tx| {
+            .with_read_only_clarity_tx(&sortdb.index_handle_at_tip(), latest_block, |clarity_tx| {
                 clarity_tx
                     .with_readonly_clarity_env(
                         false,
@@ -2992,7 +2992,7 @@ fn verify_signer_key_sig(
                                 reward_cycle,
                                 topic.get_name_str(),
                                 period,
-                                to_hex(&signature),
+                                to_hex(signature),
                                 signing_key.to_hex(),
                                 amount,
                                 max_amount,
@@ -3314,10 +3314,10 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     let mut stacker_nonce = 0;
     let stacker_key = &keys[0];
     let min_ustx = get_stacking_minimum(&mut peer, &latest_block);
-    let stacker_addr = key_to_stacks_addr(&stacker_key);
+    let stacker_addr = key_to_stacks_addr(stacker_key);
     let signer_key = &keys[1];
     let signer_public_key = StacksPublicKey::from_private(signer_key);
-    let pox_addr = pox_addr_from(&stacker_key);
+    let pox_addr = pox_addr_from(stacker_key);
 
     let second_stacker = &keys[2];
     let second_stacker_addr = key_to_stacks_addr(second_stacker);
@@ -3333,7 +3333,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     // Test 1: invalid reward cycle
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_key,
+        signer_key,
         reward_cycle - 1,
         &topic,
         lock_period,
@@ -3342,7 +3342,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     );
     let invalid_cycle_nonce = stacker_nonce;
     let invalid_cycle_stack = make_pox_4_lockup(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &pox_addr,
@@ -3358,7 +3358,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &second_stacker_pox_addr,
-        &signer_key,
+        signer_key,
         reward_cycle,
         &topic,
         lock_period,
@@ -3367,7 +3367,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     );
     let invalid_pox_addr_nonce = stacker_nonce;
     let invalid_pox_addr_tx = make_pox_4_lockup(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &pox_addr,
@@ -3383,7 +3383,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &second_stacker,
+        second_stacker,
         reward_cycle,
         &topic,
         lock_period,
@@ -3392,7 +3392,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     );
     let invalid_key_nonce = stacker_nonce;
     let invalid_key_tx = make_pox_4_lockup(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &pox_addr,
@@ -3408,7 +3408,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_key,
+        signer_key,
         reward_cycle,
         &Pox4SignatureTopic::StackExtend, // wrong topic
         lock_period,
@@ -3417,7 +3417,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     );
     let invalid_topic_nonce = stacker_nonce;
     let invalid_topic_tx = make_pox_4_lockup(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &pox_addr,
@@ -3433,7 +3433,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_key,
+        signer_key,
         reward_cycle,
         &topic,
         lock_period + 1, // wrong period
@@ -3442,7 +3442,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     );
     let invalid_period_nonce = stacker_nonce;
     let invalid_period_tx = make_pox_4_lockup(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &pox_addr,
@@ -3458,7 +3458,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_key,
+        signer_key,
         reward_cycle,
         &topic,
         lock_period,
@@ -3467,7 +3467,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     );
     let invalid_auth_id_nonce = stacker_nonce;
     let invalid_auth_id_tx = make_pox_4_lockup(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &pox_addr,
@@ -3483,7 +3483,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_key,
+        signer_key,
         reward_cycle,
         &topic,
         lock_period,
@@ -3492,7 +3492,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     );
     let invalid_amount_nonce = stacker_nonce;
     let invalid_amount_tx = make_pox_4_lockup(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &pox_addr,
@@ -3508,7 +3508,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_key,
+        signer_key,
         reward_cycle,
         &topic,
         lock_period,
@@ -3517,7 +3517,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     );
     let invalid_max_amount_nonce = stacker_nonce;
     let invalid_max_amount_tx = make_pox_4_lockup(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &pox_addr,
@@ -3533,7 +3533,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_key,
+        signer_key,
         reward_cycle,
         &topic,
         lock_period,
@@ -3542,7 +3542,7 @@ fn stack_stx_verify_signer_sig(use_nakamoto: bool) {
     );
     let valid_nonce = stacker_nonce;
     let valid_tx = make_pox_4_lockup(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &pox_addr,
@@ -3634,10 +3634,10 @@ fn stack_extend_verify_sig() {
     let mut stacker_nonce = 0;
     let stacker_key = &keys[0];
     let min_ustx = get_stacking_minimum(&mut peer, &latest_block);
-    let stacker_addr = key_to_stacks_addr(&stacker_key);
+    let stacker_addr = key_to_stacks_addr(stacker_key);
     let signer_key = &keys[1];
     let signer_public_key = StacksPublicKey::from_private(signer_key);
-    let pox_addr = pox_addr_from(&signer_key);
+    let pox_addr = pox_addr_from(signer_key);
 
     let reward_cycle = get_current_reward_cycle(&peer, &burnchain);
     let topic = Pox4SignatureTopic::StackExtend;
@@ -3645,7 +3645,7 @@ fn stack_extend_verify_sig() {
     // Setup: stack-stx
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_key,
+        signer_key,
         reward_cycle,
         &Pox4SignatureTopic::StackStx,
         lock_period,
@@ -3654,7 +3654,7 @@ fn stack_extend_verify_sig() {
     );
     let stack_nonce = stacker_nonce;
     let stack_tx = make_pox_4_lockup(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &pox_addr,
@@ -3683,7 +3683,7 @@ fn stack_extend_verify_sig() {
     stacker_nonce += 1;
     let invalid_cycle_nonce = stacker_nonce;
     let invalid_cycle_tx = make_pox_4_extend(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         pox_addr.clone(),
         lock_period,
@@ -3707,7 +3707,7 @@ fn stack_extend_verify_sig() {
     );
     let invalid_pox_addr_nonce = stacker_nonce;
     let invalid_pox_addr_tx = make_pox_4_extend(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         pox_addr.clone(),
         lock_period,
@@ -3731,7 +3731,7 @@ fn stack_extend_verify_sig() {
     );
     let invalid_key_nonce = stacker_nonce;
     let invalid_key_tx = make_pox_4_extend(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         pox_addr.clone(),
         lock_period,
@@ -3754,7 +3754,7 @@ fn stack_extend_verify_sig() {
     );
     let invalid_auth_id_nonce = stacker_nonce;
     let invalid_auth_id_tx = make_pox_4_extend(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         pox_addr.clone(),
         lock_period,
@@ -3777,7 +3777,7 @@ fn stack_extend_verify_sig() {
     );
     let invalid_max_amount_nonce = stacker_nonce;
     let invalid_max_amount_tx = make_pox_4_extend(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         pox_addr.clone(),
         lock_period,
@@ -3800,7 +3800,7 @@ fn stack_extend_verify_sig() {
     );
     let valid_nonce = stacker_nonce;
     let valid_tx = make_pox_4_extend(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         pox_addr.clone(),
         lock_period,
@@ -3889,15 +3889,15 @@ fn stack_agg_commit_verify_sig() {
     let min_ustx = get_stacking_minimum(&mut peer, &latest_block);
 
     let stacker_key = &keys[0];
-    let stacker_addr = PrincipalData::from(key_to_stacks_addr(&stacker_key));
+    let stacker_addr = PrincipalData::from(key_to_stacks_addr(stacker_key));
 
     let signer_sk = &keys[1];
     let signer_pk = StacksPublicKey::from_private(signer_sk);
 
     let delegate_key = &keys[2];
-    let delegate_addr = key_to_stacks_addr(&delegate_key);
+    let delegate_addr = key_to_stacks_addr(delegate_key);
 
-    let pox_addr = pox_addr_from(&delegate_key);
+    let pox_addr = pox_addr_from(delegate_key);
 
     let reward_cycle = burnchain
         .block_height_to_reward_cycle(block_height)
@@ -3907,7 +3907,7 @@ fn stack_agg_commit_verify_sig() {
     // Setup: delegate-stx and delegate-stack-stx
 
     let delegate_tx = make_pox_4_delegate_stx(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         delegate_addr.clone().into(),
@@ -3917,7 +3917,7 @@ fn stack_agg_commit_verify_sig() {
 
     let delegate_stack_stx_nonce = delegate_nonce;
     let delegate_stack_stx_tx = make_pox_4_delegate_stack_stx(
-        &delegate_key,
+        delegate_key,
         delegate_nonce,
         stacker_addr,
         min_ustx,
@@ -3933,7 +3933,7 @@ fn stack_agg_commit_verify_sig() {
     let next_reward_cycle = reward_cycle + 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         reward_cycle, // wrong cycle
         &topic,
         1_u128,
@@ -3942,7 +3942,7 @@ fn stack_agg_commit_verify_sig() {
     );
     let invalid_cycle_nonce = delegate_nonce;
     let invalid_cycle_tx = make_pox_4_aggregation_commit_indexed(
-        &delegate_key,
+        delegate_key,
         delegate_nonce,
         &pox_addr,
         next_reward_cycle,
@@ -3957,7 +3957,7 @@ fn stack_agg_commit_verify_sig() {
     let other_pox_addr = pox_addr_from(&Secp256k1PrivateKey::new());
     let signature = make_signer_key_signature(
         &other_pox_addr,
-        &signer_sk,
+        signer_sk,
         next_reward_cycle,
         &topic,
         1_u128,
@@ -3966,7 +3966,7 @@ fn stack_agg_commit_verify_sig() {
     );
     let invalid_pox_addr_nonce = delegate_nonce;
     let invalid_pox_addr_tx = make_pox_4_aggregation_commit_indexed(
-        &delegate_key,
+        delegate_key,
         delegate_nonce,
         &pox_addr,
         next_reward_cycle,
@@ -3980,7 +3980,7 @@ fn stack_agg_commit_verify_sig() {
     delegate_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &delegate_key,
+        delegate_key,
         next_reward_cycle,
         &topic,
         1_u128,
@@ -3989,7 +3989,7 @@ fn stack_agg_commit_verify_sig() {
     );
     let invalid_key_nonce = delegate_nonce;
     let invalid_key_tx = make_pox_4_aggregation_commit_indexed(
-        &delegate_key,
+        delegate_key,
         delegate_nonce,
         &pox_addr,
         next_reward_cycle,
@@ -4003,7 +4003,7 @@ fn stack_agg_commit_verify_sig() {
     delegate_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         next_reward_cycle,
         &topic,
         2_u128, // wrong period
@@ -4012,7 +4012,7 @@ fn stack_agg_commit_verify_sig() {
     );
     let invalid_period_nonce = delegate_nonce;
     let invalid_period_tx = make_pox_4_aggregation_commit_indexed(
-        &delegate_key,
+        delegate_key,
         delegate_nonce,
         &pox_addr,
         next_reward_cycle,
@@ -4026,7 +4026,7 @@ fn stack_agg_commit_verify_sig() {
     delegate_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         next_reward_cycle,
         &Pox4SignatureTopic::StackStx, // wrong topic
         1_u128,
@@ -4035,7 +4035,7 @@ fn stack_agg_commit_verify_sig() {
     );
     let invalid_topic_nonce = delegate_nonce;
     let invalid_topic_tx = make_pox_4_aggregation_commit_indexed(
-        &delegate_key,
+        delegate_key,
         delegate_nonce,
         &pox_addr,
         next_reward_cycle,
@@ -4049,7 +4049,7 @@ fn stack_agg_commit_verify_sig() {
     delegate_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         next_reward_cycle,
         &topic,
         1_u128,
@@ -4058,7 +4058,7 @@ fn stack_agg_commit_verify_sig() {
     );
     let invalid_auth_id_nonce = delegate_nonce;
     let invalid_auth_id_tx = make_pox_4_aggregation_commit_indexed(
-        &delegate_key,
+        delegate_key,
         delegate_nonce,
         &pox_addr,
         next_reward_cycle,
@@ -4072,7 +4072,7 @@ fn stack_agg_commit_verify_sig() {
     delegate_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         next_reward_cycle,
         &topic,
         1_u128,
@@ -4081,7 +4081,7 @@ fn stack_agg_commit_verify_sig() {
     );
     let invalid_max_amount_nonce = delegate_nonce;
     let invalid_max_amount_tx = make_pox_4_aggregation_commit_indexed(
-        &delegate_key,
+        delegate_key,
         delegate_nonce,
         &pox_addr,
         next_reward_cycle,
@@ -4095,7 +4095,7 @@ fn stack_agg_commit_verify_sig() {
     delegate_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         next_reward_cycle,
         &topic,
         1_u128,
@@ -4104,7 +4104,7 @@ fn stack_agg_commit_verify_sig() {
     );
     let invalid_amount_nonce = delegate_nonce;
     let invalid_amount_tx = make_pox_4_aggregation_commit_indexed(
-        &delegate_key,
+        delegate_key,
         delegate_nonce,
         &pox_addr,
         next_reward_cycle,
@@ -4118,7 +4118,7 @@ fn stack_agg_commit_verify_sig() {
     delegate_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         next_reward_cycle,
         &topic,
         1_u128,
@@ -4127,7 +4127,7 @@ fn stack_agg_commit_verify_sig() {
     );
     let valid_nonce = delegate_nonce;
     let valid_tx = make_pox_4_aggregation_commit_indexed(
-        &delegate_key,
+        delegate_key,
         delegate_nonce,
         &pox_addr,
         next_reward_cycle,
@@ -4262,7 +4262,7 @@ fn advance_to_block_height(
             peer.get_burn_block_height(),
             passed_txs.len()
         );
-        latest_block = Some(tenure_with_txs(peer, &passed_txs, peer_nonce, test_signers));
+        latest_block = Some(tenure_with_txs(peer, passed_txs, peer_nonce, test_signers));
         passed_txs = &[];
         if tx_block.is_none() {
             tx_block = Some(observer.get_blocks().last().unwrap().clone());
@@ -4690,7 +4690,7 @@ fn stack_agg_increase() {
         burnchain_unlock_height: Value::UInt(0),
     };
 
-    check_pox_print_event(&aggregation_increase_event, common_data, increase_op_data);
+    check_pox_print_event(aggregation_increase_event, common_data, increase_op_data);
 
     // Check that Bob's second pool has an assigned reward index of 1
     let bob_aggregate_commit_reward_index = &tx_block
@@ -4716,10 +4716,10 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     let mut stacker_nonce = 0;
     let stacker_key = &keys[0];
     let min_ustx = get_stacking_minimum(&mut peer, &latest_block);
-    let stacker_addr = key_to_stacks_addr(&stacker_key);
+    let stacker_addr = key_to_stacks_addr(stacker_key);
     let signer_sk = &keys[1];
     let signer_pk = StacksPublicKey::from_private(signer_sk);
-    let pox_addr = pox_addr_from(&signer_sk);
+    let pox_addr = pox_addr_from(signer_sk);
 
     let reward_cycle = get_current_reward_cycle(&peer, &burnchain);
     let topic = Pox4SignatureTopic::StackIncrease;
@@ -4727,7 +4727,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     // Setup: stack-stx
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         reward_cycle,
         &Pox4SignatureTopic::StackStx,
         lock_period,
@@ -4736,7 +4736,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     );
     let stack_nonce = stacker_nonce;
     let stack_tx = make_pox_4_lockup(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &pox_addr,
@@ -4752,7 +4752,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         reward_cycle - 1, // invalid
         &topic,
         lock_period,
@@ -4761,7 +4761,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     );
     let invalid_cycle_nonce = stacker_nonce;
     let invalid_cycle_tx = make_pox_4_stack_increase(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &signer_pk,
@@ -4775,7 +4775,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     let other_pox_addr = pox_addr_from(&Secp256k1PrivateKey::new());
     let signature = make_signer_key_signature(
         &other_pox_addr, // different than existing
-        &signer_sk,
+        signer_sk,
         reward_cycle,
         &topic,
         lock_period,
@@ -4784,7 +4784,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     );
     let invalid_pox_addr_nonce = stacker_nonce;
     let invalid_pox_addr_tx = make_pox_4_stack_increase(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &signer_pk,
@@ -4797,7 +4797,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &stacker_key, // different than signer
+        stacker_key, // different than signer
         reward_cycle,
         &topic,
         lock_period,
@@ -4806,7 +4806,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     );
     let invalid_key_nonce = stacker_nonce;
     let invalid_key_tx = make_pox_4_stack_increase(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &signer_pk,
@@ -4819,7 +4819,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         reward_cycle,
         &topic,
         lock_period + 1, // wrong
@@ -4828,7 +4828,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     );
     let invalid_period_nonce = stacker_nonce;
     let invalid_period_tx = make_pox_4_stack_increase(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &signer_pk,
@@ -4841,7 +4841,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         reward_cycle,
         &Pox4SignatureTopic::StackExtend, // wrong topic
         lock_period,
@@ -4850,7 +4850,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     );
     let invalid_topic_nonce = stacker_nonce;
     let invalid_topic_tx = make_pox_4_stack_increase(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &signer_pk,
@@ -4863,7 +4863,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         reward_cycle,
         &topic,
         lock_period,
@@ -4872,7 +4872,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     );
     let invalid_auth_id_nonce = stacker_nonce;
     let invalid_auth_id_tx = make_pox_4_stack_increase(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &signer_pk,
@@ -4885,7 +4885,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         reward_cycle,
         &topic,
         lock_period,
@@ -4894,7 +4894,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     );
     let invalid_max_amount_nonce = stacker_nonce;
     let invalid_max_amount_tx = make_pox_4_stack_increase(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &signer_pk,
@@ -4907,7 +4907,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         reward_cycle,
         &topic,
         lock_period,
@@ -4916,7 +4916,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     );
     let invalid_amount_nonce = stacker_nonce;
     let invalid_amount_tx = make_pox_4_stack_increase(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &signer_pk,
@@ -4929,7 +4929,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         reward_cycle,
         &Pox4SignatureTopic::StackIncrease,
         lock_period,
@@ -4938,7 +4938,7 @@ fn stack_increase_verify_signer_key(use_nakamoto: bool) {
     );
     let valid_nonce = stacker_nonce;
     let stack_increase = make_pox_4_stack_increase(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &signer_pk,
@@ -5006,10 +5006,10 @@ fn stack_increase_different_signer_keys(use_nakamoto: bool) {
     let mut stacker_nonce = 0;
     let stacker_key = &keys[0];
     let min_ustx = get_stacking_minimum(&mut peer, &latest_block);
-    let stacker_addr = key_to_stacks_addr(&stacker_key);
+    let stacker_addr = key_to_stacks_addr(stacker_key);
     let signer_sk = &keys[1];
     let signer_pk = StacksPublicKey::from_private(signer_sk);
-    let pox_addr = pox_addr_from(&signer_sk);
+    let pox_addr = pox_addr_from(signer_sk);
 
     // Second key is used in `stack-extend`
     let second_signer_sk = &keys[2];
@@ -5020,7 +5020,7 @@ fn stack_increase_different_signer_keys(use_nakamoto: bool) {
     // Setup: stack-stx
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         reward_cycle,
         &Pox4SignatureTopic::StackStx,
         lock_period,
@@ -5029,7 +5029,7 @@ fn stack_increase_different_signer_keys(use_nakamoto: bool) {
     );
     let stack_nonce = stacker_nonce;
     let stack_tx = make_pox_4_lockup(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &pox_addr,
@@ -5044,7 +5044,7 @@ fn stack_increase_different_signer_keys(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &second_signer_sk,
+        second_signer_sk,
         reward_cycle,
         &Pox4SignatureTopic::StackExtend,
         lock_period,
@@ -5053,7 +5053,7 @@ fn stack_increase_different_signer_keys(use_nakamoto: bool) {
     );
     let extend_nonce = stacker_nonce;
     let extend_tx = make_pox_4_extend(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         pox_addr.clone(),
         lock_period,
@@ -5066,7 +5066,7 @@ fn stack_increase_different_signer_keys(use_nakamoto: bool) {
     stacker_nonce += 1;
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         reward_cycle,
         &Pox4SignatureTopic::StackIncrease,
         2, // 2 cycles total (1 from stack-stx, 1 from extend)
@@ -5075,7 +5075,7 @@ fn stack_increase_different_signer_keys(use_nakamoto: bool) {
     );
     let increase_nonce = stacker_nonce;
     let stack_increase = make_pox_4_stack_increase(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &signer_pk,
@@ -5212,11 +5212,11 @@ fn stack_stx_signer_key(use_nakamoto: bool) {
     //                       (start-burn-ht uint)
     //                       (lock-period uint)
     //                       (signer-key (buff 33)))
-    let pox_addr = pox_addr_from(&stacker_key);
+    let pox_addr = pox_addr_from(stacker_key);
     let pox_addr_val = Value::Tuple(pox_addr.clone().as_clarity_tuple().unwrap());
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_key,
+        signer_key,
         reward_cycle,
         &Pox4SignatureTopic::StackStx,
         2_u128,
@@ -5250,7 +5250,7 @@ fn stack_stx_signer_key(use_nakamoto: bool) {
     .expect_tuple();
 
     let stacker_txs =
-        get_last_block_sender_transactions(&observer, key_to_stacks_addr(&stacker_key));
+        get_last_block_sender_transactions(&observer, key_to_stacks_addr(stacker_key));
 
     let stacking_tx = stacker_txs.get(0).unwrap();
     let events: Vec<&STXLockEventData> = stacking_tx
@@ -5312,7 +5312,7 @@ fn stack_stx_signer_auth(use_nakamoto: bool) {
 
     let reward_cycle = get_current_reward_cycle(&peer, &burnchain);
 
-    let pox_addr = pox_addr_from(&stacker_key);
+    let pox_addr = pox_addr_from(stacker_key);
     let pox_addr_val = Value::Tuple(pox_addr.clone().as_clarity_tuple().unwrap());
     let lock_period = 6;
 
@@ -5320,7 +5320,7 @@ fn stack_stx_signer_auth(use_nakamoto: bool) {
 
     let failed_stack_nonce = stacker_nonce;
     let failed_stack_tx = make_pox_4_lockup(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &pox_addr,
@@ -5335,7 +5335,7 @@ fn stack_stx_signer_auth(use_nakamoto: bool) {
     let enable_auth_nonce = signer_nonce;
     let enable_auth_tx = make_pox_4_set_signer_key_auth(
         &pox_addr,
-        &signer_key,
+        signer_key,
         reward_cycle,
         &topic,
         lock_period,
@@ -5350,7 +5350,7 @@ fn stack_stx_signer_auth(use_nakamoto: bool) {
     stacker_nonce += 1;
     let successful_stack_nonce = stacker_nonce;
     let valid_stack_tx = make_pox_4_lockup(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &pox_addr,
@@ -5374,7 +5374,7 @@ fn stack_stx_signer_auth(use_nakamoto: bool) {
     .expect_tuple();
 
     let stacker_txs =
-        get_last_block_sender_transactions(&observer, key_to_stacks_addr(&stacker_key));
+        get_last_block_sender_transactions(&observer, key_to_stacks_addr(stacker_key));
 
     let expected_error = Value::error(Value::Int(19)).unwrap();
 
@@ -5391,7 +5391,7 @@ fn stack_stx_signer_auth(use_nakamoto: bool) {
         .expect_result_ok()
         .expect("Expected ok result from stack-stx tx");
 
-    let signer_txs = get_last_block_sender_transactions(&observer, key_to_stacks_addr(&signer_key));
+    let signer_txs = get_last_block_sender_transactions(&observer, key_to_stacks_addr(signer_key));
 
     // enable auth worked
     let enable_tx_result = signer_txs
@@ -5417,15 +5417,15 @@ fn stack_agg_commit_signer_auth(use_nakamoto: bool) {
     let min_ustx = get_stacking_minimum(&mut peer, &latest_block);
 
     let stacker_key = &keys[0];
-    let stacker_addr = PrincipalData::from(key_to_stacks_addr(&stacker_key));
+    let stacker_addr = PrincipalData::from(key_to_stacks_addr(stacker_key));
 
     let signer_sk = &keys[1];
     let signer_pk = StacksPublicKey::from_private(signer_sk);
 
     let delegate_key = &keys[2];
-    let delegate_addr = key_to_stacks_addr(&delegate_key);
+    let delegate_addr = key_to_stacks_addr(delegate_key);
 
-    let pox_addr = pox_addr_from(&delegate_key);
+    let pox_addr = pox_addr_from(delegate_key);
 
     let reward_cycle = burnchain
         .block_height_to_reward_cycle(block_height)
@@ -5435,7 +5435,7 @@ fn stack_agg_commit_signer_auth(use_nakamoto: bool) {
     // Setup: delegate-stx and delegate-stack-stx
 
     let delegate_tx = make_pox_4_delegate_stx(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         delegate_addr.clone().into(),
@@ -5445,7 +5445,7 @@ fn stack_agg_commit_signer_auth(use_nakamoto: bool) {
 
     let delegate_stack_stx_nonce = delegate_nonce;
     let delegate_stack_stx_tx = make_pox_4_delegate_stack_stx(
-        &delegate_key,
+        delegate_key,
         delegate_nonce,
         stacker_addr,
         min_ustx,
@@ -5460,7 +5460,7 @@ fn stack_agg_commit_signer_auth(use_nakamoto: bool) {
     delegate_nonce += 1;
     let invalid_agg_nonce = delegate_nonce;
     let invalid_agg_tx = make_pox_4_aggregation_commit_indexed(
-        &delegate_key,
+        delegate_key,
         delegate_nonce,
         &pox_addr,
         next_reward_cycle,
@@ -5474,7 +5474,7 @@ fn stack_agg_commit_signer_auth(use_nakamoto: bool) {
     let enable_auth_nonce = 0;
     let enable_auth_tx = make_pox_4_set_signer_key_auth(
         &pox_addr,
-        &signer_sk,
+        signer_sk,
         next_reward_cycle,
         &topic,
         1,
@@ -5489,7 +5489,7 @@ fn stack_agg_commit_signer_auth(use_nakamoto: bool) {
     delegate_nonce += 1;
     let valid_agg_nonce = delegate_nonce;
     let valid_agg_tx = make_pox_4_aggregation_commit_indexed(
-        &delegate_key,
+        delegate_key,
         delegate_nonce,
         &pox_addr,
         next_reward_cycle,
@@ -5536,10 +5536,10 @@ fn stack_extend_signer_auth(use_nakamoto: bool) {
     let mut stacker_nonce = 0;
     let stacker_key = &keys[0];
     let min_ustx = get_stacking_minimum(&mut peer, &latest_block);
-    let stacker_addr = key_to_stacks_addr(&stacker_key);
+    let stacker_addr = key_to_stacks_addr(stacker_key);
     let signer_key = &keys[1];
     let signer_public_key = StacksPublicKey::from_private(signer_key);
-    let pox_addr = pox_addr_from(&signer_key);
+    let pox_addr = pox_addr_from(signer_key);
 
     let reward_cycle = get_current_reward_cycle(&peer, &burnchain);
     let topic = Pox4SignatureTopic::StackExtend;
@@ -5547,7 +5547,7 @@ fn stack_extend_signer_auth(use_nakamoto: bool) {
     // Setup: stack-stx
     let signature = make_signer_key_signature(
         &pox_addr,
-        &signer_key,
+        signer_key,
         reward_cycle,
         &Pox4SignatureTopic::StackStx,
         lock_period,
@@ -5556,7 +5556,7 @@ fn stack_extend_signer_auth(use_nakamoto: bool) {
     );
     let stack_nonce = stacker_nonce;
     let stack_tx = make_pox_4_lockup(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &pox_addr,
@@ -5572,7 +5572,7 @@ fn stack_extend_signer_auth(use_nakamoto: bool) {
     stacker_nonce += 1;
     let invalid_extend_nonce = stacker_nonce;
     let invalid_cycle_tx = make_pox_4_extend(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         pox_addr.clone(),
         lock_period,
@@ -5586,7 +5586,7 @@ fn stack_extend_signer_auth(use_nakamoto: bool) {
     let enable_auth_nonce = 0;
     let enable_auth_tx = make_pox_4_set_signer_key_auth(
         &pox_addr,
-        &signer_key,
+        signer_key,
         reward_cycle,
         &topic,
         lock_period,
@@ -5601,7 +5601,7 @@ fn stack_extend_signer_auth(use_nakamoto: bool) {
     stacker_nonce += 1;
     let valid_extend_nonce = stacker_nonce;
     let valid_tx = make_pox_4_extend(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         pox_addr,
         lock_period,
@@ -5642,12 +5642,12 @@ fn test_set_signer_key_auth(use_nakamoto: bool) {
     let alice_nonce = 0;
     let alice_key = &keys[0];
     let min_ustx = get_stacking_minimum(&mut peer, &latest_block);
-    let alice_addr = key_to_stacks_addr(&alice_key);
+    let alice_addr = key_to_stacks_addr(alice_key);
     let mut signer_nonce = 0;
     let signer_key = &keys[1];
     let signer_public_key = StacksPublicKey::from_private(signer_key);
-    let signer_addr = key_to_stacks_addr(&signer_key);
-    let pox_addr = pox_addr_from(&signer_key);
+    let signer_addr = key_to_stacks_addr(signer_key);
+    let pox_addr = pox_addr_from(signer_key);
 
     let current_reward_cycle = get_current_reward_cycle(&peer, &burnchain);
 
@@ -5655,13 +5655,13 @@ fn test_set_signer_key_auth(use_nakamoto: bool) {
     let invalid_enable_nonce = alice_nonce;
     let invalid_enable_tx = make_pox_4_set_signer_key_auth(
         &pox_addr,
-        &signer_key,
+        signer_key,
         1,
         &Pox4SignatureTopic::StackStx,
         lock_period,
         true,
         invalid_enable_nonce,
-        Some(&alice_key),
+        Some(alice_key),
         u128::MAX,
         1,
     );
@@ -5671,13 +5671,13 @@ fn test_set_signer_key_auth(use_nakamoto: bool) {
     signer_nonce += 1;
     let invalid_tx_period: StacksTransaction = make_pox_4_set_signer_key_auth(
         &pox_addr,
-        &signer_key,
+        signer_key,
         current_reward_cycle,
         &Pox4SignatureTopic::StackStx,
         0,
         false,
         signer_invalid_period_nonce,
-        Some(&signer_key),
+        Some(signer_key),
         u128::MAX,
         1,
     );
@@ -5687,13 +5687,13 @@ fn test_set_signer_key_auth(use_nakamoto: bool) {
     // Test that confirmed reward cycle is at least current reward cycle
     let invalid_tx_cycle: StacksTransaction = make_pox_4_set_signer_key_auth(
         &pox_addr,
-        &signer_key,
+        signer_key,
         1,
         &Pox4SignatureTopic::StackStx,
         1,
         false,
         signer_invalid_cycle_nonce,
-        Some(&signer_key),
+        Some(signer_key),
         u128::MAX,
         1,
     );
@@ -5701,7 +5701,7 @@ fn test_set_signer_key_auth(use_nakamoto: bool) {
     // Disable auth for `signer-key`
     let disable_auth_tx: StacksTransaction = make_pox_4_set_signer_key_auth(
         &pox_addr,
-        &signer_key,
+        signer_key,
         current_reward_cycle,
         &Pox4SignatureTopic::StackStx,
         lock_period,
@@ -5780,7 +5780,7 @@ fn test_set_signer_key_auth(use_nakamoto: bool) {
     let enable_auth_nonce = signer_nonce;
     let enable_auth_tx = make_pox_4_set_signer_key_auth(
         &pox_addr,
-        &signer_key,
+        signer_key,
         current_reward_cycle,
         &Pox4SignatureTopic::StackStx,
         lock_period,
@@ -5817,7 +5817,7 @@ fn test_set_signer_key_auth(use_nakamoto: bool) {
     let disable_auth_nonce = signer_nonce;
     let disable_auth_tx = make_pox_4_set_signer_key_auth(
         &pox_addr,
-        &signer_key,
+        signer_key,
         current_reward_cycle,
         &Pox4SignatureTopic::StackStx,
         lock_period,
@@ -5867,7 +5867,7 @@ fn stack_extend_signer_key(use_nakamoto: bool) {
     let stacker_key = &keys[0];
     let min_ustx = get_stacking_minimum(&mut peer, &latest_block) * 2;
 
-    let pox_addr = pox_addr_from(&stacker_key);
+    let pox_addr = pox_addr_from(stacker_key);
     let pox_addr_val = Value::Tuple(pox_addr.clone().as_clarity_tuple().unwrap());
 
     let signer_sk = Secp256k1PrivateKey::from_seed(&[0]);
@@ -5897,7 +5897,7 @@ fn stack_extend_signer_key(use_nakamoto: bool) {
     );
 
     let txs = vec![make_pox_4_lockup(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         min_ustx,
         &pox_addr,
@@ -5924,7 +5924,7 @@ fn stack_extend_signer_key(use_nakamoto: bool) {
     );
 
     let update_txs = vec![make_pox_4_extend(
-        &stacker_key,
+        stacker_key,
         stacker_nonce,
         pox_addr.clone(),
         1,
@@ -6015,7 +6015,7 @@ fn delegate_stack_stx_signer_key(use_nakamoto: bool) {
     //                          (delegate-to principal)
     //                          (until-burn-ht (optional uint))
     //                          (pox-addr (optional { version: (buff 1), hashbytes: (buff 32) })))
-    let pox_addr = pox_addr_from(&stacker_key);
+    let pox_addr = pox_addr_from(stacker_key);
     let pox_addr_val = Value::Tuple(pox_addr.clone().as_clarity_tuple().unwrap());
     let signer_sk = Secp256k1PrivateKey::from_seed(&[1, 1, 1]);
     let signer_key = Secp256k1PublicKey::from_private(&signer_sk);
@@ -6476,7 +6476,7 @@ fn stack_increase(use_nakamoto: bool) {
         burnchain_unlock_height: Value::UInt(expected_unlock_height as u128),
     };
 
-    check_pox_print_event(&increase_event, common_data, increase_op_data);
+    check_pox_print_event(increase_event, common_data, increase_op_data);
 
     // Testing stack_increase response is equal to expected response
     // Test is straightforward because 'stack-increase' in PoX-4 is the same as PoX-3
@@ -6695,7 +6695,7 @@ pub fn pox_4_scenario_test_setup<'a>(
     peer_config.burnchain.pox_constants.reward_cycle_length = 20;
     peer_config.burnchain.pox_constants.prepare_length = 5;
 
-    let mut peer = TestPeer::new_with_observer(peer_config.clone(), Some(&observer));
+    let mut peer = TestPeer::new_with_observer(peer_config.clone(), Some(observer));
 
     let mut peer_nonce = 0;
 
@@ -8561,7 +8561,7 @@ fn delegate_stack_increase_err(use_nakamoto: bool) {
 
     // Bob's Aggregate Increase
     let bobs_aggregate_increase = make_pox_4_aggregation_increase(
-        &bob_delegate_key,
+        bob_delegate_key,
         bob_nonce,
         &pox_addr,
         next_reward_cycle.into(),
@@ -8662,11 +8662,11 @@ pub fn get_signer_key_authorization_pox_4(
 ) -> Option<bool> {
     with_clarity_db_ro(peer, tip, |db| {
         let lookup_tuple = make_signer_key_authorization_lookup_key(
-            &pox_addr,
+            pox_addr,
             reward_cycle,
-            &topic,
+            topic,
             period,
-            &signer_key,
+            signer_key,
             max_amount,
             auth_id,
         );
@@ -8700,11 +8700,11 @@ pub fn get_signer_key_authorization_used_pox_4(
 ) -> bool {
     with_clarity_db_ro(peer, tip, |db| {
         let lookup_tuple = make_signer_key_authorization_lookup_key(
-            &pox_addr,
+            pox_addr,
             reward_cycle,
-            &topic,
+            topic,
             period,
-            &signer_key,
+            signer_key,
             max_amount,
             auth_id,
         );
@@ -8785,8 +8785,8 @@ pub fn get_delegation_state_pox_4(
 }
 
 pub fn get_stacking_minimum(peer: &mut TestPeer, latest_block: &StacksBlockId) -> u128 {
-    with_sortdb(peer, |ref mut chainstate, ref sortdb| {
-        chainstate.get_stacking_minimum(sortdb, &latest_block)
+    with_sortdb(peer, |ref mut chainstate, sortdb| {
+        chainstate.get_stacking_minimum(sortdb, latest_block)
     })
     .unwrap()
 }
@@ -8827,7 +8827,7 @@ pub fn prepare_pox4_test<'a>(
                 signer_private_key: key.clone(),
                 stacker_private_key: key.clone(),
                 amount: 1024 * POX_THRESHOLD_STEPS_USTX,
-                pox_addr: Some(pox_addr_from(&key)),
+                pox_addr: Some(pox_addr_from(key)),
                 max_amount: None,
             })
             .collect::<Vec<_>>();
@@ -8999,7 +8999,7 @@ fn missed_slots_no_unlock() {
 
     let (mut peer, mut keys) = instantiate_pox_peer_with_epoch(
         &burnchain,
-        &function_name!(),
+        function_name!(),
         Some(epochs.clone()),
         Some(&observer),
     );
@@ -9252,7 +9252,7 @@ fn no_lockups_2_5() {
 
     let (mut peer, mut keys) = instantiate_pox_peer_with_epoch(
         &burnchain,
-        &function_name!(),
+        function_name!(),
         Some(epochs.clone()),
         Some(&observer),
     );

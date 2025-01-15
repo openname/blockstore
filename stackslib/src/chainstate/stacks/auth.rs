@@ -459,7 +459,7 @@ impl OrderIndependentMultisigSpendingCondition {
                     }
 
                     let (pubkey, _next_sighash) = TransactionSpendingCondition::next_verification(
-                        &initial_sighash,
+                        initial_sighash,
                         cond_code,
                         self.tx_fee,
                         self.nonce,

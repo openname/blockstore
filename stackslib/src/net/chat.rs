@@ -525,7 +525,7 @@ impl Neighbor {
             };
         }
 
-        neighbor.handshake_update(conn, &handshake_data)?;
+        neighbor.handshake_update(conn, handshake_data)?;
         Ok((neighbor, present))
     }
 
@@ -636,7 +636,7 @@ impl ConversationP2P {
     }
 
     pub fn to_neighbor_address(&self) -> NeighborAddress {
-        let pubkh = if let Some(ref pubk) = self.ref_public_key() {
+        let pubkh = if let Some(pubk) = self.ref_public_key() {
             Hash160::from_node_public_key(pubk)
         } else {
             Hash160([0u8; 20])
@@ -650,7 +650,7 @@ impl ConversationP2P {
     }
 
     pub fn to_handshake_neighbor_address(&self) -> NeighborAddress {
-        let pubkh = if let Some(ref pubk) = self.ref_public_key() {
+        let pubkh = if let Some(pubk) = self.ref_public_key() {
             Hash160::from_node_public_key(pubk)
         } else {
             Hash160([0u8; 20])
@@ -1412,7 +1412,7 @@ impl ConversationP2P {
             StacksMessageType::Ping(ref data) => data,
             _ => panic!("Message is not a ping"),
         };
-        let pong_data = PongData::from_ping(&ping_data);
+        let pong_data = PongData::from_ping(ping_data);
         Ok(Some(StacksMessage::from_chain_view(
             self.version,
             self.network_id,
@@ -1563,7 +1563,7 @@ impl ConversationP2P {
         }
 
         let base_snapshot_or_nack = Self::validate_consensus_hash_reward_cycle_start(
-            &_local_peer,
+            _local_peer,
             sortdb,
             &get_blocks_inv.consensus_hash,
         )?;
@@ -1618,7 +1618,7 @@ impl ConversationP2P {
                 Err(db_error::NotFoundError) | Err(db_error::InvalidPoxSortition) => {
                     debug!(
                         "{:?}: Failed to load ancestor hashes from {}",
-                        &_local_peer, &tip_snapshot.consensus_hash
+                        _local_peer, &tip_snapshot.consensus_hash
                     );
 
                     // make this into a NACK
@@ -1723,7 +1723,7 @@ impl ConversationP2P {
         let _local_peer = network.get_local_peer();
 
         let base_snapshot_or_nack = Self::validate_consensus_hash_reward_cycle_start(
-            &_local_peer,
+            _local_peer,
             sortdb,
             &get_nakamoto_inv.consensus_hash,
         )?;
@@ -2519,7 +2519,7 @@ impl ConversationP2P {
         burnchain_view: &BurnchainView,
     ) -> Result<bool, net_error> {
         // validate message preamble
-        if let Err(e) = self.is_preamble_valid(&msg, burnchain_view) {
+        if let Err(e) = self.is_preamble_valid(msg, burnchain_view) {
             match e {
                 net_error::InvalidMessage => {
                     // Disconnect from this peer.  If it thinks nothing's wrong, it'll
@@ -2635,7 +2635,7 @@ impl ConversationP2P {
         //
         // Anything else will be nack'ed -- the peer will first need to handshake.
         let mut consume = false;
-        let solicited = self.connection.is_solicited(&msg);
+        let solicited = self.connection.is_solicited(msg);
         let reply_opt = match msg.payload {
             StacksMessageType::Handshake(_) => {
                 monitoring::increment_msg_counter("p2p_unauthenticated_handshake".to_string());
@@ -3137,8 +3137,8 @@ mod test {
             PeerAddress::from_ipv4(127, 0, 0, 1),
             NETWORK_P2P_PORT,
             data_url.clone(),
-            &asn4_entries,
-            Some(&initial_neighbors),
+            asn4_entries,
+            Some(initial_neighbors),
             &[QualifiedContractIdentifier::parse("SP000000000000000000002Q6VF78.sbtc").unwrap()],
         )
         .unwrap();
@@ -3163,7 +3163,7 @@ mod test {
         let first_burnchain_block_height = burnchain.first_block_height;
         let first_burnchain_block_hash = burnchain.first_block_hash;
 
-        let mut boot_data = ChainStateBootData::new(&burnchain, vec![], None);
+        let mut boot_data = ChainStateBootData::new(burnchain, vec![], None);
 
         let (chainstate, _) = StacksChainState::open_and_exec(
             false,
@@ -3443,8 +3443,8 @@ mod test {
                 &chain_view_2,
             );
 
-            let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
-            let local_peer_2 = PeerDB::get_local_peer(&peerdb_2.conn()).unwrap();
+            let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
+            let local_peer_2 = PeerDB::get_local_peer(peerdb_2.conn()).unwrap();
 
             peerdb_1
                 .update_local_peer(
@@ -3472,8 +3472,8 @@ mod test {
                 )
                 .unwrap();
 
-            let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
-            let local_peer_2 = PeerDB::get_local_peer(&peerdb_2.conn()).unwrap();
+            let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
+            let local_peer_2 = PeerDB::get_local_peer(peerdb_2.conn()).unwrap();
 
             assert_eq!(
                 local_peer_1.stacker_dbs,
@@ -3752,7 +3752,7 @@ mod test {
                 );
 
             let mut net_1 = db_setup(
-                &test_name_1,
+                test_name_1,
                 &burnchain_1,
                 0x9abcdef0,
                 &mut peerdb_1,
@@ -3761,7 +3761,7 @@ mod test {
                 &chain_view,
             );
             let mut net_2 = db_setup(
-                &test_name_2,
+                test_name_2,
                 &burnchain_2,
                 0x9abcdef0,
                 &mut peerdb_2,
@@ -3770,8 +3770,8 @@ mod test {
                 &chain_view,
             );
 
-            let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
-            let local_peer_2 = PeerDB::get_local_peer(&peerdb_2.conn()).unwrap();
+            let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
+            let local_peer_2 = PeerDB::get_local_peer(peerdb_2.conn()).unwrap();
 
             let mut convo_1 = ConversationP2P::new(
                 123,
@@ -3932,7 +3932,7 @@ mod test {
             );
 
         let mut net_1 = db_setup(
-            &test_name_1,
+            test_name_1,
             &burnchain_1,
             0x9abcdef0,
             &mut peerdb_1,
@@ -3941,7 +3941,7 @@ mod test {
             &chain_view,
         );
         let mut net_2 = db_setup(
-            &test_name_2,
+            test_name_2,
             &burnchain_2,
             0x9abcdef0,
             &mut peerdb_2,
@@ -3950,8 +3950,8 @@ mod test {
             &chain_view,
         );
 
-        let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
-        let local_peer_2 = PeerDB::get_local_peer(&peerdb_2.conn()).unwrap();
+        let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
+        let local_peer_2 = PeerDB::get_local_peer(peerdb_2.conn()).unwrap();
 
         let mut convo_1 = ConversationP2P::new(
             123,
@@ -4077,7 +4077,7 @@ mod test {
             );
 
         let mut net_1 = db_setup(
-            &test_name_1,
+            test_name_1,
             &burnchain_1,
             0x9abcdef0,
             &mut peerdb_1,
@@ -4086,7 +4086,7 @@ mod test {
             &chain_view,
         );
         let mut net_2 = db_setup(
-            &test_name_2,
+            test_name_2,
             &burnchain_2,
             0x9abcdef0,
             &mut peerdb_2,
@@ -4095,8 +4095,8 @@ mod test {
             &chain_view,
         );
 
-        let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
-        let local_peer_2 = PeerDB::get_local_peer(&peerdb_2.conn()).unwrap();
+        let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
+        let local_peer_2 = PeerDB::get_local_peer(peerdb_2.conn()).unwrap();
 
         let mut convo_1 = ConversationP2P::new(
             123,
@@ -4221,7 +4221,7 @@ mod test {
             );
 
         let mut net_1 = db_setup(
-            &test_name_1,
+            test_name_1,
             &burnchain_1,
             0x9abcdef0,
             &mut peerdb_1,
@@ -4230,7 +4230,7 @@ mod test {
             &chain_view,
         );
         let mut net_2 = db_setup(
-            &test_name_2,
+            test_name_2,
             &burnchain_2,
             0x9abcdef0,
             &mut peerdb_2,
@@ -4239,8 +4239,8 @@ mod test {
             &chain_view,
         );
 
-        let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
-        let local_peer_2 = PeerDB::get_local_peer(&peerdb_2.conn()).unwrap();
+        let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
+        let local_peer_2 = PeerDB::get_local_peer(peerdb_2.conn()).unwrap();
 
         let mut convo_1 = ConversationP2P::new(
             123,
@@ -4378,7 +4378,7 @@ mod test {
             );
 
         let mut net_1 = db_setup(
-            &test_name_1,
+            test_name_1,
             &burnchain_1,
             0x9abcdef0,
             &mut peerdb_1,
@@ -4387,7 +4387,7 @@ mod test {
             &chain_view,
         );
         let mut net_2 = db_setup(
-            &test_name_2,
+            test_name_2,
             &burnchain_2,
             0x9abcdef0,
             &mut peerdb_2,
@@ -4396,8 +4396,8 @@ mod test {
             &chain_view,
         );
 
-        let mut local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
-        let local_peer_2 = PeerDB::get_local_peer(&peerdb_2.conn()).unwrap();
+        let mut local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
+        let local_peer_2 = PeerDB::get_local_peer(peerdb_2.conn()).unwrap();
 
         let mut convo_1 = ConversationP2P::new(
             123,
@@ -4577,7 +4577,7 @@ mod test {
             );
 
         let mut net_1 = db_setup(
-            &test_name_1,
+            test_name_1,
             &burnchain_1,
             0x9abcdef0,
             &mut peerdb_1,
@@ -4586,7 +4586,7 @@ mod test {
             &chain_view,
         );
         let mut net_2 = db_setup(
-            &test_name_2,
+            test_name_2,
             &burnchain_2,
             0x9abcdef0,
             &mut peerdb_2,
@@ -4595,8 +4595,8 @@ mod test {
             &chain_view,
         );
 
-        let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
-        let local_peer_2 = PeerDB::get_local_peer(&peerdb_2.conn()).unwrap();
+        let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
+        let local_peer_2 = PeerDB::get_local_peer(peerdb_2.conn()).unwrap();
 
         let mut convo_1 = ConversationP2P::new(
             123,
@@ -4721,7 +4721,7 @@ mod test {
             );
 
         let mut net_1 = db_setup(
-            &test_name_1,
+            test_name_1,
             &burnchain_1,
             0x9abcdef0,
             &mut peerdb_1,
@@ -4730,7 +4730,7 @@ mod test {
             &chain_view,
         );
         let mut net_2 = db_setup(
-            &test_name_2,
+            test_name_2,
             &burnchain_2,
             0x9abcdef0,
             &mut peerdb_2,
@@ -4739,8 +4739,8 @@ mod test {
             &chain_view,
         );
 
-        let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
-        let local_peer_2 = PeerDB::get_local_peer(&peerdb_2.conn()).unwrap();
+        let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
+        let local_peer_2 = PeerDB::get_local_peer(peerdb_2.conn()).unwrap();
 
         let mut convo_1 = ConversationP2P::new(
             123,
@@ -4897,7 +4897,7 @@ mod test {
             );
 
         let mut net_1 = db_setup(
-            &test_name_1,
+            test_name_1,
             &burnchain_1,
             0x9abcdef0,
             &mut peerdb_1,
@@ -4906,7 +4906,7 @@ mod test {
             &chain_view,
         );
         let mut net_2 = db_setup(
-            &test_name_2,
+            test_name_2,
             &burnchain_2,
             0x9abcdef0,
             &mut peerdb_2,
@@ -4915,8 +4915,8 @@ mod test {
             &chain_view,
         );
 
-        let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
-        let local_peer_2 = PeerDB::get_local_peer(&peerdb_2.conn()).unwrap();
+        let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
+        let local_peer_2 = PeerDB::get_local_peer(peerdb_2.conn()).unwrap();
 
         let mut convo_1 = ConversationP2P::new(
             123,
@@ -5124,7 +5124,7 @@ mod test {
             );
 
         let mut net_1 = db_setup(
-            &test_name_1,
+            test_name_1,
             &burnchain_1,
             0x9abcdef0,
             &mut peerdb_1,
@@ -5133,7 +5133,7 @@ mod test {
             &chain_view,
         );
         let mut net_2 = db_setup(
-            &test_name_2,
+            test_name_2,
             &burnchain_2,
             0x9abcdef0,
             &mut peerdb_2,
@@ -5142,8 +5142,8 @@ mod test {
             &chain_view,
         );
 
-        let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
-        let local_peer_2 = PeerDB::get_local_peer(&peerdb_2.conn()).unwrap();
+        let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
+        let local_peer_2 = PeerDB::get_local_peer(peerdb_2.conn()).unwrap();
 
         let mut convo_1 = ConversationP2P::new(
             123,
@@ -5274,7 +5274,7 @@ mod test {
             );
 
         let mut net_1 = db_setup(
-            &test_name_1,
+            test_name_1,
             &burnchain_1,
             0x9abcdef0,
             &mut peerdb_1,
@@ -5283,7 +5283,7 @@ mod test {
             &chain_view,
         );
         let mut net_2 = db_setup(
-            &test_name_2,
+            test_name_2,
             &burnchain_2,
             0x9abcdef0,
             &mut peerdb_2,
@@ -5292,8 +5292,8 @@ mod test {
             &chain_view,
         );
 
-        let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
-        let local_peer_2 = PeerDB::get_local_peer(&peerdb_2.conn()).unwrap();
+        let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
+        let local_peer_2 = PeerDB::get_local_peer(peerdb_2.conn()).unwrap();
 
         let mut convo_1 = ConversationP2P::new(
             123,
@@ -5445,7 +5445,7 @@ mod test {
                 );
 
             let mut net_1 = db_setup(
-                &test_name_1,
+                test_name_1,
                 &burnchain_1,
                 0x9abcdef0,
                 &mut peerdb_1,
@@ -5454,7 +5454,7 @@ mod test {
                 &chain_view,
             );
             let mut net_2 = db_setup(
-                &test_name_2,
+                test_name_2,
                 &burnchain_2,
                 0x9abcdef0,
                 &mut peerdb_2,
@@ -5463,8 +5463,8 @@ mod test {
                 &chain_view,
             );
 
-            let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
-            let local_peer_2 = PeerDB::get_local_peer(&peerdb_2.conn()).unwrap();
+            let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
+            let local_peer_2 = PeerDB::get_local_peer(peerdb_2.conn()).unwrap();
 
             let mut convo_1 = ConversationP2P::new(
                 123,
@@ -5724,7 +5724,7 @@ mod test {
                 );
 
             let mut net_1 = db_setup(
-                &test_name_1,
+                test_name_1,
                 &burnchain_1,
                 0x9abcdef0,
                 &mut peerdb_1,
@@ -5733,7 +5733,7 @@ mod test {
                 &chain_view,
             );
             let mut net_2 = db_setup(
-                &test_name_2,
+                test_name_2,
                 &burnchain_2,
                 0x9abcdef0,
                 &mut peerdb_2,
@@ -5742,8 +5742,8 @@ mod test {
                 &chain_view,
             );
 
-            let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
-            let local_peer_2 = PeerDB::get_local_peer(&peerdb_2.conn()).unwrap();
+            let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
+            let local_peer_2 = PeerDB::get_local_peer(peerdb_2.conn()).unwrap();
 
             let mut convo_1 = ConversationP2P::new(
                 123,
@@ -6004,7 +6004,7 @@ mod test {
             );
 
         let mut net_1 = db_setup(
-            &test_name_1,
+            test_name_1,
             &burnchain_1,
             0x9abcdef0,
             &mut peerdb_1,
@@ -6013,7 +6013,7 @@ mod test {
             &chain_view,
         );
         let mut net_2 = db_setup(
-            &test_name_2,
+            test_name_2,
             &burnchain_2,
             0x9abcdef0,
             &mut peerdb_2,
@@ -6022,8 +6022,8 @@ mod test {
             &chain_view,
         );
 
-        let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
-        let local_peer_2 = PeerDB::get_local_peer(&peerdb_2.conn()).unwrap();
+        let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
+        let local_peer_2 = PeerDB::get_local_peer(peerdb_2.conn()).unwrap();
 
         let mut convo_1 = ConversationP2P::new(
             123,
@@ -6128,7 +6128,7 @@ mod test {
             );
 
         let net_1 = db_setup(
-            &test_name_1,
+            test_name_1,
             &burnchain,
             0x9abcdef0,
             &mut peerdb_1,
@@ -6137,7 +6137,7 @@ mod test {
             &chain_view,
         );
 
-        let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
+        let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
 
         // network ID check
         {
@@ -6796,7 +6796,7 @@ mod test {
         );
 
         let net_1 = db_setup(
-            &test_name_1,
+            test_name_1,
             &burnchain,
             0x9abcdef0,
             &mut peerdb_1,
@@ -6805,7 +6805,7 @@ mod test {
             &chain_view,
         );
 
-        let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
+        let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
 
         let mut convo_1 = ConversationP2P::new(
             123,
@@ -6914,7 +6914,7 @@ mod test {
         );
 
         let net_1 = db_setup(
-            &test_name_1,
+            test_name_1,
             &burnchain,
             0x9abcdef0,
             &mut peerdb_1,
@@ -6923,7 +6923,7 @@ mod test {
             &chain_view,
         );
 
-        let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
+        let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
 
         let mut convo_1 = ConversationP2P::new(
             123,
@@ -6981,7 +6981,7 @@ mod test {
         );
 
         let net_1 = db_setup(
-            &test_name_1,
+            test_name_1,
             &burnchain,
             0x9abcdef0,
             &mut peerdb_1,
@@ -6990,7 +6990,7 @@ mod test {
             &chain_view,
         );
 
-        let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
+        let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
 
         let mut convo_1 = ConversationP2P::new(
             123,
@@ -7115,7 +7115,7 @@ mod test {
         );
 
         let net_1 = db_setup(
-            &test_name_1,
+            test_name_1,
             &burnchain,
             0x9abcdef0,
             &mut peerdb_1,
@@ -7124,7 +7124,7 @@ mod test {
             &chain_view,
         );
 
-        let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
+        let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
 
         let mut convo_1 = ConversationP2P::new(
             123,
@@ -7249,7 +7249,7 @@ mod test {
         );
 
         let net_1 = db_setup(
-            &test_name_1,
+            test_name_1,
             &burnchain,
             0x9abcdef0,
             &mut peerdb_1,
@@ -7258,7 +7258,7 @@ mod test {
             &chain_view,
         );
 
-        let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
+        let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
 
         let mut convo_1 = ConversationP2P::new(
             123,
@@ -7383,7 +7383,7 @@ mod test {
         );
 
         let net_1 = db_setup(
-            &test_name_1,
+            test_name_1,
             &burnchain,
             0x9abcdef0,
             &mut peerdb_1,
@@ -7392,7 +7392,7 @@ mod test {
             &chain_view,
         );
 
-        let local_peer_1 = PeerDB::get_local_peer(&peerdb_1.conn()).unwrap();
+        let local_peer_1 = PeerDB::get_local_peer(peerdb_1.conn()).unwrap();
 
         let mut convo_1 = ConversationP2P::new(
             123,

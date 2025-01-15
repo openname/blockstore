@@ -232,7 +232,7 @@ impl NakamotoSigners {
         let liquid_ustx = clarity.with_clarity_db_readonly(|db| db.get_total_liquid_ustx())?;
         let reward_slots = Self::get_reward_slots(clarity, reward_cycle, pox_contract)?;
         let (threshold, participation) = StacksChainState::get_reward_threshold_and_participation(
-            &pox_constants,
+            pox_constants,
             &reward_slots[..],
             liquid_ustx,
         );
@@ -322,13 +322,13 @@ impl NakamotoSigners {
                 |vm_env| {
                     vm_env.execute_in_env(sender_addr.clone(), None, None, |env| {
                         env.execute_contract_allow_private(
-                            &signers_contract,
+                            signers_contract,
                             "stackerdb-set-signer-slots",
                             &set_stackerdb_args,
                             false,
                         )?;
                         env.execute_contract_allow_private(
-                            &signers_contract,
+                            signers_contract,
                             "set-signers",
                             &set_signers_args,
                             false,
@@ -435,7 +435,7 @@ impl NakamotoSigners {
             .as_free_transaction(|clarity| {
                 Self::handle_signer_stackerdb_update(
                     clarity,
-                    &pox_constants,
+                    pox_constants,
                     cycle_of_prepare_phase,
                     active_pox_contract,
                     coinbase_height,
@@ -568,7 +568,7 @@ impl NakamotoSigners {
         transactions: Vec<StacksTransaction>,
     ) {
         for transaction in transactions {
-            if NakamotoSigners::valid_vote_transaction(&account_nonces, &transaction, mainnet) {
+            if NakamotoSigners::valid_vote_transaction(account_nonces, &transaction, mainnet) {
                 let origin_address = transaction.origin_address();
                 let origin_nonce = transaction.get_origin_nonce();
                 if let Some(entry) = filtered_transactions.get_mut(&origin_address) {

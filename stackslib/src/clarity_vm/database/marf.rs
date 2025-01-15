@@ -67,7 +67,7 @@ impl MarfedKV {
                 .map_err(|err| InterpreterError::MarfFailure(err.to_string()))?
         };
 
-        if SqliteConnection::check_schema(&marf.sqlite_conn()).is_ok() {
+        if SqliteConnection::check_schema(marf.sqlite_conn()).is_ok() {
             // no need to initialize
             return Ok(marf);
         }

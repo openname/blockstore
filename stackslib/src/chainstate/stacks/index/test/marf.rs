@@ -1477,7 +1477,7 @@ fn marf_insert_random_4096_128_merkle_proof() {
 
             m.begin(&prev_block_header, &block_header).unwrap();
 
-            let marf_values = values.iter().map(|x| MARFValue::from_value(&x)).collect();
+            let marf_values = values.iter().map(|x| MARFValue::from_value(x)).collect();
 
             m.insert_batch(&keys, marf_values).unwrap();
             m.commit().unwrap();

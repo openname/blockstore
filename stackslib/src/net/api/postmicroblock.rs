@@ -118,7 +118,7 @@ impl HttpRequest for RPCPostMicroblockRequestHandler {
             ));
         }
 
-        let microblock = Self::parse_postmicroblock_octets(&body)?;
+        let microblock = Self::parse_postmicroblock_octets(body)?;
         self.microblock = Some(microblock);
 
         Ok(HttpRequestContents::new().query_string(query))

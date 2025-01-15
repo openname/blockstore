@@ -557,7 +557,7 @@ pub fn read_prepare_phase_commits<B: BurnchainHeaderReader>(
 
     let mut ret = vec![];
     for header in headers.into_iter() {
-        let blk = BurnchainDB::get_burnchain_block(&burnchain_tx.conn(), &header.block_hash)
+        let blk = BurnchainDB::get_burnchain_block(burnchain_tx.conn(), &header.block_hash)
             .unwrap_or_else(|_| {
                 panic!(
                     "BUG: failed to load prepare-phase block {} ({})",
@@ -1126,7 +1126,7 @@ pub fn find_pox_anchor_block<B: BurnchainHeaderReader>(
     let prepare_ops_valid =
         inner_find_valid_prepare_phase_commits(burnchain_tx, reward_cycle, indexer, burnchain)?;
     let anchor_block_and_descendancy_opt = find_heaviest_block_commit(
-        &burnchain_tx,
+        burnchain_tx,
         indexer,
         &prepare_ops_valid,
         burnchain.pox_constants.anchor_threshold,

@@ -73,7 +73,7 @@ impl StacksIndexedMicroblockStream {
     ) -> Result<Self, ChainError> {
         // look up parent
         let mblock_info = StacksChainState::load_staging_microblock_info_indexed(
-            &chainstate.db(),
+            chainstate.db(),
             tail_index_microblock_hash,
         )?
         .ok_or(ChainError::NoSuchBlockError)?;

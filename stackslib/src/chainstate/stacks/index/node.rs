@@ -433,7 +433,7 @@ impl<T: MarfTrieId> TrieCursor<T> {
         for i in 0..node_path.len() {
             if node_path[i] != path_bytes[self.index] {
                 // diverged
-                trace!("cursor: diverged({} != {}): i = {}, self.index = {}, self.node_path_index = {}", to_hex(&node_path), to_hex(path_bytes), i, self.index, self.node_path_index);
+                trace!("cursor: diverged({} != {}): i = {}, self.index = {}, self.node_path_index = {}", to_hex(node_path), to_hex(path_bytes), i, self.index, self.node_path_index);
                 self.last_error = Some(CursorError::PathDiverged);
                 return Err(CursorError::PathDiverged);
             }

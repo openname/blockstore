@@ -575,7 +575,7 @@ fn test_get_blocks_and_microblocks_3_peers_push_available() {
             },
             |num_blocks, ref mut peers| {
                 let tip = SortitionDB::get_canonical_burn_chain_tip(
-                    &peers[0].sortdb.as_ref().unwrap().conn(),
+                    peers[0].sortdb.as_ref().unwrap().conn(),
                 )
                 .unwrap();
                 let this_reward_cycle = peers[0]
@@ -592,7 +592,7 @@ fn test_get_blocks_and_microblocks_3_peers_push_available() {
                     // announcements in reward cycles the remote
                     // peer doesn't know about won't work.
                     let tip = SortitionDB::get_canonical_burn_chain_tip(
-                        &peers[0].sortdb.as_ref().unwrap().conn(),
+                        peers[0].sortdb.as_ref().unwrap().conn(),
                     )
                     .unwrap();
                     if peers[0]
@@ -618,7 +618,7 @@ fn test_get_blocks_and_microblocks_3_peers_push_available() {
                     }
 
                     let sn = SortitionDB::get_canonical_burn_chain_tip(
-                        &peers[0].sortdb.as_ref().unwrap().conn(),
+                        peers[0].sortdb.as_ref().unwrap().conn(),
                     )
                     .unwrap();
                     block_data.push((
@@ -667,7 +667,7 @@ fn test_get_blocks_and_microblocks_3_peers_push_available() {
                 }
 
                 let tip = SortitionDB::get_canonical_burn_chain_tip(
-                    &peers[0].sortdb.as_ref().unwrap().conn(),
+                    peers[0].sortdb.as_ref().unwrap().conn(),
                 )
                 .unwrap();
                 let this_reward_cycle = peers[0]
@@ -1105,7 +1105,7 @@ fn test_get_blocks_and_microblocks_2_peers_push_blocks_and_microblocks(
             },
             |num_blocks, ref mut peers| {
                 let tip = SortitionDB::get_canonical_burn_chain_tip(
-                    &peers[0].sortdb.as_ref().unwrap().conn(),
+                    peers[0].sortdb.as_ref().unwrap().conn(),
                 )
                 .unwrap();
                 let this_reward_cycle = peers[0]
@@ -1118,7 +1118,7 @@ fn test_get_blocks_and_microblocks_2_peers_push_blocks_and_microblocks(
                 let mut block_data = vec![];
                 for _ in 0..num_blocks {
                     let tip = SortitionDB::get_canonical_burn_chain_tip(
-                        &peers[0].sortdb.as_ref().unwrap().conn(),
+                        peers[0].sortdb.as_ref().unwrap().conn(),
                     )
                     .unwrap();
                     if peers[0]
@@ -1143,7 +1143,7 @@ fn test_get_blocks_and_microblocks_2_peers_push_blocks_and_microblocks(
                     }
 
                     let sn = SortitionDB::get_canonical_burn_chain_tip(
-                        &peers[0].sortdb.as_ref().unwrap().conn(),
+                        peers[0].sortdb.as_ref().unwrap().conn(),
                     )
                     .unwrap();
                     block_data.push((
@@ -1413,7 +1413,7 @@ fn test_get_blocks_and_microblocks_upload_blocks_http() {
             },
             |num_blocks, ref mut peers| {
                 let tip = SortitionDB::get_canonical_burn_chain_tip(
-                    &peers[0].sortdb.as_ref().unwrap().conn(),
+                    peers[0].sortdb.as_ref().unwrap().conn(),
                 )
                 .unwrap();
                 let this_reward_cycle = peers[0]
@@ -1430,7 +1430,7 @@ fn test_get_blocks_and_microblocks_upload_blocks_http() {
                     // announcements in reward cycles the remote
                     // peer doesn't know about won't work.
                     let tip = SortitionDB::get_canonical_burn_chain_tip(
-                        &peers[0].sortdb.as_ref().unwrap().conn(),
+                        peers[0].sortdb.as_ref().unwrap().conn(),
                     )
                     .unwrap();
                     if peers[0]
@@ -1456,7 +1456,7 @@ fn test_get_blocks_and_microblocks_upload_blocks_http() {
                     }
 
                     let sn = SortitionDB::get_canonical_burn_chain_tip(
-                        &peers[0].sortdb.as_ref().unwrap().conn(),
+                        peers[0].sortdb.as_ref().unwrap().conn(),
                     )
                     .unwrap();
                     block_data.push((
@@ -1636,7 +1636,7 @@ fn test_get_blocks_and_microblocks_2_peers_push_transactions() {
             },
             |num_blocks, ref mut peers| {
                 let tip = SortitionDB::get_canonical_burn_chain_tip(
-                    &peers[0].sortdb.as_ref().unwrap().conn(),
+                    peers[0].sortdb.as_ref().unwrap().conn(),
                 )
                 .unwrap();
                 let this_reward_cycle = peers[0]
@@ -1649,7 +1649,7 @@ fn test_get_blocks_and_microblocks_2_peers_push_transactions() {
                 let mut block_data = vec![];
                 for b in 0..num_blocks {
                     let tip = SortitionDB::get_canonical_burn_chain_tip(
-                        &peers[0].sortdb.as_ref().unwrap().conn(),
+                        peers[0].sortdb.as_ref().unwrap().conn(),
                     )
                     .unwrap();
                     if peers[0]
@@ -1678,7 +1678,7 @@ fn test_get_blocks_and_microblocks_2_peers_push_transactions() {
                     }
 
                     let sn = SortitionDB::get_canonical_burn_chain_tip(
-                        &peers[0].sortdb.as_ref().unwrap().conn(),
+                        peers[0].sortdb.as_ref().unwrap().conn(),
                     )
                     .unwrap();
                     block_data.push((
@@ -2013,7 +2013,7 @@ fn test_get_blocks_and_microblocks_peers_broadcast() {
             },
             |num_blocks, ref mut peers| {
                 let tip = SortitionDB::get_canonical_burn_chain_tip(
-                    &peers[0].sortdb.as_ref().unwrap().conn(),
+                    peers[0].sortdb.as_ref().unwrap().conn(),
                 )
                 .unwrap();
                 let this_reward_cycle = peers[0]
@@ -2026,7 +2026,7 @@ fn test_get_blocks_and_microblocks_peers_broadcast() {
                 let mut block_data = vec![];
                 for _ in 0..num_blocks {
                     let tip = SortitionDB::get_canonical_burn_chain_tip(
-                        &peers[0].sortdb.as_ref().unwrap().conn(),
+                        peers[0].sortdb.as_ref().unwrap().conn(),
                     )
                     .unwrap();
                     if peers[0]
@@ -2051,7 +2051,7 @@ fn test_get_blocks_and_microblocks_peers_broadcast() {
                     }
 
                     let sn = SortitionDB::get_canonical_burn_chain_tip(
-                        &peers[0].sortdb.as_ref().unwrap().conn(),
+                        peers[0].sortdb.as_ref().unwrap().conn(),
                     )
                     .unwrap();
 
@@ -2325,7 +2325,7 @@ fn test_get_blocks_and_microblocks_2_peers_antientropy() {
             },
             |num_blocks, ref mut peers| {
                 let tip = SortitionDB::get_canonical_burn_chain_tip(
-                    &peers[0].sortdb.as_ref().unwrap().conn(),
+                    peers[0].sortdb.as_ref().unwrap().conn(),
                 )
                 .unwrap();
                 let this_reward_cycle = peers[0]
@@ -2338,7 +2338,7 @@ fn test_get_blocks_and_microblocks_2_peers_antientropy() {
                 let mut block_data = vec![];
                 for _ in 0..num_blocks {
                     let tip = SortitionDB::get_canonical_burn_chain_tip(
-                        &peers[0].sortdb.as_ref().unwrap().conn(),
+                        peers[0].sortdb.as_ref().unwrap().conn(),
                     )
                     .unwrap();
                     if peers[0]
@@ -2363,7 +2363,7 @@ fn test_get_blocks_and_microblocks_2_peers_antientropy() {
                     }
 
                     let sn = SortitionDB::get_canonical_burn_chain_tip(
-                        &peers[0].sortdb.as_ref().unwrap().conn(),
+                        peers[0].sortdb.as_ref().unwrap().conn(),
                     )
                     .unwrap();
                     block_data.push((
@@ -2380,7 +2380,7 @@ fn test_get_blocks_and_microblocks_2_peers_antientropy() {
                     peers[i].next_burnchain_block_raw(vec![]);
                 }
                 let sn = SortitionDB::get_canonical_burn_chain_tip(
-                    &peers[0].sortdb.as_ref().unwrap().conn(),
+                    peers[0].sortdb.as_ref().unwrap().conn(),
                 )
                 .unwrap();
                 block_data.push((sn.consensus_hash.clone(), None, None));
@@ -2457,7 +2457,7 @@ fn test_get_blocks_and_microblocks_2_peers_buffered_messages() {
             },
             |num_blocks, ref mut peers| {
                 let tip = SortitionDB::get_canonical_burn_chain_tip(
-                    &peers[0].sortdb.as_ref().unwrap().conn(),
+                    peers[0].sortdb.as_ref().unwrap().conn(),
                 )
                 .unwrap();
                 let this_reward_cycle = peers[0]
@@ -2470,7 +2470,7 @@ fn test_get_blocks_and_microblocks_2_peers_buffered_messages() {
                 let mut block_data = vec![];
                 for block_num in 0..num_blocks {
                     let tip = SortitionDB::get_canonical_burn_chain_tip(
-                        &peers[0].sortdb.as_ref().unwrap().conn(),
+                        peers[0].sortdb.as_ref().unwrap().conn(),
                     )
                     .unwrap();
                     let (mut burn_ops, stacks_block, microblocks) = peers[0].make_default_tenure();
@@ -2492,7 +2492,7 @@ fn test_get_blocks_and_microblocks_2_peers_buffered_messages() {
                     }
 
                     let sn = SortitionDB::get_canonical_burn_chain_tip(
-                        &peers[0].sortdb.as_ref().unwrap().conn(),
+                        peers[0].sortdb.as_ref().unwrap().conn(),
                     )
                     .unwrap();
                     block_data.push((
@@ -2792,7 +2792,7 @@ fn process_new_blocks_rejects_problematic_asts() {
     let chainstate_path = peer.chainstate_path.clone();
 
     let first_stacks_block_height = {
-        let sn = SortitionDB::get_canonical_burn_chain_tip(&peer.sortdb.as_ref().unwrap().conn())
+        let sn = SortitionDB::get_canonical_burn_chain_tip(peer.sortdb.as_ref().unwrap().conn())
             .unwrap();
         sn.block_height
     };
@@ -2820,7 +2820,7 @@ fn process_new_blocks_rejects_problematic_asts() {
     };
 
     let tip =
-        SortitionDB::get_canonical_burn_chain_tip(&peer.sortdb.as_ref().unwrap().conn()).unwrap();
+        SortitionDB::get_canonical_burn_chain_tip(peer.sortdb.as_ref().unwrap().conn()).unwrap();
 
     let mblock_privk = StacksPrivateKey::new();
 
@@ -2883,7 +2883,7 @@ fn process_new_blocks_rejects_problematic_asts() {
     peer.process_stacks_epoch(&block, &consensus_hash, &[]);
 
     let tip =
-        SortitionDB::get_canonical_burn_chain_tip(&peer.sortdb.as_ref().unwrap().conn()).unwrap();
+        SortitionDB::get_canonical_burn_chain_tip(peer.sortdb.as_ref().unwrap().conn()).unwrap();
 
     let (burn_ops, bad_block, mut microblocks) = peer.make_tenure(
         |ref mut miner,
@@ -3154,7 +3154,7 @@ fn process_new_blocks_rejects_problematic_asts() {
         &mut network_result,
         &sortdb,
         &mut peer.stacks_node.as_mut().unwrap().chainstate,
-        &mut peer.mempool.as_mut().unwrap(),
+        peer.mempool.as_mut().unwrap(),
         None,
     )
     .unwrap();

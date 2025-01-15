@@ -186,7 +186,7 @@ pub trait NeighborWalkDB {
         let block_height = network.get_chain_view().burn_block_height;
         let cur_epoch = network.get_current_epoch();
         let neighbors = PeerDB::get_random_walk_neighbors(
-            &network.peerdb_conn(),
+            network.peerdb_conn(),
             network.get_local_peer().network_id,
             cur_epoch.network_epoch,
             min_age,
@@ -202,7 +202,7 @@ pub trait NeighborWalkDB {
                 min_age
             );
             let seed_nodes = PeerDB::get_bootstrap_peers(
-                &network.peerdb_conn(),
+                network.peerdb_conn(),
                 network.get_local_peer().network_id,
             )?;
             if seed_nodes.is_empty() {
@@ -436,10 +436,7 @@ impl NeighborWalkDB for PeerDBNeighborWalk {
     ) -> Result<Vec<Neighbor>, net_error> {
         let allowed_peers = if ibd {
             // only get bootstrap peers (will be randomized)
-            PeerDB::get_bootstrap_peers(
-                &network.peerdb_conn(),
-                network.get_local_peer().network_id,
-            )?
+            PeerDB::get_bootstrap_peers(network.peerdb_conn(), network.get_local_peer().network_id)?
         } else {
             // can be any peer marked 'always-allowed' (will be randomized)
             PeerDB::get_always_allowed_peers(
@@ -456,12 +453,7 @@ impl NeighborWalkDB for PeerDBNeighborWalk {
         nk: &NeighborKey,
     ) -> Result<(), net_error> {
         // don't proceed if denied
-        if PeerDB::is_peer_denied(
-            &network.peerdb_conn(),
-            nk.network_id,
-            &nk.addrbytes,
-            nk.port,
-        )? {
+        if PeerDB::is_peer_denied(network.peerdb_conn(), nk.network_id, &nk.addrbytes, nk.port)? {
             debug!(
                 "{:?}: neighbor {:?} is denied",
                 network.get_local_peer(),
@@ -504,7 +496,7 @@ impl NeighborWalkDB for PeerDBNeighborWalk {
                     local_peer_str, &replaced.addr, &replacement.addr
                 );
 
-                PeerDB::insert_or_replace_peer(&tx, &replacement, *slot)?;
+                PeerDB::insert_or_replace_peer(&tx, replacement, *slot)?;
                 result.add_replaced(replaced.addr.clone());
             }
         }
@@ -519,7 +511,7 @@ impl NeighborWalkDB for PeerDBNeighborWalk {
         data: &HandshakeAcceptData,
     ) -> Result<Neighbor, net_error> {
         Neighbor::load_and_update(
-            &network.peerdb_conn(),
+            network.peerdb_conn(),
             preamble.peer_version,
             preamble.network_id,
             &data.handshake,

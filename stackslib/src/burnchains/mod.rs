@@ -231,7 +231,7 @@ impl BurnchainTransaction {
             BurnchainTransaction::Bitcoin(ref btc) => btc
                 .outputs
                 .iter()
-                .map(|ref o| BurnchainRecipient::try_from_bitcoin_output(o))
+                .map(BurnchainRecipient::try_from_bitcoin_output)
                 .collect(),
         }
     }

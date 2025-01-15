@@ -195,7 +195,7 @@ pub fn write_headers<W: Write>(
     fd: &mut W,
     headers: &BTreeMap<String, String>,
 ) -> Result<(), CodecError> {
-    for (ref key, ref value) in headers.iter() {
+    for (key, value) in headers.iter() {
         fd.write_all(key.as_str().as_bytes())
             .map_err(CodecError::WriteError)?;
         fd.write_all(": ".as_bytes())

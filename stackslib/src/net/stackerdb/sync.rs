@@ -289,7 +289,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
         if let Some(event_id) = network.get_event_id(&nk) {
             self.comms.unpin_connection(event_id);
         }
-        self.connected_replicas.remove(&naddr);
+        self.connected_replicas.remove(naddr);
     }
 
     /// Make a chunk inv request
@@ -531,7 +531,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
         // validate -- must be a valid chunk
         if !network.validate_received_chunk(
             &self.smart_contract_id,
-            &config,
+            config,
             data,
             &self.expected_versions,
         )? {
@@ -984,7 +984,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
         }
 
         // got everything. Calculate download priority
-        let priorities = self.make_chunk_request_schedule(&network, None)?;
+        let priorities = self.make_chunk_request_schedule(network, None)?;
         let expected_versions = self.stackerdbs.get_slot_versions(&self.smart_contract_id)?;
 
         self.chunk_fetch_priorities = priorities;
@@ -1050,7 +1050,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
 
             if let Err(e) = self.comms.neighbor_send(
                 network,
-                &selected_neighbor,
+                selected_neighbor,
                 StacksMessageType::StackerDBGetChunk(chunk_request.clone()),
             ) {
                 info!(
@@ -1058,7 +1058,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
                     network.get_local_peer(),
                     &self.smart_contract_id,
                     chunk_request.slot_id,
-                    &selected_neighbor,
+                    selected_neighbor,
                     &e
                 );
                 unpin.insert(selected_neighbor.clone());
@@ -1159,7 +1159,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
     pub fn pushchunks_begin(&mut self, network: &mut PeerNetwork) -> Result<bool, net_error> {
         if self.chunk_push_priorities.is_empty() && self.push_round != self.rounds {
             // only do this once per round
-            let priorities = self.make_chunk_push_schedule(&network)?;
+            let priorities = self.make_chunk_push_schedule(network)?;
             self.chunk_push_priorities = priorities;
             self.push_round = self.rounds;
         }
@@ -1224,7 +1224,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
             let slot_version = chunk_push.chunk_data.slot_version;
             if let Err(e) = self.comms.neighbor_send(
                 network,
-                &selected_neighbor,
+                selected_neighbor,
                 StacksMessageType::StackerDBPushChunk(chunk_push),
             ) {
                 info!(
@@ -1232,7 +1232,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
                     network.get_local_peer(),
                     &self.smart_contract_id,
                     slot_id,
-                    &selected_neighbor,
+                    selected_neighbor,
                     &e
                 );
                 continue;
@@ -1342,7 +1342,7 @@ impl<NC: NeighborComms> StackerDBSync<NC> {
         }
 
         let priorities =
-            self.make_chunk_request_schedule(&network, Some(expected_versions.clone()))?;
+            self.make_chunk_request_schedule(network, Some(expected_versions.clone()))?;
 
         self.chunk_fetch_priorities = priorities;
         self.expected_versions = expected_versions;

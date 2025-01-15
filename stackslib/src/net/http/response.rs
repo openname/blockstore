@@ -668,7 +668,7 @@ impl HttpResponsePayload {
         match self {
             Self::Empty => Ok(()),
             Self::JSON(value) => serde_json::to_writer(fd, &value).map_err(Error::JsonError),
-            Self::Bytes(value) => fd.write_all(&value).map_err(Error::WriteError),
+            Self::Bytes(value) => fd.write_all(value).map_err(Error::WriteError),
             Self::Text(value) => fd.write_all(value.as_bytes()).map_err(Error::WriteError),
         }
     }

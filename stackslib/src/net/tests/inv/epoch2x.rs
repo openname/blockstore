@@ -527,7 +527,7 @@ fn test_sync_inv_set_blocks_microblocks_available() {
     ]
     .iter_mut()
     {
-        let working_dir = get_burnchain(&test_path, None).working_dir;
+        let working_dir = get_burnchain(test_path, None).working_dir;
 
         // pre-populate headers
         let mut indexer = BitcoinIndexer::new_unit_test(&working_dir);
@@ -582,7 +582,7 @@ fn test_sync_inv_set_blocks_microblocks_available() {
 
     let num_blocks = 5;
     let first_stacks_block_height = {
-        let sn = SortitionDB::get_canonical_burn_chain_tip(&peer_1.sortdb.as_ref().unwrap().conn())
+        let sn = SortitionDB::get_canonical_burn_chain_tip(peer_1.sortdb.as_ref().unwrap().conn())
             .unwrap();
         sn.block_height
     };
@@ -752,7 +752,7 @@ fn test_sync_inv_make_inv_messages() {
     let mut peer_1 = TestPeer::new(peer_1_config);
 
     let first_stacks_block_height = {
-        let sn = SortitionDB::get_canonical_burn_chain_tip(&peer_1.sortdb.as_ref().unwrap().conn())
+        let sn = SortitionDB::get_canonical_burn_chain_tip(peer_1.sortdb.as_ref().unwrap().conn())
             .unwrap();
         sn.block_height
     };
@@ -1343,7 +1343,7 @@ fn test_sync_inv_2_peers_plain() {
         let num_blocks = GETPOXINV_MAX_BITLEN * 2;
         let first_stacks_block_height = {
             let sn =
-                SortitionDB::get_canonical_burn_chain_tip(&peer_1.sortdb.as_ref().unwrap().conn())
+                SortitionDB::get_canonical_burn_chain_tip(peer_1.sortdb.as_ref().unwrap().conn())
                     .unwrap();
             sn.block_height + 1
         };
@@ -1520,7 +1520,7 @@ fn test_sync_inv_2_peers_stale() {
         let num_blocks = GETPOXINV_MAX_BITLEN * 2;
         let first_stacks_block_height = {
             let sn =
-                SortitionDB::get_canonical_burn_chain_tip(&peer_1.sortdb.as_ref().unwrap().conn())
+                SortitionDB::get_canonical_burn_chain_tip(peer_1.sortdb.as_ref().unwrap().conn())
                     .unwrap();
             sn.block_height + 1
         };
@@ -1560,7 +1560,7 @@ fn test_sync_inv_2_peers_stale() {
                     assert_eq!(inv.get_dead_peers().len(), 0);
                     assert_eq!(inv.get_diverged_peers().len(), 0);
 
-                    if let Some(ref peer_2_inv) = inv.block_stats.get(&peer_2.to_neighbor().addr) {
+                    if let Some(peer_2_inv) = inv.block_stats.get(&peer_2.to_neighbor().addr) {
                         if peer_2_inv.inv.num_sortitions
                             == first_stacks_block_height
                                 - peer_1.config.burnchain.first_block_height
@@ -1583,7 +1583,7 @@ fn test_sync_inv_2_peers_stale() {
                     assert_eq!(inv.get_dead_peers().len(), 0);
                     assert_eq!(inv.get_diverged_peers().len(), 0);
 
-                    if let Some(ref peer_1_inv) = inv.block_stats.get(&peer_1.to_neighbor().addr) {
+                    if let Some(peer_1_inv) = inv.block_stats.get(&peer_1.to_neighbor().addr) {
                         if peer_1_inv.inv.num_sortitions
                             == first_stacks_block_height
                                 - peer_1.config.burnchain.first_block_height
@@ -1629,7 +1629,7 @@ fn test_sync_inv_2_peers_unstable() {
 
         let first_stacks_block_height = {
             let sn =
-                SortitionDB::get_canonical_burn_chain_tip(&peer_1.sortdb.as_ref().unwrap().conn())
+                SortitionDB::get_canonical_burn_chain_tip(peer_1.sortdb.as_ref().unwrap().conn())
                     .unwrap();
             sn.block_height + 1
         };
@@ -1842,7 +1842,7 @@ fn test_sync_inv_2_peers_different_pox_vectors() {
 
         let first_stacks_block_height = {
             let sn =
-                SortitionDB::get_canonical_burn_chain_tip(&peer_1.sortdb.as_ref().unwrap().conn())
+                SortitionDB::get_canonical_burn_chain_tip(peer_1.sortdb.as_ref().unwrap().conn())
                     .unwrap();
             sn.block_height + 1
         };

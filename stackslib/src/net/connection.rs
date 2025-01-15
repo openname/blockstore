@@ -2022,7 +2022,7 @@ mod test {
         // the combined ping buffers should be the serialized ping
         let mut combined_ping_buf = vec![];
         combined_ping_buf.append(&mut half_ping);
-        combined_ping_buf.extend_from_slice(&write_buf_05.get_mut());
+        combined_ping_buf.extend_from_slice(write_buf_05.get_mut());
 
         assert_eq!(combined_ping_buf, serialized_ping);
 

@@ -410,7 +410,7 @@ impl TestStacksNode {
             sortdb,
             burn_block,
             miner,
-            &last_tenure_id,
+            last_tenure_id,
             burn_amount,
             miner_key,
             parent_block_snapshot_opt,
@@ -510,7 +510,7 @@ impl TestStacksNode {
                 let mut cursor = first_parent.header.consensus_hash;
                 let parent_sortition = loop {
                     let parent_sortition =
-                        SortitionDB::get_block_snapshot_consensus(&sortdb.conn(), &cursor)
+                        SortitionDB::get_block_snapshot_consensus(sortdb.conn(), &cursor)
                             .unwrap()
                             .unwrap();
 
@@ -618,7 +618,7 @@ impl TestStacksNode {
                 )
             } else {
                 let hdr =
-                    NakamotoChainState::get_canonical_block_header(self.chainstate.db(), &sortdb)
+                    NakamotoChainState::get_canonical_block_header(self.chainstate.db(), sortdb)
                         .unwrap()
                         .unwrap();
                 if hdr.anchored_header.as_stacks_nakamoto().is_some() {
@@ -766,7 +766,7 @@ impl TestStacksNode {
                     Some(nakamoto_parent)
                 } else {
                     warn!("Produced Tenure change transaction does not point to a real block");
-                    NakamotoChainState::get_canonical_block_header(chainstate.db(), &sortdb)?
+                    NakamotoChainState::get_canonical_block_header(chainstate.db(), sortdb)?
                 }
             } else if let Some(tenure_change) = tenure_change.as_ref() {
                 // make sure parent tip is consistent with a tenure change
@@ -782,13 +782,13 @@ impl TestStacksNode {
                         Some(nakamoto_parent)
                     } else {
                         debug!("Use parent tip identified by canonical tip pointer (no parent block {})", &payload.previous_tenure_end);
-                        NakamotoChainState::get_canonical_block_header(chainstate.db(), &sortdb)?
+                        NakamotoChainState::get_canonical_block_header(chainstate.db(), sortdb)?
                     }
                 } else {
                     panic!("Tenure change transaction does not have a TenureChange payload");
                 }
             } else {
-                NakamotoChainState::get_canonical_block_header(chainstate.db(), &sortdb)?
+                NakamotoChainState::get_canonical_block_header(chainstate.db(), sortdb)?
             };
 
             let burn_tip = SortitionDB::get_canonical_burn_chain_tip(sortdb.conn())?;
@@ -952,7 +952,7 @@ impl TestStacksNode {
                         // canonical tip
                         let stacks_chain_tip = NakamotoChainState::get_canonical_block_header(
                             chainstate.db(),
-                            &sortdb,
+                            sortdb,
                         )?
                         .ok_or_else(|| ChainstateError::NoSuchBlockError)?;
                         let nakamoto_chain_tip = stacks_chain_tip
@@ -1626,7 +1626,7 @@ impl TestPeer<'_> {
         let tip = SortitionDB::get_canonical_sortition_tip(sortdb.conn()).unwrap();
 
         node.add_nakamoto_tenure_blocks(blocks.clone());
-        for block in blocks.into_iter() {
+        for block in blocks.iter() {
             let mut sort_handle = sortdb.index_handle(&tip);
             let block_id = block.block_id();
             debug!("Process Nakamoto block {} ({:?}", &block_id, &block.header);
@@ -1636,7 +1636,7 @@ impl TestPeer<'_> {
                 &mut sort_handle,
                 &mut node.chainstate,
                 &self.network.stacks_tip.block_id(),
-                &block,
+                block,
                 None,
                 NakamotoBlockObtainMethod::Pushed,
             )
@@ -1646,7 +1646,7 @@ impl TestPeer<'_> {
                 self.coord.handle_new_nakamoto_stacks_block().unwrap();
 
                 debug!("Begin check Nakamoto block {}", &block.block_id());
-                TestPeer::check_processed_nakamoto_block(&mut sortdb, &mut node.chainstate, &block);
+                TestPeer::check_processed_nakamoto_block(&mut sortdb, &mut node.chainstate, block);
                 debug!("Eegin check Nakamoto block {}", &block.block_id());
             } else {
                 test_debug!("Did NOT accept Nakamoto block {}", &block_id);
@@ -1666,7 +1666,7 @@ impl TestPeer<'_> {
     ) -> StacksHeaderInfo {
         let Ok(Some(tenure_start_header)) = NakamotoChainState::get_tenure_start_block_header(
             &mut chainstate.index_conn(),
-            &tip_block_id,
+            tip_block_id,
             tenure_id_consensus_hash,
         ) else {
             panic!(
@@ -1697,7 +1697,7 @@ impl TestPeer<'_> {
         // get the tenure-start block of the last tenure
         let Ok(Some(prev_tenure_start_header)) = NakamotoChainState::get_tenure_start_block_header(
             &mut chainstate.index_conn(),
-            &tip_block_id,
+            tip_block_id,
             prev_tenure_consensus_hash,
         ) else {
             panic!(
@@ -1958,7 +1958,7 @@ impl TestPeer<'_> {
         let parent_vrf_proof = NakamotoChainState::get_parent_vrf_proof(
             &mut chainstate.index_conn(),
             &block.header.parent_block_id,
-            &sortdb.conn(),
+            sortdb.conn(),
             &block.header.consensus_hash,
             &tenure_block_commit.txid,
         )
@@ -2184,7 +2184,7 @@ impl TestPeer<'_> {
         assert!(NakamotoChainState::check_block_commit_vrf_seed(
             &mut chainstate.index_conn(),
             sortdb.conn(),
-            &block
+            block
         )
         .is_ok());
 
@@ -2410,7 +2410,7 @@ impl TestPeer<'_> {
                 chainstate.nakamoto_blocks_db(),
                 &sortdb.index_handle_at_tip(),
                 None,
-                &block,
+                block,
                 false,
                 0x80000000,
             )
@@ -2421,7 +2421,7 @@ impl TestPeer<'_> {
                 chainstate.nakamoto_blocks_db(),
                 &sortdb.index_handle_at_tip(),
                 Some(block.header.burn_spent),
-                &block,
+                block,
                 false,
                 0x80000000,
             )
@@ -2433,7 +2433,7 @@ impl TestPeer<'_> {
                     chainstate.nakamoto_blocks_db(),
                     &sortdb.index_handle_at_tip(),
                     Some(block.header.burn_spent + 1),
-                    &block,
+                    block,
                     false,
                     0x80000000,
                 )

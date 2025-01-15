@@ -147,7 +147,7 @@ fn test_try_make_response() {
             rpc_test.peer_2.chainstate(),
             &parent_consensus_hash,
             &parent_block.block_hash(),
-            &mblock,
+            mblock,
         );
     }
 

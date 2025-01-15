@@ -547,7 +547,7 @@ impl RewardSetInfo {
     ) -> Result<Option<RewardSetInfo>, op_error> {
         // did this block-commit pay to the correct PoX addresses?
         let intended_recipients = tx
-            .get_reward_set_payouts_at(&intended_sortition)
+            .get_reward_set_payouts_at(intended_sortition)
             .map_err(|_e| op_error::BlockCommitBadOutputs)?
             .0;
         let block_height = SortitionDB::get_block_snapshot(tx.tx(), intended_sortition)

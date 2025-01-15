@@ -180,7 +180,7 @@ impl<M: CostMetric> FeeEstimator for ScalarFeeRateEstimator<M> {
                                 read_count: 2,
                                 runtime: 4640, // taken from .costs-3
                             },
-                            &block_limit,
+                            block_limit,
                             tx_size,
                         )
                     }
@@ -196,7 +196,7 @@ impl<M: CostMetric> FeeEstimator for ScalarFeeRateEstimator<M> {
                         // and contibute to the block length limit with their tx_len
                         self.metric.from_cost_and_len(
                             &tx_receipt.execution_cost,
-                            &block_limit,
+                            block_limit,
                             tx_size,
                         )
                     }

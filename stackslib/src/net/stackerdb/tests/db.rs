@@ -217,7 +217,7 @@ fn test_stackerdb_create_list_delete() {
 
     // each DB's single chunk exists
     for sc in dbs.iter() {
-        db.get_latest_chunk(&sc, 0).unwrap().expect("missing chunk");
+        db.get_latest_chunk(sc, 0).unwrap().expect("missing chunk");
     }
 
     // remove a db
@@ -260,7 +260,7 @@ fn test_stackerdb_create_list_delete() {
 
     // only existing DBs still have chunks
     for sc in dbs.iter() {
-        db.get_latest_chunk(&sc, 0).unwrap().expect("missing chunk");
+        db.get_latest_chunk(sc, 0).unwrap().expect("missing chunk");
     }
 
     // deletion is idempotent
@@ -302,7 +302,7 @@ fn test_stackerdb_create_list_delete() {
     );
     // only existing DBs still have chunks
     for sc in dbs.iter() {
-        db.get_latest_chunk(&sc, 0).unwrap().expect("missing chunk");
+        db.get_latest_chunk(sc, 0).unwrap().expect("missing chunk");
     }
 }
 
@@ -448,7 +448,7 @@ fn test_stackerdb_insert_query_chunks() {
                 C32_ADDRESS_VERSION_MAINNET_SINGLESIG,
                 &AddressHashMode::SerializeP2PKH,
                 1,
-                &vec![StacksPublicKey::from_private(&pk)],
+                &vec![StacksPublicKey::from_private(pk)],
             )
             .unwrap()
         })
@@ -473,7 +473,7 @@ fn test_stackerdb_insert_query_chunks() {
             data: vec![i as u8; 128],
         };
 
-        chunk_data.sign(&pk).unwrap();
+        chunk_data.sign(pk).unwrap();
 
         let slot_metadata = tx.get_slot_metadata(&sc, i as u32).unwrap().unwrap();
         assert_eq!(slot_metadata.slot_id, i as u32);
@@ -505,7 +505,7 @@ fn test_stackerdb_insert_query_chunks() {
 
         // should fail -- too many writes version
         chunk_data.slot_version = db_config.max_writes + 1;
-        chunk_data.sign(&pk).unwrap();
+        chunk_data.sign(pk).unwrap();
         if let Err(net_error::TooManySlotWrites {
             supplied_version,
             max_writes,
@@ -549,7 +549,7 @@ fn test_stackerdb_insert_query_chunks() {
         assert_eq!(chunk.data, vec![i as u8; 128]);
         assert_eq!(chunk.slot_version, 1);
         assert_eq!(chunk.slot_id, i as u32);
-        assert!(chunk.verify(&addr).unwrap());
+        assert!(chunk.verify(addr).unwrap());
 
         // incorrect version
         let chunk = db.get_chunk(&sc, i as u32, 0).unwrap();
@@ -560,7 +560,7 @@ fn test_stackerdb_insert_query_chunks() {
         assert!(chunk.is_none());
 
         let slot_metadata = db.get_slot_metadata(&sc, i as u32).unwrap().unwrap();
-        assert!(slot_metadata.verify(&addr).unwrap());
+        assert!(slot_metadata.verify(addr).unwrap());
     }
 
     let versions = db.get_slot_versions(&sc).unwrap();
@@ -603,7 +603,7 @@ fn test_reconfigure_stackerdb() {
                 C32_ADDRESS_VERSION_MAINNET_SINGLESIG,
                 &AddressHashMode::SerializeP2PKH,
                 1,
-                &vec![StacksPublicKey::from_private(&pk)],
+                &vec![StacksPublicKey::from_private(pk)],
             )
             .unwrap()
         })
@@ -629,7 +629,7 @@ fn test_reconfigure_stackerdb() {
             data: vec![i as u8; 128],
         };
 
-        chunk_data.sign(&pk).unwrap();
+        chunk_data.sign(pk).unwrap();
 
         let slot_metadata = tx.get_slot_metadata(&sc, i as u32).unwrap().unwrap();
         assert_eq!(slot_metadata.slot_id, i as u32);
@@ -677,7 +677,7 @@ fn test_reconfigure_stackerdb() {
                 C32_ADDRESS_VERSION_MAINNET_SINGLESIG,
                 &AddressHashMode::SerializeP2PKH,
                 1,
-                &vec![StacksPublicKey::from_private(&pk)],
+                &vec![StacksPublicKey::from_private(pk)],
             )
             .unwrap()
         })
@@ -759,7 +759,7 @@ fn test_reconfigure_stackerdb() {
                 C32_ADDRESS_VERSION_MAINNET_SINGLESIG,
                 &AddressHashMode::SerializeP2PKH,
                 1,
-                &vec![StacksPublicKey::from_private(&pk)],
+                &vec![StacksPublicKey::from_private(pk)],
             )
             .unwrap()
         })

@@ -74,13 +74,13 @@ impl<T: fmt::Display> fmt::Display for VecDisplay<'_, T> {
 
 impl fmt::Display for StacksString {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(String::from_utf8_lossy(&self).into_owned().as_str())
+        f.write_str(String::from_utf8_lossy(self).into_owned().as_str())
     }
 }
 
 impl fmt::Debug for StacksString {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(String::from_utf8_lossy(&self).into_owned().as_str())
+        f.write_str(String::from_utf8_lossy(self).into_owned().as_str())
     }
 }
 
@@ -330,7 +330,7 @@ mod test {
     #[test]
     fn tx_stacks_strings_codec() {
         let s = "hello-world";
-        let stacks_str = StacksString::from_str(&s).unwrap();
+        let stacks_str = StacksString::from_str(s).unwrap();
         let clarity_str = ClarityName::try_from(s).unwrap();
         let contract_str = ContractName::try_from(s).unwrap();
 
@@ -359,10 +359,10 @@ mod test {
     #[test]
     fn tx_stacks_string_invalid() {
         let s = "hello\rworld";
-        assert!(StacksString::from_str(&s).is_none());
+        assert!(StacksString::from_str(s).is_none());
 
         let s = "hello\x01world";
-        assert!(StacksString::from_str(&s).is_none());
+        assert!(StacksString::from_str(s).is_none());
     }
 
     #[test]

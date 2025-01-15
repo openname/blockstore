@@ -123,7 +123,7 @@ impl RPCRequestHandler for RPCGetTransactionUnconfirmedRequestHandler {
         let txinfo_res =
             node.with_node_state(|_network, _sortdb, chainstate, mempool, _rpc_args| {
                 // present in the unconfirmed state?
-                if let Some(ref unconfirmed) = chainstate.unconfirmed_state.as_ref() {
+                if let Some(unconfirmed) = chainstate.unconfirmed_state.as_ref() {
                     if let Some((transaction, mblock_hash, seq)) =
                         unconfirmed.get_unconfirmed_transaction(&txid)
                     {

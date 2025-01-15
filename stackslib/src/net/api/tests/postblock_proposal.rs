@@ -234,7 +234,7 @@ fn test_try_make_response() {
     let mut requests = vec![];
 
     let tip =
-        SortitionDB::get_canonical_burn_chain_tip(&rpc_test.peer_1.sortdb.as_ref().unwrap().conn())
+        SortitionDB::get_canonical_burn_chain_tip(rpc_test.peer_1.sortdb.as_ref().unwrap().conn())
             .unwrap();
 
     let (stacks_tip_ch, stacks_tip_bhh) = SortitionDB::get_canonical_stacks_chain_tip_hash(

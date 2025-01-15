@@ -280,7 +280,7 @@ impl NakamotoBootPlan {
                     &mut sort_handle,
                     &mut node.chainstate,
                     &peer.network.stacks_tip.block_id(),
-                    &block,
+                    block,
                     None,
                     NakamotoBlockObtainMethod::Pushed,
                 )
@@ -317,7 +317,7 @@ impl NakamotoBootPlan {
                     &mut sort_handle,
                     &mut node.chainstate,
                     &peer.network.stacks_tip.block_id(),
-                    &block,
+                    block,
                     None,
                     NakamotoBlockObtainMethod::Pushed,
                 )
@@ -1147,7 +1147,7 @@ fn test_boot_nakamoto_peer() {
         0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
     ]);
 
-    let plan = NakamotoBootPlan::new(&function_name!())
+    let plan = NakamotoBootPlan::new(function_name!())
         .with_private_key(private_key)
         .with_pox_constants(10, 3)
         .with_initial_balances(vec![(addr.into(), 1_000_000)])

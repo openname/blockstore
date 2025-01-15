@@ -119,7 +119,7 @@ impl RPCPostFeeRateRequestHandler {
             metric.from_cost_and_len(&estimated_cost, &stacks_epoch.block_limit, estimated_len);
         let fee_rates = fee_estimator.get_rate_estimates().map_err(|e| {
             StacksHttpResponse::new_error(
-                &preamble,
+                preamble,
                 &HttpBadRequest::new(format!(
                     "Estimator RPC endpoint failed to estimate fees for tx: {:?}",
                     &e

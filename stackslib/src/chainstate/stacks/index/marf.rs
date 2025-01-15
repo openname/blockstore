@@ -1169,7 +1169,7 @@ impl<T: MarfTrieId> MARF<T> {
     ) -> Result<Option<MARFValue>, Error> {
         let (cur_block_hash, cur_block_id) = storage.get_cur_block_and_id();
 
-        let result = MARF::get_path(storage, block_hash, &path).or_else(|e| match e {
+        let result = MARF::get_path(storage, block_hash, path).or_else(|e| match e {
             Error::NotFoundError => Ok(None),
             _ => Err(e),
         });
@@ -1229,7 +1229,7 @@ impl<T: MarfTrieId> MARF<T> {
     ) -> Result<Option<MARFValue>, Error> {
         let (cur_block_hash, cur_block_id) = storage.get_cur_block_and_id();
 
-        let result = MARF::get_path(storage, block_hash, &path).or_else(|e| match e {
+        let result = MARF::get_path(storage, block_hash, path).or_else(|e| match e {
             Error::NotFoundError => Ok(None),
             _ => Err(e),
         });
@@ -1423,11 +1423,11 @@ impl<T: MarfTrieId> MARF<T> {
         path: &TrieHash,
     ) -> Result<Option<(MARFValue, TrieMerkleProof<T>)>, Error> {
         let mut conn = self.storage.connection();
-        let marf_value = match MARF::get_by_path(&mut conn, block_hash, &path)? {
+        let marf_value = match MARF::get_by_path(&mut conn, block_hash, path)? {
             None => return Ok(None),
             Some(x) => x,
         };
-        let proof = TrieMerkleProof::from_path(&mut conn, &path, &marf_value, block_hash)?;
+        let proof = TrieMerkleProof::from_path(&mut conn, path, &marf_value, block_hash)?;
         Ok(Some((marf_value, proof)))
     }
 

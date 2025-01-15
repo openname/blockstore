@@ -128,7 +128,7 @@ impl TestSigners {
             self.generate_aggregate_key(cycle);
         }
 
-        let signer_signature = self.generate_block_signatures(&block);
+        let signer_signature = self.generate_block_signatures(block);
 
         test_debug!(
             "Signed Nakamoto block {} with {} signatures (rc {})",

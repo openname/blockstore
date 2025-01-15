@@ -30,7 +30,7 @@ pub const STRUCTURED_DATA_PREFIX: [u8; 6] = [0x53, 0x49, 0x50, 0x30, 0x31, 0x38]
 pub fn structured_data_hash(value: Value) -> Sha256Sum {
     let mut bytes = vec![];
     value.serialize_write(&mut bytes).unwrap();
-    Sha256Sum::from_data(&bytes.as_slice())
+    Sha256Sum::from_data(bytes.as_slice())
 }
 
 /// Generate a message hash for signing structured Clarity data.
@@ -241,7 +241,7 @@ pub mod pox4 {
                         .analyze_smart_contract(
                             &pox_contract_id,
                             clarity_version,
-                            &body,
+                            body,
                             ASTRules::PrecheckSize,
                         )
                         .unwrap();
@@ -250,7 +250,7 @@ pub mod pox4 {
                             &pox_contract_id,
                             clarity_version,
                             &ast,
-                            &body,
+                            body,
                             None,
                             |_, _| false,
                         )

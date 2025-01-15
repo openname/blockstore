@@ -290,7 +290,7 @@ impl SegwitBitcoinAddress {
         let mut bytes_u5: Vec<u5> = vec![u5::try_from_u8(self.witness_version())
             .expect("FATAL: bad witness version does not fit into a u5")];
         bytes_u5.extend_from_slice(&bytes.to_base32());
-        let addr = bech32::encode(&hrp, bytes_u5, self.bech32_variant())
+        let addr = bech32::encode(hrp, bytes_u5, self.bech32_variant())
             .expect("FATAL: could not encode segwit address");
         addr
     }

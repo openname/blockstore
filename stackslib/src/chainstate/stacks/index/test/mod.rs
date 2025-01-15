@@ -184,7 +184,7 @@ pub fn merkle_test_marf_key_value(
 
     s.open_block(header).unwrap();
     let (_, root_hash) = Trie::read_root(s).unwrap();
-    let proof = TrieMerkleProof::from_entry(s, key, value, &header).unwrap();
+    let proof = TrieMerkleProof::from_entry(s, key, value, header).unwrap();
 
     test_debug!("---------");
     test_debug!("MARF merkle verify: {:?}", &proof);

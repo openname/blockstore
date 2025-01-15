@@ -386,8 +386,7 @@ fn test_stream_getheaders() {
 
     // ask for only a few
     let mut stream =
-        StacksHeaderStream::new(&chainstate, &blocks_fork_index_hashes.last().unwrap(), 10)
-            .unwrap();
+        StacksHeaderStream::new(&chainstate, blocks_fork_index_hashes.last().unwrap(), 10).unwrap();
     let header_bytes = stream_headers_to_vec(&mut stream);
     let headers: Vec<ExtendedStacksHeader> =
         serde_json::from_reader(&mut &header_bytes[..]).unwrap();

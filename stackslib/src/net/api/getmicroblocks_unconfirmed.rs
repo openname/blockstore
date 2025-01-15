@@ -77,7 +77,7 @@ impl StacksUnconfirmedMicroblockStream {
         seq: u16,
     ) -> Result<Self, ChainError> {
         let mblock_info = StacksChainState::load_next_descendant_microblock(
-            &chainstate.db(),
+            chainstate.db(),
             parent_block_id,
             seq,
         )?

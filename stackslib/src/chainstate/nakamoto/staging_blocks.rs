@@ -520,7 +520,7 @@ impl NakamotoStagingBlocksTx<'_> {
             "UPDATE nakamoto_staging_blocks SET processed = 1, processed_time = ?2
                                   WHERE index_block_hash = ?1";
         self.execute(
-            &clear_staged_block,
+            clear_staged_block,
             params![block, u64_to_sql(get_epoch_time_secs())?],
         )?;
 
@@ -534,13 +534,13 @@ impl NakamotoStagingBlocksTx<'_> {
         let update_dependents = "UPDATE nakamoto_staging_blocks SET orphaned = 1
                                  WHERE parent_block_id = ?";
 
-        self.execute(&update_dependents, &[&block])?;
+        self.execute(update_dependents, &[&block])?;
 
         let clear_staged_block =
             "UPDATE nakamoto_staging_blocks SET processed = 1, processed_time = ?2, orphaned = 1
                                   WHERE index_block_hash = ?1";
         self.execute(
-            &clear_staged_block,
+            clear_staged_block,
             params![block, u64_to_sql(get_epoch_time_secs())?],
         )?;
 
@@ -555,7 +555,7 @@ impl NakamotoStagingBlocksTx<'_> {
     ) -> Result<(), ChainstateError> {
         let update_dependents = "UPDATE nakamoto_staging_blocks SET burn_attachable = 1
                                  WHERE consensus_hash = ?";
-        self.execute(&update_dependents, &[consensus_hash])?;
+        self.execute(update_dependents, &[consensus_hash])?;
 
         Ok(())
     }
@@ -743,13 +743,13 @@ impl StacksChainState {
     pub fn get_nakamoto_staging_blocks_db_version(
         conn: &Connection,
     ) -> Result<u32, ChainstateError> {
-        let db_version_exists = table_exists(&conn, "db_version")?;
+        let db_version_exists = table_exists(conn, "db_version")?;
         if !db_version_exists {
             return Ok(1);
         }
         let qry = "SELECT version FROM db_version ORDER BY version DESC LIMIT 1";
         let args = NO_PARAMS;
-        let version: Option<i64> = match query_row(&conn, qry, args) {
+        let version: Option<i64> = match query_row(conn, qry, args) {
             Ok(x) => x,
             Err(e) => {
                 error!("Failed to get Nakamoto staging blocks DB version: {:?}", &e);

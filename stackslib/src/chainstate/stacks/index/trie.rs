@@ -641,7 +641,7 @@ impl Trie {
 
         node.set_path(new_cur_node_path);
 
-        let new_cur_node_hash = get_nodetype_hash(storage, &node)?;
+        let new_cur_node_hash = get_nodetype_hash(storage, node)?;
 
         let mut new_node4 = TrieNode4::new(&shared_path_prefix);
         new_node4.insert(&leaf_ptr);
@@ -684,7 +684,7 @@ impl Trie {
         );
         cursor.repair_retarget(&new_node, &ret, &storage.get_cur_block());
 
-        trace!("splice_leaf: node-X' at {:?}", &ret);
+        trace!("splice_leaf: node-X' at {ret:?}");
         Ok(ret)
     }
 

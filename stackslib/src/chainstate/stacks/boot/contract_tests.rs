@@ -1778,9 +1778,9 @@ fn test_deploy_smart_contract(
 ) -> std::result::Result<(), ClarityError> {
     block.as_transaction(|tx| {
         let (ast, analysis) =
-            tx.analyze_smart_contract(&contract_id, version, content, ASTRules::PrecheckSize)?;
-        tx.initialize_smart_contract(&contract_id, version, &ast, content, None, |_, _| false)?;
-        tx.save_analysis(&contract_id, &analysis)?;
+            tx.analyze_smart_contract(contract_id, version, content, ASTRules::PrecheckSize)?;
+        tx.initialize_smart_contract(contract_id, version, &ast, content, None, |_, _| false)?;
+        tx.save_analysis(contract_id, &analysis)?;
         return Ok(());
     })
 }

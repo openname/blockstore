@@ -251,8 +251,7 @@ impl BitcoinBlockParser {
         }
 
         // block transactions must match header merkle root
-        let tx_merkle_root =
-            bitcoin_merkle_root(block.txdata.iter().map(|ref tx| tx.txid()).collect());
+        let tx_merkle_root = bitcoin_merkle_root(block.txdata.iter().map(|tx| tx.txid()).collect());
 
         if block.header.merkle_root != tx_merkle_root {
             return false;
@@ -273,7 +272,7 @@ impl BitcoinBlockParser {
             return None;
         }
 
-        let script_pieces = bits::parse_script(&data_output);
+        let script_pieces = bits::parse_script(data_output);
         if script_pieces.len() != 2 {
             // not OP_RETURN <data>
             test_debug!("Data output does not encode a valid OP_RETURN");
@@ -281,7 +280,7 @@ impl BitcoinBlockParser {
         }
 
         match (&script_pieces[0], &script_pieces[1]) {
-            (Instruction::Op(ref opcode), Instruction::PushBytes(ref data)) => {
+            (Instruction::Op(ref opcode), Instruction::PushBytes(data)) => {
                 if *opcode != btc_opcodes::OP_RETURN {
                     test_debug!("Data output does not use a standard OP_RETURN");
                     return None;
@@ -349,7 +348,7 @@ impl BitcoinBlockParser {
     fn parse_inputs_structured(tx: &Transaction) -> Option<Vec<BitcoinTxInput>> {
         let mut ret = vec![];
         for inp in &tx.input {
-            match BitcoinTxInput::from_bitcoin_txin_structured(&inp) {
+            match BitcoinTxInput::from_bitcoin_txin_structured(inp) {
                 None => {
                     test_debug!("Failed to parse input");
                     return None;
@@ -367,7 +366,7 @@ impl BitcoinBlockParser {
     fn parse_inputs_raw(tx: &Transaction) -> Vec<BitcoinTxInput> {
         let mut ret = vec![];
         for inp in &tx.input {
-            ret.push(BitcoinTxInput::from_bitcoin_txin_raw(&inp));
+            ret.push(BitcoinTxInput::from_bitcoin_txin_raw(inp));
         }
         ret
     }
@@ -386,9 +385,9 @@ impl BitcoinBlockParser {
         let mut ret = vec![];
         for outp in &tx.output[1..tx.output.len()] {
             let out_opt = if BitcoinBlockParser::allow_segwit_outputs(epoch_id) {
-                BitcoinTxOutput::from_bitcoin_txout(self.network_id, &outp)
+                BitcoinTxOutput::from_bitcoin_txout(self.network_id, outp)
             } else {
-                BitcoinTxOutput::from_bitcoin_txout_legacy(self.network_id, &outp)
+                BitcoinTxOutput::from_bitcoin_txout_legacy(self.network_id, outp)
             };
             match out_opt {
                 None => {
@@ -507,7 +506,7 @@ impl BitcoinBlockParser {
         }
 
         // parse it
-        let burn_block = self.parse_block(&block, height, epoch_id);
+        let burn_block = self.parse_block(block, height, epoch_id);
         Some(burn_block)
     }
 }
@@ -523,7 +522,7 @@ impl BurnchainBlockParser for BitcoinBlockParser {
         match ipc_block.block_message {
             btc_message::NetworkMessage::Block(ref block) => {
                 match self.process_block(
-                    &block,
+                    block,
                     &ipc_block.header_data.block_header,
                     ipc_block.header_data.block_height,
                     epoch_id,

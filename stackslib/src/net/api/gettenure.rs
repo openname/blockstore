@@ -188,10 +188,10 @@ impl HttpRequest for RPCNakamotoTenureRequestHandler {
         let req_contents = HttpRequestContents::new().query_string(query);
         let last_block_id = req_contents
             .get_query_arg("stop")
-            .map(|last_block_id_hex| StacksBlockId::from_hex(&last_block_id_hex))
+            .map(|last_block_id_hex| StacksBlockId::from_hex(last_block_id_hex))
             .transpose()
             .map_err(|e| {
-                Error::DecodeError(format!("Failed to parse stop= query parameter: {:?}", &e))
+                Error::DecodeError(format!("Failed to parse stop= query parameter: {e:?}"))
             })?;
 
         self.last_block_id = last_block_id;

@@ -173,7 +173,7 @@ fn inner_get_slot_metadata(
     let stackerdb_id = inner_get_stackerdb_id(conn, smart_contract)?;
     let sql = "SELECT slot_id,version,data_hash,signature FROM chunks WHERE stackerdb_id = ?1 AND slot_id = ?2";
     let args = params![stackerdb_id, slot_id];
-    query_row(conn, &sql, args).map_err(|e| e.into())
+    query_row(conn, sql, args).map_err(|e| e.into())
 }
 
 /// Load up validation information from the database, keyed by the chunk's database's smart
@@ -188,7 +188,7 @@ fn inner_get_slot_validation(
     let sql =
         "SELECT signer,write_time,version FROM chunks WHERE stackerdb_id = ?1 AND slot_id = ?2";
     let args = params![stackerdb_id, slot_id];
-    query_row(conn, &sql, args).map_err(|e| e.into())
+    query_row(conn, sql, args).map_err(|e| e.into())
 }
 
 impl StackerDBTx<'_> {
@@ -218,7 +218,7 @@ impl StackerDBTx<'_> {
         &self,
     ) -> Result<Vec<QualifiedContractIdentifier>, net_error> {
         let sql = "SELECT smart_contract_id FROM databases ORDER BY smart_contract_id";
-        query_rows(&self.conn(), sql, NO_PARAMS).map_err(|e| e.into())
+        query_rows(self.conn(), sql, NO_PARAMS).map_err(|e| e.into())
     }
 
     /// Get the Stacker DB ID for a smart contract
@@ -226,7 +226,7 @@ impl StackerDBTx<'_> {
         &self,
         smart_contract: &QualifiedContractIdentifier,
     ) -> Result<i64, net_error> {
-        inner_get_stackerdb_id(&self.conn(), smart_contract)
+        inner_get_stackerdb_id(self.conn(), smart_contract)
     }
 
     /// Set up a database's storage slots.
@@ -246,14 +246,14 @@ impl StackerDBTx<'_> {
         }
 
         let qry = "INSERT OR REPLACE INTO databases (smart_contract_id) VALUES (?1)";
-        let mut stmt = self.sql_tx.prepare(&qry)?;
+        let mut stmt = self.sql_tx.prepare(qry)?;
         let args = params![smart_contract.to_string()];
         stmt.execute(args)?;
 
         let stackerdb_id = self.get_stackerdb_id(smart_contract)?;
 
         let qry = "INSERT OR REPLACE INTO chunks (stackerdb_id,signer,slot_id,version,write_time,data,data_hash,signature) VALUES (?1,?2,?3,?4,?5,?6,?7,?8)";
-        let mut stmt = self.sql_tx.prepare(&qry)?;
+        let mut stmt = self.sql_tx.prepare(qry)?;
         let mut slot_id = 0u32;
 
         for (principal, slot_count) in slots.iter() {
@@ -288,7 +288,7 @@ impl StackerDBTx<'_> {
         let stackerdb_id = self.get_stackerdb_id(smart_contract)?;
         let qry = "DELETE FROM chunks WHERE stackerdb_id = ?1";
         let args = params![stackerdb_id];
-        let mut stmt = self.sql_tx.prepare(&qry)?;
+        let mut stmt = self.sql_tx.prepare(qry)?;
         stmt.execute(args)?;
         Ok(())
     }
@@ -297,7 +297,7 @@ impl StackerDBTx<'_> {
     fn shrink_stackerdb(&self, stackerdb_id: i64, first_slot_id: u32) -> Result<(), net_error> {
         let qry = "DELETE FROM chunks WHERE stackerdb_id = ?1 AND slot_id >= ?2";
         let args = params![&stackerdb_id, &first_slot_id];
-        let mut stmt = self.sql_tx.prepare(&qry)?;
+        let mut stmt = self.sql_tx.prepare(qry)?;
         stmt.execute(args)?;
         Ok(())
     }
@@ -337,7 +337,7 @@ impl StackerDBTx<'_> {
 
                 // new slot, or existing slot with a different signer
                 let qry = "INSERT OR REPLACE INTO chunks (stackerdb_id,signer,slot_id,version,write_time,data,data_hash,signature) VALUES (?1,?2,?3,?4,?5,?6,?7,?8)";
-                let mut stmt = self.sql_tx.prepare(&qry)?;
+                let mut stmt = self.sql_tx.prepare(qry)?;
                 let args = params![
                     stackerdb_id,
                     principal.to_string(),
@@ -386,7 +386,7 @@ impl StackerDBTx<'_> {
     ) -> Result<(), net_error> {
         let stackerdb_id = self.get_stackerdb_id(smart_contract)?;
         let sql = "UPDATE chunks SET version = ?1, data_hash = ?2, signature = ?3, data = ?4, write_time = ?5 WHERE stackerdb_id = ?6 AND slot_id = ?7";
-        let mut stmt = self.sql_tx.prepare(&sql)?;
+        let mut stmt = self.sql_tx.prepare(sql)?;
 
         let args = params![
             slot_desc.slot_version,
@@ -560,7 +560,7 @@ impl StackerDBs {
         let stackerdb_id = self.get_stackerdb_id(smart_contract)?;
         let sql = "SELECT signer FROM chunks WHERE stackerdb_id = ?1 AND slot_id = ?2";
         let args = params![stackerdb_id, slot_id];
-        query_row(&self.conn, &sql, args).map_err(|e| e.into())
+        query_row(&self.conn, sql, args).map_err(|e| e.into())
     }
 
     /// Get all principals who can write to a particular stacker DB.
@@ -573,7 +573,7 @@ impl StackerDBs {
         let stackerdb_id = self.get_stackerdb_id(smart_contract)?;
         let sql = "SELECT signer FROM chunks WHERE stackerdb_id = ?1 GROUP BY signer";
         let args = params![stackerdb_id];
-        query_rows(&self.conn, &sql, args).map_err(|e| e.into())
+        query_rows(&self.conn, sql, args).map_err(|e| e.into())
     }
 
     /// Get the slot metadata
@@ -594,7 +594,7 @@ impl StackerDBs {
         let stackerdb_id = inner_get_stackerdb_id(&self.conn, smart_contract)?;
         let sql = "SELECT slot_id,version,data_hash,signature FROM chunks WHERE stackerdb_id = ?1 ORDER BY slot_id ASC";
         let args = params![stackerdb_id];
-        query_rows(&self.conn, &sql, args).map_err(|e| e.into())
+        query_rows(&self.conn, sql, args).map_err(|e| e.into())
     }
 
     /// Get a slot's validation data
@@ -633,7 +633,7 @@ impl StackerDBs {
         let stackerdb_id = self.get_stackerdb_id(smart_contract)?;
         let sql = "SELECT version FROM chunks WHERE stackerdb_id = ?1 ORDER BY slot_id";
         let args = params![stackerdb_id];
-        query_rows(&self.conn, &sql, args).map_err(|e| e.into())
+        query_rows(&self.conn, sql, args).map_err(|e| e.into())
     }
 
     /// Get the list of slot write timestamps for a given DB instance at a given reward cycle
@@ -644,7 +644,7 @@ impl StackerDBs {
         let stackerdb_id = self.get_stackerdb_id(smart_contract)?;
         let sql = "SELECT write_time FROM chunks WHERE stackerdb_id = ?1 ORDER BY slot_id";
         let args = params![stackerdb_id];
-        query_rows(&self.conn, &sql, args).map_err(|e| e.into())
+        query_rows(&self.conn, sql, args).map_err(|e| e.into())
     }
 
     /// Get the latest chunk out of the database.
@@ -692,6 +692,6 @@ impl StackerDBs {
         let stackerdb_id = self.get_stackerdb_id(smart_contract)?;
         let qry = "SELECT slot_id,version,signature,data FROM chunks WHERE stackerdb_id = ?1 AND slot_id = ?2 AND version = ?3";
         let args = params![stackerdb_id, slot_id, slot_version];
-        query_row(&self.conn, &qry, args).map_err(|e| e.into())
+        query_row(&self.conn, qry, args).map_err(|e| e.into())
     }
 }

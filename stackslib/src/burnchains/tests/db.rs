@@ -554,7 +554,7 @@ pub fn make_simple_block_commit(
         new_op.commit_outs = vec![PoxAddress::standard_burn_address(false)];
     }
 
-    if let Some(ref op) = parent {
+    if let Some(op) = parent {
         new_op.parent_block_ptr = op.block_height as u32;
         new_op.parent_vtxindex = op.vtxindex as u16;
     };
@@ -639,18 +639,14 @@ fn test_get_commit_at() {
     }
 
     for i in 0..5 {
-        let cmt = BurnchainDB::get_commit_at(
-            &burnchain_db.conn(),
-            &headers,
-            (first_height + i) as u32,
-            0,
-        )
-        .unwrap()
-        .unwrap();
+        let cmt =
+            BurnchainDB::get_commit_at(burnchain_db.conn(), &headers, (first_height + i) as u32, 0)
+                .unwrap()
+                .unwrap();
         assert_eq!(cmt, cmts[i as usize]);
     }
 
-    let cmt = BurnchainDB::get_commit_at(&burnchain_db.conn(), &headers, 5, 0)
+    let cmt = BurnchainDB::get_commit_at(burnchain_db.conn(), &headers, 5, 0)
         .unwrap()
         .unwrap();
     assert_eq!(cmt, cmts[4]);
@@ -681,12 +677,12 @@ fn test_get_commit_at() {
         )
         .unwrap();
 
-    let cmt = BurnchainDB::get_commit_at(&burnchain_db.conn(), &headers, 5, 0)
+    let cmt = BurnchainDB::get_commit_at(burnchain_db.conn(), &headers, 5, 0)
         .unwrap()
         .unwrap();
     assert_eq!(cmt, cmts[4]);
 
-    let cmt = BurnchainDB::get_commit_at(&burnchain_db.conn(), &fork_headers, 5, 1)
+    let cmt = BurnchainDB::get_commit_at(burnchain_db.conn(), &fork_headers, 5, 1)
         .unwrap()
         .unwrap();
     assert_eq!(cmt, fork_cmt);

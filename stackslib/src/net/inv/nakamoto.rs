@@ -294,7 +294,7 @@ impl InvGenerator {
             // we have not loaded the tenure info for this tip, or it was cleared via cache
             // maintenance.  Either way, got get it from disk.
             let loaded_info_opt =
-                InvTenureInfo::load(chainstate, &tip_block_id, &tenure_id_consensus_hash)?;
+                InvTenureInfo::load(chainstate, &tip_block_id, tenure_id_consensus_hash)?;
 
             tenure_infos.insert(tenure_id_consensus_hash.clone(), loaded_info_opt.clone());
             self.cache_misses = self.cache_misses.saturating_add(1);
@@ -873,7 +873,7 @@ impl<NC: NeighborComms> NakamotoInvStateMachine<NC> {
             if ibd {
                 // in IBD, only connect to initial peers
                 let is_initial = PeerDB::is_initial_peer(
-                    &network.peerdb_conn(),
+                    network.peerdb_conn(),
                     convo.peer_network_id,
                     &convo.peer_addrbytes,
                     convo.peer_port,

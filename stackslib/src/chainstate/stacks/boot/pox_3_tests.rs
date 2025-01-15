@@ -78,7 +78,7 @@ const USTX_PER_HOLDER: u128 = 1_000_000;
 /// Return the BlockSnapshot for the latest sortition in the provided
 ///  SortitionDB option-reference. Panics on any errors.
 fn get_tip(sortdb: Option<&SortitionDB>) -> BlockSnapshot {
-    SortitionDB::get_canonical_burn_chain_tip(&sortdb.unwrap().conn()).unwrap()
+    SortitionDB::get_canonical_burn_chain_tip(sortdb.unwrap().conn()).unwrap()
 }
 
 fn make_test_epochs_pox() -> (EpochList, PoxConstants) {
@@ -250,7 +250,7 @@ fn simple_pox_lockup_transition_pox_2() {
 
     // check the stacking minimum
     let total_liquid_ustx = get_liquid_ustx(&mut peer);
-    let min_ustx = with_sortdb(&mut peer, |ref mut chainstate, ref sortdb| {
+    let min_ustx = with_sortdb(&mut peer, |ref mut chainstate, sortdb| {
         chainstate.get_stacking_minimum(sortdb, &tip_index_block)
     })
     .unwrap();
@@ -260,7 +260,7 @@ fn simple_pox_lockup_transition_pox_2() {
     );
 
     // no reward addresses
-    let reward_addrs = with_sortdb(&mut peer, |ref mut chainstate, ref sortdb| {
+    let reward_addrs = with_sortdb(&mut peer, |ref mut chainstate, sortdb| {
         get_reward_addresses_with_par_tip(chainstate, &burnchain, sortdb, &tip_index_block)
     })
     .unwrap();
@@ -2108,7 +2108,7 @@ fn pox_extend_transition() {
         let cur_reward_cycle = burnchain
             .block_height_to_reward_cycle(tip_burn_block_height)
             .unwrap() as u128;
-        let (min_ustx, reward_addrs, total_stacked) = with_sortdb(peer, |ref mut c, ref sortdb| {
+        let (min_ustx, reward_addrs, total_stacked) = with_sortdb(peer, |ref mut c, sortdb| {
             (
                 c.get_stacking_minimum(sortdb, &tip_index_block).unwrap(),
                 get_reward_addresses_with_par_tip(c, &burnchain, sortdb, &tip_index_block).unwrap(),
@@ -2149,7 +2149,7 @@ fn pox_extend_transition() {
         let cur_reward_cycle = burnchain
             .block_height_to_reward_cycle(tip_burn_block_height)
             .unwrap() as u128;
-        let (min_ustx, reward_addrs, total_stacked) = with_sortdb(peer, |ref mut c, ref sortdb| {
+        let (min_ustx, reward_addrs, total_stacked) = with_sortdb(peer, |ref mut c, sortdb| {
             (
                 c.get_stacking_minimum(sortdb, &tip_index_block).unwrap(),
                 get_reward_addresses_with_par_tip(c, &burnchain, sortdb, &tip_index_block).unwrap(),
@@ -2213,7 +2213,7 @@ fn pox_extend_transition() {
 
     // check the stacking minimum
     let total_liquid_ustx = get_liquid_ustx(&mut peer);
-    let min_ustx = with_sortdb(&mut peer, |ref mut chainstate, ref sortdb| {
+    let min_ustx = with_sortdb(&mut peer, |ref mut chainstate, sortdb| {
         chainstate.get_stacking_minimum(sortdb, &tip_index_block)
     })
     .unwrap();
@@ -2223,7 +2223,7 @@ fn pox_extend_transition() {
     );
 
     // no reward addresses
-    let reward_addrs = with_sortdb(&mut peer, |ref mut chainstate, ref sortdb| {
+    let reward_addrs = with_sortdb(&mut peer, |ref mut chainstate, sortdb| {
         get_reward_addresses_with_par_tip(chainstate, &burnchain, sortdb, &tip_index_block)
     })
     .unwrap();

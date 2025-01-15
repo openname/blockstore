@@ -266,9 +266,9 @@ impl CostEstimator for PessimisticEstimator {
             // only log the estimate error if an estimate could be constructed
             if let Ok(estimated_cost) = self.estimate_cost(tx, evaluated_epoch) {
                 let estimated_scalar =
-                    estimated_cost.proportion_dot_product(&block_limit, PROPORTION_RESOLUTION);
+                    estimated_cost.proportion_dot_product(block_limit, PROPORTION_RESOLUTION);
                 let actual_scalar =
-                    actual_cost.proportion_dot_product(&block_limit, PROPORTION_RESOLUTION);
+                    actual_cost.proportion_dot_product(block_limit, PROPORTION_RESOLUTION);
                 info!("PessimisticEstimator received event";
                       "key" => %PessimisticEstimator::get_estimate_key(tx, &CostField::RuntimeCost, evaluated_epoch),
                       "estimate" => estimated_scalar,

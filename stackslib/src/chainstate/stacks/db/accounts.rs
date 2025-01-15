@@ -420,7 +420,7 @@ impl StacksChainState {
                     panic!();
                 });
 
-                db.set_account_nonce(&principal, next_nonce)?;
+                db.set_account_nonce(principal, next_nonce)?;
                 Ok(())
             })
             .unwrap_or_else(|e| {
@@ -1190,7 +1190,7 @@ mod test {
             new_tip.burn_header_height,
             new_tip.burn_header_timestamp,
             new_tip.microblock_tail.clone(),
-            &block_reward,
+            block_reward,
             None,
             &ExecutionCost::ZERO,
             123,

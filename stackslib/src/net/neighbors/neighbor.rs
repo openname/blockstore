@@ -55,9 +55,9 @@ impl Neighbor {
         stacker_dbs: Option<&[QualifiedContractIdentifier]>,
     ) -> Result<(), net_error> {
         self.last_contact_time = get_epoch_time_secs();
-        PeerDB::update_peer(tx, &self).map_err(net_error::DBError)?;
+        PeerDB::update_peer(tx, self).map_err(net_error::DBError)?;
         if let Some(stacker_dbs) = stacker_dbs {
-            PeerDB::update_peer_stacker_dbs(tx, &self, stacker_dbs).map_err(net_error::DBError)?;
+            PeerDB::update_peer_stacker_dbs(tx, self, stacker_dbs).map_err(net_error::DBError)?;
         }
         Ok(())
     }
@@ -72,7 +72,7 @@ impl Neighbor {
         stacker_dbs: Option<&[QualifiedContractIdentifier]>,
     ) -> Result<bool, net_error> {
         self.last_contact_time = get_epoch_time_secs();
-        PeerDB::try_insert_peer(tx, &self, stacker_dbs.unwrap_or(&[])).map_err(net_error::DBError)
+        PeerDB::try_insert_peer(tx, self, stacker_dbs.unwrap_or(&[])).map_err(net_error::DBError)
     }
 
     /// Attempt to load a neighbor from our peer DB, given its NeighborAddress reported by another

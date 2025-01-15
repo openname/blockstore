@@ -861,10 +861,7 @@ fn dump_peers(peers: &[TestPeer]) {
         }
 
         let all_neighbors = PeerDB::get_all_peers(peers[i].network.peerdb.conn()).unwrap();
-        let num_allowed = all_neighbors.iter().fold(0, |mut sum, ref n2| {
-            sum += if n2.allowed < 0 { 1 } else { 0 };
-            sum
-        });
+        let num_allowed = all_neighbors.iter().filter(|n2| n2.allowed < 0).count();
         test_debug!("Neighbor {} (all={}, outbound={}) (total neighbors = {}, total allowed = {}): outbound={:?} all={:?}", i, neighbor_index.len(), outbound_neighbor_index.len(), all_neighbors.len(), num_allowed, &outbound_neighbor_index, &neighbor_index);
     }
     test_debug!("\n");
@@ -1002,7 +999,7 @@ fn run_topology_test_ex<F>(
 
             // allowed peers are still connected
             match initial_allowed.get(&nk) {
-                Some(ref peer_list) => {
+                Some(peer_list) => {
                     for pnk in peer_list.iter() {
                         if !peers[i].network.events.contains_key(&pnk.clone()) {
                             error!(
@@ -1018,7 +1015,7 @@ fn run_topology_test_ex<F>(
 
             // denied peers are never connected
             match initial_denied.get(&nk) {
-                Some(ref peer_list) => {
+                Some(peer_list) => {
                     for pnk in peer_list.iter() {
                         if peers[i].network.events.contains_key(&pnk.clone()) {
                             error!("{:?}: Perma-denied peer {:?} connected", &nk, &pnk);
@@ -1041,7 +1038,7 @@ fn run_topology_test_ex<F>(
 
             // done?
             let now_finished = if use_finished_check {
-                finished_check(&peers)
+                finished_check(peers)
             } else {
                 let mut done = true;
                 let all_neighbors = PeerDB::get_all_peers(peers[i].network.peerdb.conn()).unwrap();
@@ -1082,13 +1079,13 @@ fn run_topology_test_ex<F>(
         }
 
         test_debug!("Finished walking the network {} times", count);
-        dump_peers(&peers);
-        dump_peer_histograms(&peers);
+        dump_peers(peers);
+        dump_peer_histograms(peers);
     }
 
     test_debug!("Converged after {} calls to network.run()", count);
-    dump_peers(&peers);
-    dump_peer_histograms(&peers);
+    dump_peers(peers);
+    dump_peer_histograms(peers);
 
     // each peer learns each other peer's stacker DBs
     for (i, peer) in peers.iter().enumerate() {

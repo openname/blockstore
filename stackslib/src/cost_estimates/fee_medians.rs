@@ -192,7 +192,7 @@ impl<M: CostMetric> FeeEstimator for WeightedMedianFeeRateEstimator<M> {
             .tx_receipts
             .iter()
             .filter_map(|tx_receipt| {
-                fee_rate_and_weight_from_receipt(&self.metric, &tx_receipt, block_limit)
+                fee_rate_and_weight_from_receipt(&self.metric, tx_receipt, block_limit)
             })
             .collect();
 
@@ -327,7 +327,7 @@ fn fee_rate_and_weight_from_receipt(
         | TransactionPayload::TenureChange(..) => {
             // These transaction payload types all "work" the same: they have associated ExecutionCosts
             // and contibute to the block length limit with their tx_len
-            metric.from_cost_and_len(&tx_receipt.execution_cost, &block_limit, tx_size)
+            metric.from_cost_and_len(&tx_receipt.execution_cost, block_limit, tx_size)
         }
     };
     let denominator = cmp::max(scalar_cost, 1) as f64;

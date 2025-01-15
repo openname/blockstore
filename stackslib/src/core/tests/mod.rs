@@ -2119,7 +2119,7 @@ fn test_make_mempool_sync_data() {
                     assert!(in_bf >= recent_txids.len());
 
                     for txid in txids.iter() {
-                        if !recent_set.contains(&txid) && bf.contains_raw(&txid.0) {
+                        if !recent_set.contains(txid) && bf.contains_raw(&txid.0) {
                             fp_count += 1;
                         }
                         if bf.contains_raw(&txid.0) {
@@ -2166,7 +2166,7 @@ fn test_make_mempool_sync_data() {
                 );
             }
 
-            let total_count = MemPoolDB::get_num_recent_txs(&mempool.conn()).unwrap();
+            let total_count = MemPoolDB::get_num_recent_txs(mempool.conn()).unwrap();
             eprintln!(
                 "present_count: {}, absent count: {}, total sent: {}, total recent: {}",
                 present_count,

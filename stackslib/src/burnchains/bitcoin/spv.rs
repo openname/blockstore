@@ -724,13 +724,13 @@ impl SpvClient {
             .next()
             .map_err(|e| btc_error::DBError(db_error::SqliteError(e)))?
         {
-            let height: u64 = u64::from_column(&row, "height")?;
+            let height: u64 = u64::from_column(row, "height")?;
             if height != next_height {
                 break;
             }
             next_height += 1;
 
-            let next_header = BlockHeader::from_row(&row)?;
+            let next_header = BlockHeader::from_row(row)?;
             headers.push(LoneBlockHeader {
                 header: next_header,
                 tx_count: VarInt(0),

@@ -265,7 +265,7 @@ impl NakamotoBlockBuilder {
         debug!("Nakamoto miner tenure begin"; "shadow" => shadow_block, "tenure_change" => ?cause);
 
         let Some(tenure_election_sn) =
-            SortitionDB::get_block_snapshot_consensus(&burn_dbconn, &self.header.consensus_hash)?
+            SortitionDB::get_block_snapshot_consensus(burn_dbconn, &self.header.consensus_hash)?
         else {
             warn!("Could not find sortition snapshot for burn block that elected the miner";
                 "consensus_hash" => %self.header.consensus_hash,
@@ -279,7 +279,7 @@ impl NakamotoBlockBuilder {
             None
         } else {
             let Some(tenure_block_commit) = SortitionDB::get_block_commit(
-                &burn_dbconn,
+                burn_dbconn,
                 &tenure_election_sn.winning_block_txid,
                 &tenure_election_sn.sortition_id,
             )?
@@ -674,7 +674,7 @@ impl BlockBuilder for NakamotoBlockBuilder {
         ast_rules: ASTRules,
     ) -> TransactionResult {
         if self.bytes_so_far + tx_len >= MAX_EPOCH_SIZE.into() {
-            return TransactionResult::skipped_due_to_error(&tx, Error::BlockTooBigError);
+            return TransactionResult::skipped_due_to_error(tx, Error::BlockTooBigError);
         }
 
         let non_boot_code_contract_call = match &tx.payload {
@@ -687,14 +687,14 @@ impl BlockBuilder for NakamotoBlockBuilder {
             BlockLimitFunction::CONTRACT_LIMIT_HIT => {
                 if non_boot_code_contract_call {
                     return TransactionResult::skipped(
-                        &tx,
+                        tx,
                         "BlockLimitFunction::CONTRACT_LIMIT_HIT".to_string(),
                     );
                 }
             }
             BlockLimitFunction::LIMIT_REACHED => {
                 return TransactionResult::skipped(
-                    &tx,
+                    tx,
                     "BlockLimitFunction::LIMIT_REACHED".to_string(),
                 )
             }
@@ -707,14 +707,14 @@ impl BlockBuilder for NakamotoBlockBuilder {
             if let Err(e) = Relayer::static_check_problematic_relayed_tx(
                 clarity_tx.config.mainnet,
                 clarity_tx.get_epoch(),
-                &tx,
+                tx,
                 ast_rules,
             ) {
                 info!(
                     "Detected problematic tx {} while mining; dropping from mempool",
                     tx.txid()
                 );
-                return TransactionResult::problematic(&tx, Error::NetError(e));
+                return TransactionResult::problematic(tx, Error::NetError(e));
             }
 
             let cost_before = clarity_tx.cost_so_far();
@@ -745,7 +745,7 @@ impl BlockBuilder for NakamotoBlockBuilder {
 
             // save
             self.txs.push(tx.clone());
-            TransactionResult::success_with_soft_limit(&tx, fee, receipt, soft_limit_reached)
+            TransactionResult::success_with_soft_limit(tx, fee, receipt, soft_limit_reached)
         };
 
         self.bytes_so_far += tx_len;
@@ -758,9 +758,9 @@ fn parse_process_transaction_error(
     tx: &StacksTransaction,
     e: Error,
 ) -> TransactionResult {
-    let (is_problematic, e) = TransactionResult::is_problematic(&tx, e, clarity_tx.get_epoch());
+    let (is_problematic, e) = TransactionResult::is_problematic(tx, e, clarity_tx.get_epoch());
     if is_problematic {
-        TransactionResult::problematic(&tx, e)
+        TransactionResult::problematic(tx, e)
     } else {
         match e {
             Error::CostOverflowError(cost_before, cost_after, total_budget) => {
@@ -781,18 +781,16 @@ fn parse_process_transaction_error(
                         warn!("Failed to compute measured cost of a too big transaction");
                         None
                     };
-                    TransactionResult::error(&tx, Error::TransactionTooBigError(measured_cost))
+                    TransactionResult::error(tx, Error::TransactionTooBigError(measured_cost))
                 } else {
                     warn!(
-                        "Transaction {} reached block cost {}; budget was {}",
+                        "Transaction {} reached block cost {cost_after}; budget was {total_budget}",
                         tx.txid(),
-                        &cost_after,
-                        &total_budget
                     );
-                    TransactionResult::skipped_due_to_error(&tx, Error::BlockTooBigError)
+                    TransactionResult::skipped_due_to_error(tx, Error::BlockTooBigError)
                 }
             }
-            _ => TransactionResult::error(&tx, e),
+            _ => TransactionResult::error(tx, e),
         }
     }
 }

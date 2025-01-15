@@ -88,8 +88,8 @@ pub fn copy_dir(src_dir: &str, dest_dir: &str) -> Result<(), io::Error> {
 
     while !dir_queue.is_empty() {
         let next_dir = dir_queue.pop_front().unwrap();
-        let next_src_dir = path_join(&src_dir, &next_dir);
-        let next_dest_dir = path_join(&dest_dir, &next_dir);
+        let next_src_dir = path_join(src_dir, &next_dir);
+        let next_dest_dir = path_join(dest_dir, &next_dir);
 
         eprintln!("mkdir {next_dest_dir}");
         fs::create_dir_all(&next_dest_dir)?;
@@ -99,11 +99,11 @@ pub fn copy_dir(src_dir: &str, dest_dir: &str) -> Result<(), io::Error> {
             let path = dirent.path();
             let md = fs::metadata(&path)?;
             if md.is_dir() {
-                let frontier = path_join(&next_dir, &dirent.file_name().to_str().unwrap());
+                let frontier = path_join(&next_dir, dirent.file_name().to_str().unwrap());
                 eprintln!("push {frontier}");
                 dir_queue.push_back(frontier);
             } else {
-                let dest_path = path_join(&next_dest_dir, &dirent.file_name().to_str().unwrap());
+                let dest_path = path_join(&next_dest_dir, dirent.file_name().to_str().unwrap());
                 eprintln!("copy {} to {dest_path}", &path.to_str().unwrap());
                 fs::copy(path, dest_path)?;
             }
@@ -782,7 +782,7 @@ pub fn preprocess_stacks_block_data(
         .preprocess_anchored_block(
             &ic,
             &commit_snapshot.consensus_hash,
-            &stacks_block,
+            stacks_block,
             &parent_block_consensus_hash,
             5,
         )
@@ -923,7 +923,7 @@ pub fn check_mining_reward(
             if confirmed_block_height as u64 > block_height - MINER_REWARD_MATURITY {
                 continue;
             }
-            if let Some(ref parent_reward) = stream_rewards.get(&parent_block) {
+            if let Some(parent_reward) = stream_rewards.get(&parent_block) {
                 if parent_reward.address == miner.origin_address().unwrap() {
                     let streamed = match &parent_reward.tx_fees {
                         MinerPaymentTxFees::Epoch2 { streamed, .. } => streamed,
@@ -967,10 +967,8 @@ pub fn get_last_microblock_header(
     miner: &TestMiner,
     parent_block_opt: Option<&StacksBlock>,
 ) -> Option<StacksMicroblockHeader> {
-    let last_microblocks_opt = match parent_block_opt {
-        Some(ref block) => node.get_microblock_stream(&miner, &block.block_hash()),
-        None => None,
-    };
+    let last_microblocks_opt =
+        parent_block_opt.and_then(|block| node.get_microblock_stream(miner, &block.block_hash()));
 
     let last_microblock_header_opt = match last_microblocks_opt {
         Some(last_microblocks) => {

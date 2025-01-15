@@ -135,7 +135,7 @@ impl StacksChainState {
         let block_hash = header.block_hash();
 
         let index_block_hash =
-            StacksBlockHeader::make_index_block_hash(&consensus_hash, &block_hash);
+            StacksBlockHeader::make_index_block_hash(consensus_hash, &block_hash);
 
         assert!(block_height < (i64::MAX as u64));
 
@@ -362,7 +362,7 @@ impl StacksChainState {
         for _i in 0..count {
             let parent_index_block_hash = {
                 let cur_index_block_hash = ret.last().expect("FATAL: empty list of ancestors");
-                match StacksChainState::get_parent_block_id(conn, &cur_index_block_hash)? {
+                match StacksChainState::get_parent_block_id(conn, cur_index_block_hash)? {
                     Some(ibhh) => ibhh,
                     None => {
                         // out of ancestors

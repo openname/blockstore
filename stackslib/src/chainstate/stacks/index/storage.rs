@@ -170,7 +170,7 @@ impl<T: MarfTrieId> BlockMap for TrieSqlHashMapCursor<'_, T> {
     type TrieId = T;
 
     fn get_block_hash(&self, id: u32) -> Result<T, Error> {
-        trie_sql::get_block_hash(&self.db, id)
+        trie_sql::get_block_hash(self.db, id)
     }
 
     fn get_block_hash_caching(&mut self, id: u32) -> Result<&T, Error> {
@@ -186,7 +186,7 @@ impl<T: MarfTrieId> BlockMap for TrieSqlHashMapCursor<'_, T> {
     }
 
     fn get_block_id(&self, block_hash: &T) -> Result<u32, Error> {
-        trie_sql::get_block_identifier(&self.db, block_hash)
+        trie_sql::get_block_identifier(self.db, block_hash)
     }
 
     fn get_block_id_caching(&mut self, block_hash: &T) -> Result<u32, Error> {
@@ -836,7 +836,7 @@ impl<T: MarfTrieId> TrieRAM<T> {
         while let Some(pointer) = frontier.pop_front() {
             let (node, _node_hash) = self.get_nodetype(pointer)?;
             // calculate size
-            let num_written = get_node_byte_len(&node);
+            let num_written = get_node_byte_len(node);
             ptr += num_written as u64;
 
             // queue each child
@@ -1590,7 +1590,7 @@ impl<'a, T: MarfTrieId> TrieStorageTransaction<'a, T> {
     pub fn reopen_readonly(&self) -> Result<TrieFileStorage<T>, Error> {
         let db = marf_sqlite_open(&self.db_path, OpenFlags::SQLITE_OPEN_READ_ONLY, false)?;
         let blobs = if self.blobs.is_some() {
-            Some(TrieFile::from_db_path(&self.db_path, true)?)
+            Some(TrieFile::from_db_path(self.db_path, true)?)
         } else {
             None
         };
@@ -1679,10 +1679,10 @@ impl<'a, T: MarfTrieId> TrieStorageTransaction<'a, T> {
                         return Err(Error::UnconfirmedError);
                     }
                     self.with_trie_blobs(|db, blobs| match blobs {
-                        Some(blobs) => blobs.store_trie_blob(&db, &bhh, &buffer),
+                        Some(blobs) => blobs.store_trie_blob(db, &bhh, &buffer),
                         None => {
-                            test_debug!("Stored trie blob {} to db", &bhh);
-                            trie_sql::write_trie_blob(&db, &bhh, &buffer)
+                            test_debug!("Stored trie blob {bhh} to db");
+                            trie_sql::write_trie_blob(db, &bhh, &buffer)
                         }
                     })?
                 }
@@ -2342,7 +2342,7 @@ impl<T: MarfTrieId> TrieStorageConnection<'_, T> {
 
         let mut map = TrieSqlHashMapCursor {
             db: &self.db,
-            cache: &mut self.cache,
+            cache: self.cache,
             unconfirmed: self.data.unconfirmed,
         };
 
@@ -2356,7 +2356,7 @@ impl<T: MarfTrieId> TrieStorageConnection<'_, T> {
                     &mut map,
                     node,
                     w,
-                    &mut self.bench,
+                    self.bench,
                 );
                 self.bench.write_children_hashes_finish(start_time, true);
                 return res;
@@ -2377,7 +2377,7 @@ impl<T: MarfTrieId> TrieStorageConnection<'_, T> {
                 &mut map,
                 node,
                 w,
-                &mut self.bench,
+                self.bench,
             );
             self.bench.write_children_hashes_finish(start_time, false);
             res
@@ -2396,7 +2396,7 @@ impl<T: MarfTrieId> TrieStorageConnection<'_, T> {
                 &mut map,
                 node,
                 w,
-                &mut self.bench,
+                self.bench,
             );
             self.bench.write_children_hashes_finish(start_time, false);
             res
@@ -2536,38 +2536,36 @@ impl<T: MarfTrieId> TrieStorageConnection<'_, T> {
         read_hash: bool,
     ) -> Result<(TrieNodeType, TrieHash), Error> {
         trace!(
-            "inner_read_persisted_nodetype({}): {:?} (unconfirmed={:?},{})",
-            block_id,
-            ptr,
+            "inner_read_persisted_nodetype({block_id}): {ptr:?} (unconfirmed={:?},{})",
             &self.unconfirmed_block_id,
             self.unconfirmed()
         );
         if self.unconfirmed_block_id == Some(block_id) {
-            trace!("Read persisted node from unconfirmed block id {}", block_id);
+            trace!("Read persisted node from unconfirmed block id {block_id}");
 
             // read from unconfirmed trie
             if read_hash {
-                return trie_sql::read_node_type(&self.db, block_id, &ptr);
+                return trie_sql::read_node_type(&self.db, block_id, ptr);
             } else {
-                return trie_sql::read_node_type_nohash(&self.db, block_id, &ptr)
+                return trie_sql::read_node_type_nohash(&self.db, block_id, ptr)
                     .map(|node| (node, TrieHash([0u8; TRIEHASH_ENCODED_SIZE])));
             }
         }
         let (node_inst, node_hash) = match self.blobs.as_mut() {
             Some(blobs) => {
                 if read_hash {
-                    blobs.read_node_type(&self.db, block_id, &ptr)?
+                    blobs.read_node_type(&self.db, block_id, ptr)?
                 } else {
                     blobs
-                        .read_node_type_nohash(&self.db, block_id, &ptr)
+                        .read_node_type_nohash(&self.db, block_id, ptr)
                         .map(|node| (node, TrieHash([0u8; TRIEHASH_ENCODED_SIZE])))?
                 }
             }
             None => {
                 if read_hash {
-                    trie_sql::read_node_type(&self.db, block_id, &ptr)?
+                    trie_sql::read_node_type(&self.db, block_id, ptr)?
                 } else {
-                    trie_sql::read_node_type_nohash(&self.db, block_id, &ptr)
+                    trie_sql::read_node_type_nohash(&self.db, block_id, ptr)
                         .map(|node| (node, TrieHash([0u8; TRIEHASH_ENCODED_SIZE])))?
                 }
             }
@@ -2739,11 +2737,11 @@ impl<T: MarfTrieId> TrieStorageConnection<'_, T> {
 
     #[cfg(test)]
     pub fn transient_data(&self) -> &TrieStorageTransientData<T> {
-        &self.data
+        self.data
     }
 
     #[cfg(test)]
     pub fn transient_data_mut(&mut self) -> &mut TrieStorageTransientData<T> {
-        &mut self.data
+        self.data
     }
 }

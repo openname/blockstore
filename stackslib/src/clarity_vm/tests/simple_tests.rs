@@ -55,7 +55,7 @@ fn test_at_unknown_block() {
         let err = owned_env
             .initialize_contract(
                 QualifiedContractIdentifier::local("contract").unwrap(),
-                &contract,
+                contract,
                 None,
                 clarity::vm::ast::ASTRules::PrecheckSize,
             )

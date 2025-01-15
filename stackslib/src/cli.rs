@@ -84,7 +84,7 @@ pub fn drain_common_opts(argv: &mut Vec<String>, start_at: usize) -> CommonOpts 
             "config" => {
                 let path = &argv[i];
                 i += 1;
-                let config_file = ConfigFile::from_path(&path).unwrap_or_else(|e| {
+                let config_file = ConfigFile::from_path(path).unwrap_or_else(|e| {
                     panic!("Failed to read '{path}' as stacks-node config: {e}")
                 });
                 let config = Config::from_config_file(config_file, false).unwrap_or_else(|e| {
@@ -279,7 +279,7 @@ pub fn command_replay_block_nakamoto(argv: &[String], conf: Option<&Config>) {
         if i % 100 == 0 {
             println!("Checked {i}...");
         }
-        replay_naka_staging_block(db_path, index_block_hash, &conf);
+        replay_naka_staging_block(db_path, index_block_hash, conf);
     }
     println!("Finished. run_time_seconds = {}", start.elapsed().as_secs());
 }
@@ -374,7 +374,7 @@ pub fn command_replay_mock_mining(argv: &[String], conf: Option<&Config>) {
             "block_height" => bh,
             "block" => ?block
         );
-        replay_mock_mined_block(&db_path, block, conf);
+        replay_mock_mined_block(db_path, block, conf);
     }
 }
 
@@ -715,7 +715,7 @@ fn replay_block(
 
     let Some(next_microblocks) = StacksChainState::inner_find_parent_microblock_stream(
         &chainstate_tx.tx,
-        &block_hash,
+        block_hash,
         &parent_block_hash,
         &parent_header_info.consensus_hash,
         parent_microblock_hash,
@@ -727,7 +727,7 @@ fn replay_block(
     };
 
     let (burn_header_hash, burn_header_height, burn_header_timestamp, _winning_block_txid) =
-        match SortitionDB::get_block_snapshot_consensus(&sort_tx, &block_consensus_hash).unwrap() {
+        match SortitionDB::get_block_snapshot_consensus(&sort_tx, block_consensus_hash).unwrap() {
             Some(sn) => (
                 sn.burn_header_hash,
                 sn.block_height as u32,
@@ -745,10 +745,10 @@ fn replay_block(
         block_consensus_hash, block_hash, &block_id, &burn_header_hash, parent_microblock_hash,
     );
 
-    if !StacksChainState::check_block_attachment(&parent_block_header, &block.header) {
+    if !StacksChainState::check_block_attachment(parent_block_header, &block.header) {
         let msg = format!(
             "Invalid stacks block {}/{} -- does not attach to parent {}/{}",
-            &block_consensus_hash,
+            block_consensus_hash,
             block.block_hash(),
             parent_block_header.block_hash(),
             &parent_header_info.consensus_hash
@@ -760,9 +760,9 @@ fn replay_block(
     // validation check -- validate parent microblocks and find the ones that connect the
     // block's parent to this block.
     let next_microblocks = StacksChainState::extract_connecting_microblocks(
-        &parent_header_info,
-        &block_consensus_hash,
-        &block_hash,
+        parent_header_info,
+        block_consensus_hash,
+        block_hash,
         block,
         next_microblocks,
     )
@@ -795,12 +795,12 @@ fn replay_block(
         clarity_instance,
         &mut sort_tx,
         &pox_constants,
-        &parent_header_info,
+        parent_header_info,
         block_consensus_hash,
         &burn_header_hash,
         burn_header_height,
         burn_header_timestamp,
-        &block,
+        block,
         block_size,
         &next_microblocks,
         block_commit_burn,
@@ -1080,7 +1080,7 @@ fn replay_block_nakamoto(
             .try_into()
             .expect("Failed to downcast u64 to u32"),
         next_ready_block_snapshot.burn_header_timestamp,
-        &block,
+        block,
         block_size,
         commit_burn,
         sortition_burn,

@@ -917,14 +917,14 @@ fn test_block_heights() {
             let (ast, analysis) = clarity_db.analyze_smart_contract(
                 &contract_identifier1,
                 ClarityVersion::Clarity1,
-                &contract_clarity1,
+                contract_clarity1,
                 ASTRules::PrecheckSize,
             ).unwrap();
 
             let res = clarity_db.analyze_smart_contract(
                 &contract_identifier2,
                 ClarityVersion::Clarity1,
-                &contract_clarity3,
+                contract_clarity3,
                 ASTRules::PrecheckSize,
             );
             if let Err(ClarityError::Analysis(check_error)) = res {
@@ -952,14 +952,14 @@ fn test_block_heights() {
             let (ast, analysis) = clarity_db.analyze_smart_contract(
                 &contract_identifier1,
                 ClarityVersion::Clarity2,
-                &contract_clarity1,
+                contract_clarity1,
                 ASTRules::PrecheckSize,
             ).unwrap();
 
             let res = clarity_db.analyze_smart_contract(
                 &contract_identifier2,
                 ClarityVersion::Clarity2,
-                &contract_clarity3,
+                contract_clarity3,
                 ASTRules::PrecheckSize,
             );
             if let Err(ClarityError::Analysis(check_error)) = res {
@@ -976,7 +976,7 @@ fn test_block_heights() {
             let res = clarity_db.analyze_smart_contract(
                 &contract_identifier1,
                 ClarityVersion::Clarity3,
-                &contract_clarity1,
+                contract_clarity1,
                 ASTRules::PrecheckSize,
             );
             if let Err(ClarityError::Analysis(check_error)) = res {
@@ -992,7 +992,7 @@ fn test_block_heights() {
             let (ast, analysis) = clarity_db.analyze_smart_contract(
                 &contract_identifier2,
                 ClarityVersion::Clarity3,
-                &contract_clarity3,
+                contract_clarity3,
                 ASTRules::PrecheckSize,
             ).unwrap();
 
@@ -1207,7 +1207,7 @@ fn test_block_heights_across_versions() {
                 .analyze_smart_contract(
                     &contract_id_e2c1,
                     ClarityVersion::Clarity1,
-                    &contract_e2c1_2,
+                    contract_e2c1_2,
                     ASTRules::PrecheckSize,
                 )
                 .unwrap();
@@ -1237,7 +1237,7 @@ fn test_block_heights_across_versions() {
                 .analyze_smart_contract(
                     &contract_id_e2c2,
                     ClarityVersion::Clarity2,
-                    &contract_e2c1_2,
+                    contract_e2c1_2,
                     ASTRules::PrecheckSize,
                 )
                 .unwrap();
@@ -1340,7 +1340,7 @@ fn test_block_heights_across_versions_traits_3_from_2() {
                 .analyze_smart_contract(
                     &contract_id_e2c1,
                     ClarityVersion::Clarity1,
-                    &contract_e2c1_2,
+                    contract_e2c1_2,
                     ASTRules::PrecheckSize,
                 )
                 .unwrap();
@@ -1367,7 +1367,7 @@ fn test_block_heights_across_versions_traits_3_from_2() {
                 .analyze_smart_contract(
                     &contract_id_e2c2,
                     ClarityVersion::Clarity2,
-                    &contract_e2c1_2,
+                    contract_e2c1_2,
                     ASTRules::PrecheckSize,
                 )
                 .unwrap();
@@ -1484,7 +1484,7 @@ fn test_block_heights_across_versions_traits_2_from_3() {
                 .analyze_smart_contract(
                     &contract_id_e2c1,
                     ClarityVersion::Clarity1,
-                    &contract_e2c1_2,
+                    contract_e2c1_2,
                     ASTRules::PrecheckSize,
                 )
                 .unwrap();
@@ -1511,7 +1511,7 @@ fn test_block_heights_across_versions_traits_2_from_3() {
                 .analyze_smart_contract(
                     &contract_id_e2c2,
                     ClarityVersion::Clarity2,
-                    &contract_e2c1_2,
+                    contract_e2c1_2,
                     ASTRules::PrecheckSize,
                 )
                 .unwrap();
@@ -1618,7 +1618,7 @@ fn test_block_heights_at_block() {
             let (ast, analysis) = clarity_db.analyze_smart_contract(
                 &contract_identifier,
                 ClarityVersion::Clarity3,
-                &contract,
+                contract,
                 ASTRules::PrecheckSize,
             ).unwrap();
 
@@ -1679,7 +1679,7 @@ fn test_get_block_info_time() {
                 .analyze_smart_contract(
                     &contract_identifier2,
                     ClarityVersion::Clarity2,
-                    &contract2,
+                    contract2,
                     ASTRules::PrecheckSize,
                 )
                 .unwrap();
@@ -1701,7 +1701,7 @@ fn test_get_block_info_time() {
                 .analyze_smart_contract(
                     &contract_identifier3,
                     ClarityVersion::Clarity3,
-                    &contract3,
+                    contract3,
                     ASTRules::PrecheckSize,
                 )
                 .unwrap();
@@ -1723,7 +1723,7 @@ fn test_get_block_info_time() {
                 .analyze_smart_contract(
                     &contract_identifier3_3,
                     ClarityVersion::Clarity3,
-                    &contract3_3,
+                    contract3_3,
                     ASTRules::PrecheckSize,
                 )
                 .unwrap();

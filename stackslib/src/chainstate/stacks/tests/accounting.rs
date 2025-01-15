@@ -137,7 +137,7 @@ fn test_bad_microblock_fees_pre_v210() {
     let chainstate_path = peer.chainstate_path.clone();
 
     let first_stacks_block_height = {
-        let sn = SortitionDB::get_canonical_burn_chain_tip(&peer.sortdb.as_ref().unwrap().conn())
+        let sn = SortitionDB::get_canonical_burn_chain_tip(peer.sortdb.as_ref().unwrap().conn())
             .unwrap();
         sn.block_height
     };
@@ -148,7 +148,7 @@ fn test_bad_microblock_fees_pre_v210() {
     let mut block_ids = vec![];
     for tenure_id in 0..num_blocks {
         // send transactions to the mempool
-        let tip = SortitionDB::get_canonical_burn_chain_tip(&peer.sortdb.as_ref().unwrap().conn())
+        let tip = SortitionDB::get_canonical_burn_chain_tip(peer.sortdb.as_ref().unwrap().conn())
             .unwrap();
 
         let acct = get_stacks_account(&mut peer, &addr.to_account_principal());
@@ -460,7 +460,7 @@ fn test_bad_microblock_fees_fix_transition() {
     let chainstate_path = peer.chainstate_path.clone();
 
     let first_stacks_block_height = {
-        let sn = SortitionDB::get_canonical_burn_chain_tip(&peer.sortdb.as_ref().unwrap().conn())
+        let sn = SortitionDB::get_canonical_burn_chain_tip(peer.sortdb.as_ref().unwrap().conn())
             .unwrap();
         sn.block_height
     };
@@ -471,7 +471,7 @@ fn test_bad_microblock_fees_fix_transition() {
     let mut block_ids = vec![];
     for tenure_id in 0..num_blocks {
         // send transactions to the mempool
-        let tip = SortitionDB::get_canonical_burn_chain_tip(&peer.sortdb.as_ref().unwrap().conn())
+        let tip = SortitionDB::get_canonical_burn_chain_tip(peer.sortdb.as_ref().unwrap().conn())
             .unwrap();
 
         let acct = get_stacks_account(&mut peer, &addr.to_account_principal());
@@ -817,7 +817,7 @@ fn test_get_block_info_v210() {
     let chainstate_path = peer.chainstate_path.clone();
 
     let first_stacks_block_height = {
-        let sn = SortitionDB::get_canonical_burn_chain_tip(&peer.sortdb.as_ref().unwrap().conn())
+        let sn = SortitionDB::get_canonical_burn_chain_tip(peer.sortdb.as_ref().unwrap().conn())
             .unwrap();
         sn.block_height
     };
@@ -827,7 +827,7 @@ fn test_get_block_info_v210() {
 
     for tenure_id in 0..num_blocks {
         // send transactions to the mempool
-        let tip = SortitionDB::get_canonical_burn_chain_tip(&peer.sortdb.as_ref().unwrap().conn())
+        let tip = SortitionDB::get_canonical_burn_chain_tip(peer.sortdb.as_ref().unwrap().conn())
             .unwrap();
 
         let acct = get_stacks_account(&mut peer, &addr.to_account_principal());
@@ -1189,7 +1189,7 @@ fn test_get_block_info_v210_no_microblocks() {
     let chainstate_path = peer.chainstate_path.clone();
 
     let first_stacks_block_height = {
-        let sn = SortitionDB::get_canonical_burn_chain_tip(&peer.sortdb.as_ref().unwrap().conn())
+        let sn = SortitionDB::get_canonical_burn_chain_tip(peer.sortdb.as_ref().unwrap().conn())
             .unwrap();
         sn.block_height
     };
@@ -1199,7 +1199,7 @@ fn test_get_block_info_v210_no_microblocks() {
 
     for tenure_id in 0..num_blocks {
         // send transactions to the mempool
-        let tip = SortitionDB::get_canonical_burn_chain_tip(&peer.sortdb.as_ref().unwrap().conn())
+        let tip = SortitionDB::get_canonical_burn_chain_tip(peer.sortdb.as_ref().unwrap().conn())
             .unwrap();
 
         let acct = get_stacks_account(&mut peer, &addr.to_account_principal());
@@ -1510,7 +1510,7 @@ fn test_coinbase_pay_to_alt_recipient_v210(pay_to_contract: bool) {
     let chainstate_path = peer.chainstate_path.clone();
 
     let first_stacks_block_height = {
-        let sn = SortitionDB::get_canonical_burn_chain_tip(&peer.sortdb.as_ref().unwrap().conn())
+        let sn = SortitionDB::get_canonical_burn_chain_tip(peer.sortdb.as_ref().unwrap().conn())
             .unwrap();
         sn.block_height
     };
@@ -1526,7 +1526,7 @@ fn test_coinbase_pay_to_alt_recipient_v210(pay_to_contract: bool) {
 
     for tenure_id in 0..num_blocks {
         // send transactions to the mempool
-        let tip = SortitionDB::get_canonical_burn_chain_tip(&peer.sortdb.as_ref().unwrap().conn())
+        let tip = SortitionDB::get_canonical_burn_chain_tip(peer.sortdb.as_ref().unwrap().conn())
             .unwrap();
 
         let acct = get_stacks_account(&mut peer, &addr.to_account_principal());

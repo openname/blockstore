@@ -296,7 +296,7 @@ pub fn make_token_transfer(
     stx_transfer.auth.set_origin_nonce(nonce);
 
     let mut tx_signer = StacksTransactionSigner::new(&stx_transfer);
-    tx_signer.sign_origin(&private_key).unwrap();
+    tx_signer.sign_origin(private_key).unwrap();
     let stx_transfer_signed = tx_signer.get_tx().unwrap();
 
     stx_transfer_signed
@@ -329,7 +329,7 @@ pub fn make_contract(
     stx_tx.auth.set_origin_nonce(nonce);
 
     let mut tx_signer = StacksTransactionSigner::new(&stx_tx);
-    tx_signer.sign_origin(&private_key).unwrap();
+    tx_signer.sign_origin(private_key).unwrap();
     tx_signer.get_tx().unwrap()
 }
 
@@ -611,7 +611,7 @@ impl TestPeer<'_> {
         F: FnMut(&mut NakamotoBlockBuilder),
         G: FnMut(&mut NakamotoBlock) -> bool,
     {
-        let sender_addr = StacksAddress::p2pkh(false, &StacksPublicKey::from_private(&sender_key));
+        let sender_addr = StacksAddress::p2pkh(false, &StacksPublicKey::from_private(sender_key));
         let mut test_signers = self.config.test_signers.clone().unwrap();
         let recipient_addr =
             StacksAddress::from_string("ST2YM3J4KQK09V670TD6ZZ1XYNYCNGCWCVTASN5VM").unwrap();
@@ -629,7 +629,7 @@ impl TestPeer<'_> {
                     let stx_transfer = make_token_transfer(
                         chainstate,
                         sortdb,
-                        &sender_key,
+                        sender_key,
                         sender_acct.nonce,
                         200,
                         1,
@@ -987,7 +987,7 @@ fn block_info_tests(use_primary_testnet: bool) {
             let output = chainstate
                 .clarity_eval_read_only(
                     &sortdb_handle,
-                    &tip_block_id,
+                    tip_block_id,
                     contract_id,
                     &format!("(get-info u{query_ht})"),
                 )

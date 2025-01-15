@@ -59,7 +59,7 @@ impl BitcoinTxInputStructured {
         let i2 = &instructions[1];
 
         match (i1, i2) {
-            (Instruction::PushBytes(ref _data1), Instruction::PushBytes(ref data2)) => {
+            (Instruction::PushBytes(_data1), Instruction::PushBytes(data2)) => {
                 // data2 is a pubkey?
                 match BitcoinPublicKey::from_slice(data2) {
                     Ok(pubkey) => {
@@ -1277,7 +1277,7 @@ mod tests {
                 let raw_in = BitcoinTxInputRaw::from_bitcoin_witness_script_sig(
                     &txin.script_sig,
                     txin.witness.clone(),
-                    to_txid(&txin),
+                    to_txid(txin),
                 );
                 assert_eq!(raw_in, inputs[i]);
             }
@@ -1290,7 +1290,7 @@ mod tests {
                 }
 
                 let segwit_out =
-                    BitcoinTxOutput::from_bitcoin_txout(BitcoinNetworkType::Mainnet, &txout)
+                    BitcoinTxOutput::from_bitcoin_txout(BitcoinNetworkType::Mainnet, txout)
                         .unwrap();
                 assert_eq!(segwit_out, outputs[j]);
                 j += 1;

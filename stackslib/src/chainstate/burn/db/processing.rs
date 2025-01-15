@@ -260,7 +260,7 @@ impl SortitionHandleTx<'_> {
             &block_header.block_hash
         );
 
-        blockstack_txs.sort_by(|ref a, ref b| a.vtxindex().partial_cmp(&b.vtxindex()).unwrap());
+        blockstack_txs.sort_by(|a, b| a.vtxindex().partial_cmp(&b.vtxindex()).unwrap());
 
         // check each transaction, and filter out only the ones that are valid
         debug!(
@@ -338,8 +338,8 @@ impl SortitionHandleTx<'_> {
         let new_snapshot = self.process_block_ops(
             mainnet,
             burnchain,
-            &parent_snapshot,
-            &this_block_header,
+            parent_snapshot,
+            this_block_header,
             blockstack_txs,
             next_pox_info,
             parent_pox,

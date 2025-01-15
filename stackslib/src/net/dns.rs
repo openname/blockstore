@@ -130,7 +130,7 @@ impl DNSResolver {
     }
 
     pub fn resolve(&self, req: DNSRequest) -> DNSResponse {
-        if let Some(ref addrs) = self.hardcoded.get(&(req.host.clone(), req.port)) {
+        if let Some(addrs) = self.hardcoded.get(&(req.host.clone(), req.port)) {
             return DNSResponse::new(req, Ok(addrs.to_vec()));
         }
 

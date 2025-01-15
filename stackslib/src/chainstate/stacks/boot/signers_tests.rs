@@ -445,12 +445,12 @@ fn advance_blocks(
         test_signers,
         |miner, chainstate, sortdb, blocks| {
             if blocks.len() < num_blocks as usize {
-                let addr = key_to_stacks_addr(&stacker_private_key);
+                let addr = key_to_stacks_addr(stacker_private_key);
                 let account = get_account(chainstate, sortdb, &addr);
                 let stx_transfer = make_token_transfer(
                     chainstate,
                     sortdb,
-                    &stacker_private_key,
+                    stacker_private_key,
                     account.nonce,
                     1,
                     1,

@@ -275,7 +275,7 @@ fn test_stream_mempool_txs() {
         decoded_txs.append(&mut next_txs);
 
         // for fun, use a page ID that is actually a well-formed prefix of a transaction
-        if let Some(ref tx) = decoded_txs.last() {
+        if let Some(tx) = decoded_txs.last() {
             let mut evil_buf = tx.serialize_to_vec();
             let mut evil_page_id = [0u8; 32];
             evil_page_id.copy_from_slice(&evil_buf[0..32]);

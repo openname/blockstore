@@ -78,7 +78,7 @@ impl AttachmentsDownloader {
     /// Because AttachmentBatches are ordered first by their retry deadlines, it follows that if
     /// there are any ready AttachmentBatches, they'll be at the head of the queue.
     pub fn pop_next_ready_batch(&mut self) -> Option<AttachmentsBatch> {
-        let next_is_ready = if let Some(ref next) = self.priority_queue.peek() {
+        let next_is_ready = if let Some(next) = self.priority_queue.peek() {
             next.retry_deadline < get_epoch_time_secs()
         } else {
             false
@@ -305,10 +305,10 @@ impl AttachmentsDownloader {
             atlas_db,
             new_attachments,
             |atlas_db, attachment_instance| {
-                atlas_db.mark_attachment_instance_checked(&attachment_instance, true)
+                atlas_db.mark_attachment_instance_checked(attachment_instance, true)
             },
             |atlas_db, attachment_instance| {
-                atlas_db.mark_attachment_instance_checked(&attachment_instance, false)
+                atlas_db.mark_attachment_instance_checked(attachment_instance, false)
             },
         )
     }
@@ -331,7 +331,7 @@ impl AttachmentsDownloader {
             atlas_db,
             initial_batch,
             |atlas_db, attachment_instance| {
-                atlas_db.insert_initial_attachment_instance(&attachment_instance)
+                atlas_db.insert_initial_attachment_instance(attachment_instance)
             },
             |_atlas_db, _attachment_instance| {
                 // If attachment not found, don't insert attachment instance
@@ -411,7 +411,7 @@ impl AttachmentsBatchStateContext {
             let missing_attachments = match self
                 .attachments_batch
                 .attachments_instances
-                .get(&contract_id)
+                .get(contract_id)
             {
                 None => continue,
                 Some(missing_attachments) => missing_attachments,
@@ -1108,7 +1108,7 @@ impl Ord for AttachmentRequest {
         other.sources.len().cmp(&self.sources.len()).then_with(|| {
             let (_, report) = self.get_most_reliable_source();
             let (_, other_report) = other.get_most_reliable_source();
-            report.cmp(&other_report)
+            report.cmp(other_report)
         })
     }
 }
@@ -1219,7 +1219,7 @@ impl AttachmentsBatch {
         contract_id: &QualifiedContractIdentifier,
     ) -> Vec<u32> {
         let mut pages_indexes = HashSet::new();
-        if let Some(missing_attachments) = self.attachments_instances.get(&contract_id) {
+        if let Some(missing_attachments) = self.attachments_instances.get(contract_id) {
             for (attachment_index, _) in missing_attachments.iter() {
                 let page_index = attachment_index / AttachmentInstance::ATTACHMENTS_INV_PAGE_SIZE;
                 pages_indexes.insert(page_index);

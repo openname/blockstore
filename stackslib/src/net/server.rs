@@ -91,8 +91,8 @@ impl HttpPeer {
     #[cfg_attr(test, mutants::skip)]
     pub fn find_free_conversation(&self, data_url: &UrlString) -> Option<usize> {
         for (event_id, convo) in self.peers.iter() {
-            if let Some(ref url) = convo.get_url() {
-                if *url == data_url && !convo.is_request_inflight() {
+            if let Some(url) = convo.get_url() {
+                if url == data_url && !convo.is_request_inflight() {
                     return Some(*event_id);
                 }
             }
@@ -560,7 +560,7 @@ impl HttpPeer {
         let mut to_remove = vec![];
         let mut msgs = vec![];
         for event_id in &poll_state.ready {
-            let Some(client_sock) = self.sockets.get_mut(&event_id) else {
+            let Some(client_sock) = self.sockets.get_mut(event_id) else {
                 debug!("Rogue socket event {}", event_id);
                 to_remove.push(*event_id);
                 continue;

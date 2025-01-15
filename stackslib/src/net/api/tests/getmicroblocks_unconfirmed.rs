@@ -106,7 +106,7 @@ fn test_try_make_response() {
             rpc_test.peer_2.chainstate(),
             &consensus_hash,
             &anchored_block_hash,
-            &mblock,
+            mblock,
         );
     }
 

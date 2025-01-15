@@ -318,7 +318,7 @@ impl RPCPoxInfoData {
             .active_pox_contract(burnchain.reward_cycle_to_block_height(reward_cycle_id + 1));
 
         let cur_cycle_stacked_ustx = chainstate.get_total_ustx_stacked(
-            &sortdb,
+            sortdb,
             tip,
             reward_cycle_id as u128,
             cur_cycle_pox_contract,
@@ -326,7 +326,7 @@ impl RPCPoxInfoData {
         let next_cycle_stacked_ustx =
             // next_cycle_pox_contract might not be instantiated yet
             match chainstate.get_total_ustx_stacked(
-                &sortdb,
+                sortdb,
                 tip,
                 reward_cycle_id as u128 + 1,
                 next_cycle_pox_contract,

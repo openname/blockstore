@@ -428,9 +428,8 @@ impl<'a> TestRPC<'a> {
             tx.commit().unwrap();
         }
 
-        let tip =
-            SortitionDB::get_canonical_burn_chain_tip(&peer_1.sortdb.as_ref().unwrap().conn())
-                .unwrap();
+        let tip = SortitionDB::get_canonical_burn_chain_tip(peer_1.sortdb.as_ref().unwrap().conn())
+            .unwrap();
         let mut anchor_cost = ExecutionCost::ZERO;
         let mut anchor_size = 0;
 
@@ -699,9 +698,8 @@ impl<'a> TestRPC<'a> {
             .unwrap();
 
         // next tip, coinbase
-        let tip =
-            SortitionDB::get_canonical_burn_chain_tip(&peer_1.sortdb.as_ref().unwrap().conn())
-                .unwrap();
+        let tip = SortitionDB::get_canonical_burn_chain_tip(peer_1.sortdb.as_ref().unwrap().conn())
+            .unwrap();
 
         let mut tx_coinbase = StacksTransaction::new(
             TransactionVersion::Testnet,

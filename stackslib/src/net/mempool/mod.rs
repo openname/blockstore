@@ -499,7 +499,7 @@ impl MempoolSync {
                     // 3. ask for the remote peer's mempool's novel txs
                     // address must be resolvable
                     if !network.get_connection_opts().private_neighbors
-                        && PeerAddress::from_socketaddr(&addr).is_in_private_range()
+                        && PeerAddress::from_socketaddr(addr).is_in_private_range()
                     {
                         debug!(
                             "{:?}: Mempool sync skips {}, which has private IP",

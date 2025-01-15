@@ -507,7 +507,7 @@ fn main() {
         }
 
         let index_block_hash = &argv[3];
-        let index_block_hash = StacksBlockId::from_hex(&index_block_hash).unwrap();
+        let index_block_hash = StacksBlockId::from_hex(index_block_hash).unwrap();
         let chain_state_path = format!("{}/mainnet/chainstate/", &argv[2]);
 
         let (chainstate, _) =
@@ -686,11 +686,11 @@ check if the associated microblocks can be downloaded
             };
 
             let index_block_hash =
-                StacksBlockHeader::make_index_block_hash(&consensus_hash, &block_hash);
+                StacksBlockHeader::make_index_block_hash(consensus_hash, block_hash);
             let start_load_header = get_epoch_time_ms();
             let parent_header_opt = {
                 let child_block_info = match StacksChainState::load_staging_block_info(
-                    &chain_state.db(),
+                    chain_state.db(),
                     &index_block_hash,
                 ) {
                     Ok(Some(hdr)) => hdr,
@@ -725,8 +725,8 @@ check if the associated microblocks can be downloaded
                     &chain_state,
                     &parent_consensus_hash,
                     &parent_header.block_hash(),
-                    &consensus_hash,
-                    &block_hash,
+                    consensus_hash,
+                    block_hash,
                 )
                 .unwrap();
             } else {
@@ -1029,7 +1029,7 @@ check if the associated microblocks can be downloaded
             let vals: Vec<_> = line.split(" => ").map(|x| x.trim()).collect();
             let hex_string = &vals[0];
             let expected_value_display = &vals[1];
-            let value = clarity::vm::Value::try_deserialize_hex_untyped(&hex_string).unwrap();
+            let value = clarity::vm::Value::try_deserialize_hex_untyped(hex_string).unwrap();
             assert_eq!(&value.to_string(), expected_value_display);
         }
 
@@ -1177,7 +1177,7 @@ check if the associated microblocks can be downloaded
         let txs = argv[5..]
             .iter()
             .map(|tx_str| {
-                let tx_bytes = hex_bytes(&tx_str).unwrap();
+                let tx_bytes = hex_bytes(tx_str).unwrap();
                 let tx = StacksTransaction::consensus_deserialize(&mut &tx_bytes[..]).unwrap();
                 tx
             })
@@ -1345,7 +1345,7 @@ check if the associated microblocks can be downloaded
             ),
         ];
 
-        let burnchain = Burnchain::regtest(&burnchain_db_path);
+        let burnchain = Burnchain::regtest(burnchain_db_path);
         let first_burnchain_block_height = burnchain.first_block_height;
         let first_burnchain_block_hash = burnchain.first_block_hash;
         let epochs = StacksEpoch::all(first_burnchain_block_height, u64::MAX, u64::MAX);
@@ -1358,8 +1358,7 @@ check if the associated microblocks can be downloaded
             )
             .unwrap();
 
-        let old_burnchaindb =
-            BurnchainDB::connect(&old_burnchaindb_path, &burnchain, true).unwrap();
+        let old_burnchaindb = BurnchainDB::connect(old_burnchaindb_path, &burnchain, true).unwrap();
 
         let mut boot_data = ChainStateBootData {
             initial_balances,
@@ -1385,7 +1384,7 @@ check if the associated microblocks can be downloaded
 
         let all_snapshots = old_sortition_db.get_all_snapshots().unwrap();
         let all_stacks_blocks =
-            StacksChainState::get_all_staging_block_headers(&old_chainstate.db()).unwrap();
+            StacksChainState::get_all_staging_block_headers(old_chainstate.db()).unwrap();
 
         // order block hashes by arrival index
         let mut stacks_blocks_arrival_indexes = vec![];
@@ -1402,7 +1401,7 @@ check if the associated microblocks can be downloaded
             );
             stacks_blocks_arrival_indexes.push((index_hash, snapshot.arrival_index));
         }
-        stacks_blocks_arrival_indexes.sort_by(|ref a, ref b| a.1.partial_cmp(&b.1).unwrap());
+        stacks_blocks_arrival_indexes.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
         let stacks_blocks_arrival_order: Vec<StacksBlockId> = stacks_blocks_arrival_indexes
             .into_iter()
             .map(|(h, _)| h)
@@ -1464,7 +1463,7 @@ check if the associated microblocks can be downloaded
                 header: burn_block_header,
                 ops: blockstack_txs,
             } = BurnchainDB::get_burnchain_block(
-                &old_burnchaindb.conn(),
+                old_burnchaindb.conn(),
                 &old_snapshot.burn_header_hash,
             )
             .unwrap();
@@ -2094,10 +2093,10 @@ fn analyze_sortition_mev(argv: Vec<String>) {
     for (winner, count) in all_wins_epoch3.into_iter() {
         let degradation = (count as f64)
             / (all_wins_epoch2
-                .get(&winner)
+                .get(winner)
                 .map(|cnt| *cnt as f64)
                 .unwrap_or(0.00000000000001f64));
-        println!("{},{},{}", &winner, count, degradation);
+        println!("{winner},{count},{degradation}");
     }
 
     process::exit(0);

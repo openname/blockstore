@@ -53,7 +53,7 @@ fn make_smart_contract(
     tx_contract.set_tx_fee(fee);
 
     let mut tx_signer = StacksTransactionSigner::new(&tx_contract);
-    tx_signer.sign_origin(&pk).unwrap();
+    tx_signer.sign_origin(pk).unwrap();
     let tx_contract_signed = tx_signer.get_tx().unwrap();
 
     tx_contract_signed
@@ -646,7 +646,7 @@ fn test_hint_replicas_override() {
         max_neighbors: 7,
     };
 
-    let tx = make_smart_contract("test-0", &config_contract, &contract_owner, 0, 10000);
+    let tx = make_smart_contract("test-0", config_contract, &contract_owner, 0, 10000);
     txs.push(tx);
 
     peer.tenure_with_txs(&txs, &mut coinbase_nonce);

@@ -719,11 +719,10 @@ impl StacksChainState {
                     match asset_entry {
                         AssetMapEntry::Asset(values) => {
                             // this is a NFT
-                            if let Some(ref checked_nft_asset_map) =
+                            if let Some(checked_nft_asset_map) =
                                 checked_nonfungible_assets.get(&principal)
                             {
-                                if let Some(ref nfts) = checked_nft_asset_map.get(&asset_identifier)
-                                {
+                                if let Some(nfts) = checked_nft_asset_map.get(&asset_identifier) {
                                     // each value must be covered
                                     for v in values {
                                         if !nfts.contains(&v.clone().try_into()?) {
@@ -744,7 +743,7 @@ impl StacksChainState {
                         }
                         _ => {
                             // This is STX or a fungible token
-                            if let Some(ref checked_ft_asset_ids) =
+                            if let Some(checked_ft_asset_ids) =
                                 checked_fungible_assets.get(&principal)
                             {
                                 if !checked_ft_asset_ids.contains(&asset_identifier) {
@@ -811,7 +810,7 @@ impl StacksChainState {
         // encodes MARF reads for loading microblock height and current height, and loading and storing a
         // poison-microblock report
         runtime_cost(ClarityCostFunction::PoisonMicroblock, env, 0)
-            .map_err(|e| Error::from_cost_error(e, cost_before.clone(), &env.global_context))?;
+            .map_err(|e| Error::from_cost_error(e, cost_before.clone(), env.global_context))?;
 
         let sender_principal = match &env.sender {
             Some(ref sender) => {
@@ -840,11 +839,11 @@ impl StacksChainState {
 
         // for the microblock public key hash we had to process
         env.add_memory(20)
-            .map_err(|e| Error::from_cost_error(e, cost_before.clone(), &env.global_context))?;
+            .map_err(|e| Error::from_cost_error(e, cost_before.clone(), env.global_context))?;
 
         // for the block height we had to load
         env.add_memory(4)
-            .map_err(|e| Error::from_cost_error(e, cost_before.clone(), &env.global_context))?;
+            .map_err(|e| Error::from_cost_error(e, cost_before.clone(), env.global_context))?;
 
         // was the referenced public key hash used anytime in the past
         // MINER_REWARD_MATURITY blocks?
@@ -892,11 +891,11 @@ impl StacksChainState {
                     .size()
                     .map_err(InterpreterError::from)?,
             ))
-            .map_err(|e| Error::from_cost_error(e, cost_before.clone(), &env.global_context))?;
+            .map_err(|e| Error::from_cost_error(e, cost_before.clone(), env.global_context))?;
 
             // u128 sequence
             env.add_memory(16)
-                .map_err(|e| Error::from_cost_error(e, cost_before.clone(), &env.global_context))?;
+                .map_err(|e| Error::from_cost_error(e, cost_before.clone(), env.global_context))?;
 
             if mblock_header_1.sequence < seq {
                 // this sender reports a point lower in the stream where a fork occurred, and is now
@@ -1981,7 +1980,7 @@ pub mod test {
             .iter()
             .zip(error_frags.clone())
             {
-                let mut signer = StacksTransactionSigner::new(&tx_stx_transfer);
+                let mut signer = StacksTransactionSigner::new(tx_stx_transfer);
                 signer.sign_origin(&privk).unwrap();
 
                 if tx_stx_transfer.auth.is_sponsored() {
@@ -2352,8 +2351,7 @@ pub mod test {
                 let mut tx_contract = StacksTransaction::new(
                     TransactionVersion::Testnet,
                     auth.clone(),
-                    TransactionPayload::new_smart_contract(&contract_name, &contract, None)
-                        .unwrap(),
+                    TransactionPayload::new_smart_contract(contract_name, &contract, None).unwrap(),
                 );
 
                 tx_contract.chain_id = 0x80000000;
@@ -3947,7 +3945,7 @@ pub mod test {
             for tx_pass in post_conditions_pass.iter() {
                 let (_fee, _) = StacksChainState::process_transaction(
                     &mut conn,
-                    &tx_pass,
+                    tx_pass,
                     false,
                     ASTRules::PrecheckSize,
                 )
@@ -3977,7 +3975,7 @@ pub mod test {
             for tx_pass in post_conditions_pass_payback.iter() {
                 let (_fee, _) = StacksChainState::process_transaction(
                     &mut conn,
-                    &tx_pass,
+                    tx_pass,
                     false,
                     ASTRules::PrecheckSize,
                 )
@@ -4021,10 +4019,10 @@ pub mod test {
                 assert_eq!(account_recv_publisher_after.nonce, expected_recv_nonce);
             }
 
-            for (_i, tx_pass) in post_conditions_pass_nft.iter().enumerate() {
+            for tx_pass in post_conditions_pass_nft.iter() {
                 let (_fee, _) = StacksChainState::process_transaction(
                     &mut conn,
-                    &tx_pass,
+                    tx_pass,
                     false,
                     ASTRules::PrecheckSize,
                 )
@@ -4054,7 +4052,7 @@ pub mod test {
             for tx_fail in post_conditions_fail.iter() {
                 let (_fee, _) = StacksChainState::process_transaction(
                     &mut conn,
-                    &tx_fail,
+                    tx_fail,
                     false,
                     ASTRules::PrecheckSize,
                 )
@@ -4097,7 +4095,7 @@ pub mod test {
             for tx_fail in post_conditions_fail_payback.iter() {
                 let (_fee, _) = StacksChainState::process_transaction(
                     &mut conn,
-                    &tx_fail,
+                    tx_fail,
                     false,
                     ASTRules::PrecheckSize,
                 )
@@ -4142,10 +4140,10 @@ pub mod test {
                 assert_eq!(account_publisher_after.nonce, expected_recv_nonce);
             }
 
-            for (_i, tx_fail) in post_conditions_fail_nft.iter().enumerate() {
+            for tx_fail in post_conditions_fail_nft.iter() {
                 let (_fee, _) = StacksChainState::process_transaction(
                     &mut conn,
-                    &tx_fail,
+                    tx_fail,
                     false,
                     ASTRules::PrecheckSize,
                 )
@@ -4666,10 +4664,10 @@ pub mod test {
             let mut expected_recv_nonce = 0;
             let mut expected_payback_stackaroos_balance = 0;
 
-            for (_i, tx_pass) in post_conditions_pass.iter().enumerate() {
+            for tx_pass in post_conditions_pass.iter() {
                 let (_fee, _) = StacksChainState::process_transaction(
                     &mut conn,
-                    &tx_pass,
+                    tx_pass,
                     false,
                     ASTRules::PrecheckSize,
                 )
@@ -4713,10 +4711,10 @@ pub mod test {
                 assert_eq!(account_publisher_after.nonce, expected_nonce);
             }
 
-            for (_i, tx_pass) in post_conditions_pass_payback.iter().enumerate() {
+            for tx_pass in post_conditions_pass_payback.iter() {
                 let (_fee, _) = StacksChainState::process_transaction(
                     &mut conn,
-                    &tx_pass,
+                    tx_pass,
                     false,
                     ASTRules::PrecheckSize,
                 )
@@ -4779,10 +4777,10 @@ pub mod test {
                 assert_eq!(account_recv_publisher_after.nonce, expected_recv_nonce);
             }
 
-            for (_i, tx_fail) in post_conditions_fail.iter().enumerate() {
+            for tx_fail in post_conditions_fail.iter() {
                 let (_fee, _) = StacksChainState::process_transaction(
                     &mut conn,
-                    &tx_fail,
+                    tx_fail,
                     false,
                     ASTRules::PrecheckSize,
                 )
@@ -4836,11 +4834,11 @@ pub mod test {
                 assert_eq!(account_publisher_after.nonce, expected_nonce);
             }
 
-            for (_i, tx_fail) in post_conditions_fail_payback.iter().enumerate() {
-                eprintln!("tx fail {:?}", &tx_fail);
+            for tx_fail in post_conditions_fail_payback.iter() {
+                eprintln!("tx fail {tx_fail:?}");
                 let (_fee, _) = StacksChainState::process_transaction(
                     &mut conn,
-                    &tx_fail,
+                    tx_fail,
                     false,
                     ASTRules::PrecheckSize,
                 )
@@ -8212,7 +8210,7 @@ pub mod test {
             (stx-transfer? amount tx-sender recipient))
         "#;
 
-        let auth = TransactionAuth::from_p2pkh(&tx_privk).unwrap();
+        let auth = TransactionAuth::from_p2pkh(tx_privk).unwrap();
         let addr = auth.origin().address_testnet();
 
         let mut rng = rand::thread_rng();
@@ -8232,7 +8230,7 @@ pub mod test {
         tx_contract_create.set_tx_fee(0);
 
         let mut signer = StacksTransactionSigner::new(&tx_contract_create);
-        signer.sign_origin(&tx_privk).unwrap();
+        signer.sign_origin(tx_privk).unwrap();
 
         let signed_contract_tx = signer.get_tx().unwrap();
 

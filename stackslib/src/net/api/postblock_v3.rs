@@ -164,7 +164,7 @@ impl RPCRequestHandler for RPCPostBlockRequestHandler {
                 let stacks_tip = network.stacks_tip.block_id();
                 Relayer::process_new_nakamoto_block_ext(
                     &network.burnchain,
-                    &sortdb,
+                    sortdb,
                     &mut handle_conn,
                     chainstate,
                     &stacks_tip,

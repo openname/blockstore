@@ -164,7 +164,7 @@ impl RPCRequestHandler for RPCPostBlockRequestHandler {
 
         let data_resp =
             node.with_node_state(|_network, sortdb, chainstate, _mempool, _rpc_args| {
-                match SortitionDB::get_sortition_id_by_consensus(&sortdb.conn(), &consensus_hash) {
+                match SortitionDB::get_sortition_id_by_consensus(sortdb.conn(), &consensus_hash) {
                     Ok(Some(_)) => {
                         // we recognize this consensus hash
                         let ic = sortdb.index_conn();

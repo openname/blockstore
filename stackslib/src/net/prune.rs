@@ -54,7 +54,7 @@ impl PeerNetwork {
                 None => {
                     continue;
                 }
-                Some(ref convo) => {
+                Some(convo) => {
                     if !convo.stats.outbound {
                         continue;
                     }
@@ -88,7 +88,7 @@ impl PeerNetwork {
                 "==== ORG NEIGHBOR DISTRIBUTION OF {:?} ===",
                 &self.local_peer
             );
-            for (ref _org, ref neighbor_infos) in org_neighbor.iter() {
+            for (ref _org, neighbor_infos) in org_neighbor.iter() {
                 let _neighbors: Vec<NeighborKey> =
                     neighbor_infos.iter().map(|ni| ni.0.clone()).collect();
                 test_debug!(
@@ -196,7 +196,7 @@ impl PeerNetwork {
             // likely to be up for X more seconds, so we only really want to distinguish between nodes that
             // have wildly different uptimes.
             // Within uptime buckets, sort by health.
-            match org_neighbors.get_mut(&org) {
+            match org_neighbors.get_mut(org) {
                 None => {}
                 Some(ref mut neighbor_infos) => {
                     neighbor_infos.sort_unstable_by(
@@ -211,7 +211,7 @@ impl PeerNetwork {
         // don't let a single organization have more than
         // soft_max_neighbors_per_org neighbors.
         for org in orgs.iter() {
-            match org_neighbors.get_mut(&org) {
+            match org_neighbors.get_mut(org) {
                 None => {}
                 Some(ref mut neighbor_infos) => {
                     if neighbor_infos.len() as u64 > self.connection_opts.soft_max_neighbors_per_org
@@ -324,8 +324,8 @@ impl PeerNetwork {
             if preserve.contains(event_id) {
                 continue;
             }
-            match self.peers.get(&event_id) {
-                Some(ref convo) => {
+            match self.peers.get(event_id) {
+                Some(convo) => {
                     if !convo.stats.outbound {
                         let stats = convo.stats.clone();
                         if let Some(entry) = ip_neighbor.get_mut(&nk.addrbytes) {
@@ -415,7 +415,7 @@ impl PeerNetwork {
 
         for prune in pruned_by_ip.iter() {
             debug!("{:?}: prune by IP: {:?}", &self.local_peer, prune);
-            self.deregister_neighbor(&prune);
+            self.deregister_neighbor(prune);
 
             if !self.prune_inbound_counts.contains_key(prune) {
                 self.prune_inbound_counts.insert(prune.clone(), 1);
@@ -437,7 +437,7 @@ impl PeerNetwork {
 
         for prune in pruned_by_org.iter() {
             debug!("{:?}: prune by Org: {:?}", &self.local_peer, prune);
-            self.deregister_neighbor(&prune);
+            self.deregister_neighbor(prune);
 
             if !self.prune_outbound_counts.contains_key(prune) {
                 self.prune_outbound_counts.insert(prune.clone(), 1);

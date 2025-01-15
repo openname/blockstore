@@ -252,7 +252,7 @@ fn ExtendedStacksHeader_StacksBlockHeader_serialize<S: serde::Serializer>(
 ) -> Result<S::Ok, S::Error> {
     let bytes = header.serialize_to_vec();
     let header_hex = to_hex(&bytes);
-    s.serialize_str(&header_hex.as_str())
+    s.serialize_str(header_hex.as_str())
 }
 
 /// In ExtendedStacksHeader, encode the StacksBlockHeader as a hex string
@@ -1009,10 +1009,10 @@ impl StacksChainState {
             )?;
 
             if migrate {
-                StacksChainState::apply_schema_migrations(&tx, mainnet, chain_id)?;
+                StacksChainState::apply_schema_migrations(tx, mainnet, chain_id)?;
             }
 
-            StacksChainState::add_indexes(&tx)?;
+            StacksChainState::add_indexes(tx)?;
         }
 
         dbtx.instantiate_index()?;
@@ -1227,12 +1227,12 @@ impl StacksChainState {
 
     fn parse_genesis_address(addr: &str, mainnet: bool) -> PrincipalData {
         // Typical entries are BTC encoded addresses that need converted to STX
-        let mut stacks_address = match LegacyBitcoinAddress::from_b58(&addr) {
+        let mut stacks_address = match LegacyBitcoinAddress::from_b58(addr) {
             Ok(addr) => StacksAddress::from_legacy_bitcoin_address(&addr),
             // A few addresses (from legacy placeholder accounts) are already STX addresses
             _ => match StacksAddress::from_string(addr) {
                 Some(addr) => addr,
-                None => panic!("Failed to parsed genesis address {}", addr),
+                None => panic!("Failed to parsed genesis address {addr}"),
             },
         };
         // Convert a given address to the currently running network mode (mainnet vs testnet).
@@ -1518,7 +1518,7 @@ impl StacksChainState {
 
                                 let namespace = {
                                     let namespace_str = components[1];
-                                    if !BNS_CHARS_REGEX.is_match(&namespace_str) {
+                                    if !BNS_CHARS_REGEX.is_match(namespace_str) {
                                         panic!("Invalid namespace characters");
                                     }
                                     let buffer = namespace_str.as_bytes();
@@ -2171,7 +2171,7 @@ impl StacksChainState {
     where
         F: FnOnce(&mut ClarityReadOnlyConnection) -> R,
     {
-        if let Some(ref unconfirmed) = self.unconfirmed_state.as_ref() {
+        if let Some(unconfirmed) = self.unconfirmed_state.as_ref() {
             if !unconfirmed.is_readable() {
                 return Ok(None);
             }
@@ -2637,7 +2637,7 @@ impl StacksChainState {
             &[],
             &[],
         )?;
-        let index_block_hash = new_tip.index_block_hash(&new_consensus_hash);
+        let index_block_hash = new_tip.index_block_hash(new_consensus_hash);
         test_debug!(
             "Headers index_indexed_all finished {}-{}",
             &parent_hash,

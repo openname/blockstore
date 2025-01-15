@@ -128,7 +128,7 @@ pub fn produce_burn_block<'a, I: Iterator<Item = &'a mut BurnchainDB>>(
 ) -> BurnchainHeaderHash {
     let BurnchainBlockData {
         header: par_header, ..
-    } = BurnchainDB::get_burnchain_block(&burnchain_db.conn(), par).unwrap();
+    } = BurnchainDB::get_burnchain_block(burnchain_db.conn(), par).unwrap();
     assert_eq!(&par_header.block_hash, par);
     let block_height = par_header.block_height + 1;
     for op in ops.iter_mut() {
@@ -159,7 +159,7 @@ fn produce_burn_block_do_not_set_height<'a, I: Iterator<Item = &'a mut Burnchain
 ) -> BurnchainHeaderHash {
     let BurnchainBlockData {
         header: par_header, ..
-    } = BurnchainDB::get_burnchain_block(&burnchain_db.conn(), par).unwrap();
+    } = BurnchainDB::get_burnchain_block(burnchain_db.conn(), par).unwrap();
     assert_eq!(&par_header.block_hash, par);
     let block_height = par_header.block_height + 1;
     let timestamp = par_header.timestamp + 1;
@@ -903,7 +903,7 @@ fn make_stacks_block_with_input(
 
     eprintln!(
         "Find parents stacks header: {} in sortition {} (height {}, parent {}/{},{}, index block hash {})",
-        &parent_block, &parents_sortition.sortition_id, parents_sortition.block_height, &parents_sortition.consensus_hash, parent_block, parent_height, &StacksBlockHeader::make_index_block_hash(&parents_sortition.consensus_hash, &parent_block)
+        &parent_block, &parents_sortition.sortition_id, parents_sortition.block_height, &parents_sortition.consensus_hash, parent_block, parent_height, &StacksBlockHeader::make_index_block_hash(&parents_sortition.consensus_hash, parent_block)
     );
 
     let parent_vtxindex =
@@ -6410,7 +6410,7 @@ fn test_pox_no_anchor_selected() {
             path_blinded,
             &sort_db_blind,
             &mut coord_blind,
-            &sort_id,
+            sort_id,
             block,
         );
     }
@@ -6806,7 +6806,7 @@ fn reveal_block<T: BlockEventDispatcher, N: CoordinatorNotices, U: RewardSetProv
     block: &StacksBlock,
 ) {
     let mut chainstate = get_chainstate(chainstate_path);
-    let sortition = SortitionDB::get_block_snapshot(sort_db.conn(), &my_sortition)
+    let sortition = SortitionDB::get_block_snapshot(sort_db.conn(), my_sortition)
         .unwrap()
         .unwrap();
     preprocess_block(&mut chainstate, sort_db, &sortition, block.clone());
@@ -6882,7 +6882,7 @@ fn test_check_chainstate_db_versions() {
     let chainstate_v1 = StacksChainState::open_db_without_migrations(
         false,
         CHAIN_ID_TESTNET,
-        &StacksChainState::header_index_root_path(PathBuf::from(&chainstate_path))
+        StacksChainState::header_index_root_path(PathBuf::from(&chainstate_path))
             .to_str()
             .unwrap(),
     )

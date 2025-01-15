@@ -484,7 +484,7 @@ impl NakamotoBlockBuilder {
         tip: &StacksHeaderInfo,
     ) -> Result<StacksAccount, Error> {
         let snapshot =
-            SortitionDB::get_block_snapshot_consensus(&sortdb.conn(), &tip.consensus_hash)?
+            SortitionDB::get_block_snapshot_consensus(sortdb.conn(), &tip.consensus_hash)?
                 .ok_or_else(|| Error::NoSuchBlockError)?;
 
         let account = chainstate
@@ -734,7 +734,7 @@ impl NakamotoBlockBuilder {
         block_txs.append(&mut txs);
         let (mut shadow_block, _size, _cost) = Self::make_shadow_block_from_txs(
             builder,
-            &chainstate,
+            chainstate,
             &sortdb.index_handle(&burn_tip.sortition_id),
             &tenure_id_consensus_hash,
             block_txs,
@@ -968,7 +968,7 @@ pub fn shadow_chainstate_repair(
 ) -> Result<Vec<NakamotoBlock>, ChainstateError> {
     let sort_tip = SortitionDB::get_canonical_burn_chain_tip(sort_db.conn())?;
 
-    let header = NakamotoChainState::get_canonical_block_header(chain_state.db(), &sort_db)?
+    let header = NakamotoChainState::get_canonical_block_header(chain_state.db(), sort_db)?
         .ok_or_else(|| ChainstateError::NoSuchBlockError)?;
 
     let header_sn =
@@ -987,7 +987,7 @@ pub fn shadow_chainstate_repair(
             .get_block_snapshot_by_height(burn_height)?
             .ok_or_else(|| ChainstateError::InvalidStacksBlock("No sortition at height".into()))?;
 
-        let header = NakamotoChainState::get_canonical_block_header(chain_state.db(), &sort_db)?
+        let header = NakamotoChainState::get_canonical_block_header(chain_state.db(), sort_db)?
             .ok_or_else(|| ChainstateError::NoSuchBlockError)?;
 
         let chain_tip = header.index_block_hash();

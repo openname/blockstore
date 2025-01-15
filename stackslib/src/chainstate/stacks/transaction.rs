@@ -193,7 +193,7 @@ impl StacksMessageCodec for TransactionPayload {
                 if let Some(version) = version_opt {
                     // caller requests a specific Clarity version
                     write_next(fd, &(TransactionPayloadID::VersionedSmartContract as u8))?;
-                    ClarityVersion_consensus_serialize(&version, fd)?;
+                    ClarityVersion_consensus_serialize(version, fd)?;
                     sc.consensus_serialize(fd)?;
                 } else {
                     // caller requests to use whatever the current clarity version is
@@ -1020,7 +1020,7 @@ impl StacksTransaction {
     /// Get a copy of the sending condition that will pay the tx fee
     pub fn get_payer(&self) -> TransactionSpendingCondition {
         match self.auth.sponsor() {
-            Some(ref tsc) => (*tsc).clone(),
+            Some(tsc) => tsc.clone(),
             None => self.auth.origin().clone(),
         }
     }
@@ -3502,14 +3502,14 @@ mod test {
             // length
             asset_name.len(),
         ];
-        asset_name_bytes.extend_from_slice(&asset_name.to_string().as_str().as_bytes());
+        asset_name_bytes.extend_from_slice(asset_name.to_string().as_str().as_bytes());
 
         let contract_name = ContractName::try_from("hello-world").unwrap();
         let mut contract_name_bytes = vec![
             // length
             contract_name.len(),
         ];
-        contract_name_bytes.extend_from_slice(&contract_name.to_string().as_str().as_bytes());
+        contract_name_bytes.extend_from_slice(contract_name.to_string().as_str().as_bytes());
 
         let asset_info = AssetInfo {
             contract_address: addr.clone(),
@@ -3863,7 +3863,7 @@ mod test {
             test_debug!("---------");
             test_debug!("text tx bytes:\n{}", &to_hex(&tx_bytes));
 
-            check_codec_and_corruption::<StacksTransaction>(&tx, &tx_bytes);
+            check_codec_and_corruption::<StacksTransaction>(tx, &tx_bytes);
         }
     }
 

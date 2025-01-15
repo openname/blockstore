@@ -543,7 +543,7 @@ impl NakamotoBlockProposal {
             let tx_len = tx.tx_len();
             let tx_result = builder.try_mine_tx_with_len(
                 &mut tenure_tx,
-                &tx,
+                tx,
                 tx_len,
                 &BlockLimitFunction::NO_LIMIT_HIT,
                 ASTRules::PrecheckSize,

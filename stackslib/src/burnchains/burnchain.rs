@@ -98,7 +98,7 @@ impl BurnchainStateTransition {
 
     /// Get the transaction IDs of all accepted burnchain operations in this block
     pub fn txids(&self) -> Vec<Txid> {
-        self.accepted_ops.iter().map(|ref op| op.txid()).collect()
+        self.accepted_ops.iter().map(|op| op.txid()).collect()
     }
 
     /// Get the sum of all burnchain tokens spent in this burnchain block's accepted operations
@@ -196,7 +196,7 @@ impl BurnchainStateTransition {
 
         // find all VRF leader keys that were consumed by the block commits of this block
         let consumed_leader_keys =
-            sort_tx.get_consumed_leader_keys(&parent_snapshot, &block_commits)?;
+            sort_tx.get_consumed_leader_keys(parent_snapshot, &block_commits)?;
 
         // assemble the commit windows
         let mut windowed_block_commits = vec![block_commits];
@@ -355,7 +355,7 @@ impl BurnchainStateTransition {
             );
         }
 
-        accepted_ops.sort_by(|ref a, ref b| a.vtxindex().partial_cmp(&b.vtxindex()).unwrap());
+        accepted_ops.sort_by(|a, b| a.vtxindex().partial_cmp(&b.vtxindex()).unwrap());
 
         Ok(BurnchainStateTransition {
             burn_dist,
@@ -425,7 +425,7 @@ impl BurnchainBlock {
             BurnchainBlock::Bitcoin(ref data) => data
                 .txs
                 .iter()
-                .map(|ref tx| BurnchainTransaction::Bitcoin((*tx).clone()))
+                .map(|tx| BurnchainTransaction::Bitcoin((*tx).clone()))
                 .collect(),
         }
     }
@@ -850,7 +850,7 @@ impl Burnchain {
             }
             x if x == Opcodes::TransferStx as u8 => {
                 let pre_stx_txid = TransferStxOp::get_sender_txid(burn_tx).ok()?;
-                let pre_stx_tx = match pre_stx_op_map.get(&pre_stx_txid) {
+                let pre_stx_tx = match pre_stx_op_map.get(pre_stx_txid) {
                     Some(tx_ref) => Some(BlockstackOperationType::PreStx(tx_ref.clone())),
                     None => burnchain_db.find_burnchain_op(indexer, pre_stx_txid),
                 };
@@ -879,7 +879,7 @@ impl Burnchain {
             }
             x if x == Opcodes::StackStx as u8 => {
                 let pre_stx_txid = StackStxOp::get_sender_txid(burn_tx).ok()?;
-                let pre_stx_tx = match pre_stx_op_map.get(&pre_stx_txid) {
+                let pre_stx_tx = match pre_stx_op_map.get(pre_stx_txid) {
                     Some(tx_ref) => Some(BlockstackOperationType::PreStx(tx_ref.clone())),
                     None => burnchain_db.find_burnchain_op(indexer, pre_stx_txid),
                 };
@@ -914,7 +914,7 @@ impl Burnchain {
             }
             x if x == Opcodes::DelegateStx as u8 => {
                 let pre_stx_txid = DelegateStxOp::get_sender_txid(burn_tx).ok()?;
-                let pre_stx_tx = match pre_stx_op_map.get(&pre_stx_txid) {
+                let pre_stx_tx = match pre_stx_op_map.get(pre_stx_txid) {
                     Some(tx_ref) => Some(BlockstackOperationType::PreStx(tx_ref.clone())),
                     None => burnchain_db.find_burnchain_op(indexer, pre_stx_txid),
                 };
@@ -943,7 +943,7 @@ impl Burnchain {
             }
             x if x == Opcodes::VoteForAggregateKey as u8 => {
                 let pre_stx_txid = VoteForAggregateKeyOp::get_sender_txid(burn_tx).ok()?;
-                let pre_stx_tx = match pre_stx_op_map.get(&pre_stx_txid) {
+                let pre_stx_tx = match pre_stx_op_map.get(pre_stx_txid) {
                     Some(tx_ref) => Some(BlockstackOperationType::PreStx(tx_ref.clone())),
                     None => burnchain_db.find_burnchain_op(indexer, pre_stx_txid),
                 };
@@ -1039,7 +1039,7 @@ impl Burnchain {
         );
 
         let _blockstack_txs =
-            burnchain_db.store_new_burnchain_block(burnchain, indexer, &block, epoch_id)?;
+            burnchain_db.store_new_burnchain_block(burnchain, indexer, block, epoch_id)?;
         Burnchain::process_affirmation_maps(
             burnchain,
             burnchain_db,
@@ -1111,7 +1111,7 @@ impl Burnchain {
         let blockstack_txs = burnchain_db.store_new_burnchain_block(
             burnchain,
             indexer,
-            &block,
+            block,
             cur_epoch.epoch_id,
         )?;
 
