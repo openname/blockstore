@@ -125,6 +125,7 @@ jobs:
           - tests::signer::v0::continue_after_tenure_extend
           - tests::signer::v0::tenure_extend_after_idle_signers
           - tests::signer::v0::tenure_extend_after_idle_miner
+          - tests::signer::v0::tenure_extend_after_failed_miner
           - tests::signer::v0::tenure_extend_succeeds_after_rejected_attempt
           - tests::signer::v0::stx_transfers_dont_effect_idle_timeout
           - tests::signer::v0::idle_tenure_extend_active_mining
@@ -160,6 +161,7 @@ jobs:
           - tests::nakamoto_integrations::sip029_coinbase_change
           - tests::nakamoto_integrations::clarity_cost_spend_down
           - tests::nakamoto_integrations::v3_blockbyheight_api_endpoint
+          - tests::nakamoto_integrations::test_tenure_extend_from_flashblocks
           # TODO: enable these once v1 signer is supported by a new nakamoto epoch
           # - tests::signer::v1::dkg
           # - tests::signer::v1::sign_request_rejected

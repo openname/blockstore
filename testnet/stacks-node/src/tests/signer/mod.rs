@@ -89,10 +89,12 @@ pub struct RunningNodes {
     pub vrfs_submitted: RunLoopCounter,
     pub commits_submitted: RunLoopCounter,
     pub blocks_processed: RunLoopCounter,
+    pub sortitions_processed: RunLoopCounter,
     pub nakamoto_blocks_proposed: RunLoopCounter,
     pub nakamoto_blocks_mined: RunLoopCounter,
     pub nakamoto_blocks_rejected: RunLoopCounter,
     pub nakamoto_blocks_signer_pushed: RunLoopCounter,
+    pub nakamoto_miner_directives: Arc<AtomicU64>,
     pub nakamoto_test_skip_commit_op: TestFlag<bool>,
     pub coord_channel: Arc<Mutex<CoordinatorChannels>>,
     pub conf: NeonConfig,
@@ -127,7 +129,7 @@ impl<S: Signer<T> + Send + 'static, T: SignerEventTrait + 'static> SignerTest<Sp
         )
     }
 
-    fn new_with_config_modifications<F: FnMut(&mut SignerConfig), G: FnMut(&mut NeonConfig)>(
+    pub fn new_with_config_modifications<F: FnMut(&mut SignerConfig), G: FnMut(&mut NeonConfig)>(
         num_signers: usize,
         initial_balances: Vec<(StacksAddress, u64)>,
         mut signer_config_modifier: F,
@@ -378,6 +380,7 @@ impl<S: Signer<T> + Send + 'static, T: SignerEventTrait + 'static> SignerTest<Sp
             timeout.as_secs(),
             coord_channels,
             commits_submitted,
+            true,
         )
         .unwrap();
         let t_start = Instant::now();
@@ -900,11 +903,13 @@ fn setup_stx_btc_node<G: FnMut(&mut NeonConfig)>(
     let run_loop_stopper = run_loop.get_termination_switch();
     let Counters {
         blocks_processed,
+        sortitions_processed,
         naka_submitted_vrfs: vrfs_submitted,
         naka_submitted_commits: commits_submitted,
         naka_proposed_blocks: naka_blocks_proposed,
         naka_mined_blocks: naka_blocks_mined,
         naka_rejected_blocks: naka_blocks_rejected,
+        naka_miner_directives,
         naka_skip_commit_op: nakamoto_test_skip_commit_op,
         naka_signer_pushed_blocks,
         ..
@@ -937,11 +942,13 @@ fn setup_stx_btc_node<G: FnMut(&mut NeonConfig)>(
         vrfs_submitted,
         commits_submitted,
         blocks_processed,
+        sortitions_processed,
         nakamoto_blocks_proposed: naka_blocks_proposed,
         nakamoto_blocks_mined: naka_blocks_mined,
         nakamoto_blocks_rejected: naka_blocks_rejected,
         nakamoto_blocks_signer_pushed: naka_signer_pushed_blocks,
         nakamoto_test_skip_commit_op,
+        nakamoto_miner_directives: naka_miner_directives.0,
         coord_channel,
         conf: naka_conf,
     }

@@ -2376,7 +2376,7 @@ impl BlockMinerThread {
         )
         .map_err(|e| {
             warn!("Failed to write mock proposal to stackerdb.");
-            e
+            e.to_string()
         })?;
 
         // Retrieve any MockSignatures from stackerdb
@@ -2404,7 +2404,7 @@ impl BlockMinerThread {
         )
         .map_err(|e| {
             warn!("Failed to write mock block to stackerdb.");
-            e
+            e.to_string()
         })?;
         Ok(())
     }

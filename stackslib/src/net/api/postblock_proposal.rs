@@ -190,11 +190,14 @@ impl BlockValidateResponse {
 }
 
 #[cfg(any(test, feature = "testing"))]
-fn inject_validation_delay() {
+fn fault_injection_validation_delay() {
     let delay = TEST_VALIDATE_DELAY_DURATION_SECS.get();
     warn!("Sleeping for {} seconds to simulate slow processing", delay);
     thread::sleep(Duration::from_secs(delay));
 }
+
+#[cfg(not(any(test, feature = "testing")))]
+fn fault_injection_validation_delay() {}
 
 /// Represents a block proposed to the `v3/block_proposal` endpoint for validation
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -389,8 +392,7 @@ impl NakamotoBlockProposal {
         }
         let start = Instant::now();
 
-        #[cfg(any(test, feature = "testing"))]
-        inject_validation_delay();
+        fault_injection_validation_delay();
 
         let mainnet = self.chain_id == CHAIN_ID_MAINNET;
         if self.chain_id != chainstate.chain_id || mainnet != chainstate.mainnet {
