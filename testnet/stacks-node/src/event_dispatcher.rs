@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#[cfg(test)]
+use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
@@ -330,7 +332,7 @@ impl RewardSetEventPayload {
 }
 
 #[cfg(test)]
-static TEST_EVENT_OBSERVER_SKIP_RETRY: std::sync::Mutex<Option<bool>> = std::sync::Mutex::new(None);
+thread_local! { static TEST_EVENT_OBSERVER_SKIP_RETRY: RefCell<bool> = RefCell::new(false); }
 
 impl EventObserver {
     fn init_db(db_path: &str) -> Result<Connection, db_error> {
@@ -440,11 +442,7 @@ impl EventObserver {
             Self::send_payload_directly(&payload, &url, timeout);
 
             #[cfg(test)]
-            if TEST_EVENT_OBSERVER_SKIP_RETRY
-                .lock()
-                .unwrap()
-                .unwrap_or(false)
-            {
+            if TEST_EVENT_OBSERVER_SKIP_RETRY.with(|v| *v.borrow()) {
                 warn!("Fault injection: delete_payload");
                 return;
             }
@@ -509,11 +507,7 @@ impl EventObserver {
             }
 
             #[cfg(test)]
-            if TEST_EVENT_OBSERVER_SKIP_RETRY
-                .lock()
-                .unwrap()
-                .unwrap_or(false)
-            {
+            if TEST_EVENT_OBSERVER_SKIP_RETRY.with(|v| *v.borrow()) {
                 warn!("Fault injection: skipping retry of payload");
                 return;
             }
@@ -1294,6 +1288,12 @@ impl EventDispatcher {
         block_timestamp: Option<u64>,
         coinbase_height: u64,
     ) {
+        let interested_observers =
+            self.filter_observers(&self.block_proposal_observers_lookup, true);
+        if interested_observers.is_empty() {
+            return;
+        }
+
         let all_receipts = receipts.to_owned();
         let (dispatch_matrix, events) = self.create_dispatch_matrix_and_event_vector(&all_receipts);
 
@@ -1637,7 +1637,8 @@ impl EventDispatcher {
     }
 
     pub fn process_new_attachments(&self, attachments: &[(AttachmentInstance, Attachment)]) {
-        let interested_observers: Vec<_> = self.registered_observers.iter().enumerate().collect();
+        let interested_observers = self.filter_observers(&self.mempool_observers_lookup, true);
+
         if interested_observers.is_empty() {
             return;
         }
@@ -1648,7 +1649,7 @@ impl EventDispatcher {
             serialized_attachments.push(payload);
         }
 
-        for (_, observer) in interested_observers.iter() {
+        for observer in interested_observers.iter() {
             observer.send_new_attachments(&json!(serialized_attachments));
         }
     }
@@ -1759,15 +1760,20 @@ mod test {
     use std::time::Instant;
 
     use clarity::vm::costs::ExecutionCost;
+    use clarity::vm::ClarityVersion;
     use stacks::burnchains::{PoxConstants, Txid};
     use stacks::chainstate::nakamoto::{NakamotoBlock, NakamotoBlockHeader};
     use stacks::chainstate::stacks::db::{StacksBlockHeaderTypes, StacksHeaderInfo};
     use stacks::chainstate::stacks::events::StacksBlockEventData;
-    use stacks::chainstate::stacks::StacksBlock;
+    use stacks::chainstate::stacks::{
+        SinglesigHashMode, SinglesigSpendingCondition, StacksBlock, TransactionAuth,
+        TransactionPublicKeyEncoding, TransactionSpendingCondition, TransactionVersion,
+    };
     use stacks::types::chainstate::BlockHeaderHash;
     use stacks::util::secp256k1::MessageSignature;
     use stacks_common::bitvec::BitVec;
     use stacks_common::types::chainstate::{BurnchainHeaderHash, StacksBlockId};
+    use stacks_common::util::hash::Hash160;
     use tempfile::tempdir;
     use tiny_http::{Method, Response, Server, StatusCode};
 
@@ -2395,7 +2401,7 @@ mod test {
 
         // Disable retrying so that it sends the payload only once
         // and that payload will be ignored by the test server.
-        TEST_EVENT_OBSERVER_SKIP_RETRY.lock().unwrap().replace(true);
+        TEST_EVENT_OBSERVER_SKIP_RETRY.with(|v| *v.borrow_mut() = true);
 
         info!("Sending payload 1");
 
@@ -2403,10 +2409,7 @@ mod test {
         observer.send_payload(&payload, "/test");
 
         // Re-enable retrying
-        TEST_EVENT_OBSERVER_SKIP_RETRY
-            .lock()
-            .unwrap()
-            .replace(false);
+        TEST_EVENT_OBSERVER_SKIP_RETRY.with(|v| *v.borrow_mut() = false);
 
         info!("Sending payload 2");
 
@@ -2416,5 +2419,198 @@ mod test {
         // Wait for the server to process the requests
         rx.recv_timeout(Duration::from_secs(5))
             .expect("Server did not receive request in time");
+    }
+
+    #[test]
+    fn test_event_dispatcher_tx_filtering() {
+        let dir = tempdir().unwrap();
+        let working_dir = dir.path().to_path_buf();
+
+        // Create a mock server
+        let mut server = mockito::Server::new();
+        let _m = server
+            .mock("POST", "/new_mempool_tx")
+            .with_status(200)
+            .expect_at_most(1)
+            .create();
+
+        let mut event_dispatcher = EventDispatcher::new();
+        let config = EventObserverConfig {
+            endpoint: server.url().strip_prefix("http://").unwrap().to_string(),
+            events_keys: vec![EventKeyType::MemPoolTransactions],
+            timeout_ms: 1000,
+        };
+        event_dispatcher.register_observer(&config, working_dir);
+
+        let sig = SinglesigSpendingCondition {
+            hash_mode: SinglesigHashMode::P2WPKH,
+            signer: Hash160([0u8; 20]),
+            nonce: 0,
+            tx_fee: 0,
+            key_encoding: TransactionPublicKeyEncoding::Compressed,
+            signature: MessageSignature([0u8; 65]),
+        };
+        let tx = StacksTransaction::new(
+            TransactionVersion::Testnet,
+            TransactionAuth::Standard(TransactionSpendingCondition::Singlesig(sig)),
+            TransactionPayload::new_smart_contract("test", "test", Some(ClarityVersion::Clarity3))
+                .unwrap(),
+        );
+        event_dispatcher.process_new_mempool_txs(vec![tx]);
+
+        _m.assert();
+    }
+
+    #[test]
+    fn test_event_dispatcher_tx_filtering_empty() {
+        let dir = tempdir().unwrap();
+        let working_dir = dir.path().to_path_buf();
+
+        // Create a mock server
+        let mut server = mockito::Server::new();
+        let _m = server
+            .mock("POST", "/new_mempool_tx")
+            .with_status(200)
+            .expect_at_most(0)
+            .create();
+
+        let mut event_dispatcher = EventDispatcher::new();
+        let config = EventObserverConfig {
+            endpoint: server.url().strip_prefix("http://").unwrap().to_string(),
+            events_keys: vec![],
+            timeout_ms: 1000,
+        };
+        event_dispatcher.register_observer(&config, working_dir);
+
+        let sig = SinglesigSpendingCondition {
+            hash_mode: SinglesigHashMode::P2WPKH,
+            signer: Hash160([0u8; 20]),
+            nonce: 0,
+            tx_fee: 0,
+            key_encoding: TransactionPublicKeyEncoding::Compressed,
+            signature: MessageSignature([0u8; 65]),
+        };
+        let tx = StacksTransaction::new(
+            TransactionVersion::Testnet,
+            TransactionAuth::Standard(TransactionSpendingCondition::Singlesig(sig)),
+            TransactionPayload::new_smart_contract("test", "test", Some(ClarityVersion::Clarity3))
+                .unwrap(),
+        );
+        event_dispatcher.process_new_mempool_txs(vec![tx]);
+
+        _m.assert();
+    }
+
+    #[test]
+    fn test_event_dispatcher_tx_filtering_wrong() {
+        let dir = tempdir().unwrap();
+        let working_dir = dir.path().to_path_buf();
+
+        // Create a mock server
+        let mut server = mockito::Server::new();
+        let _m = server
+            .mock("POST", "/new_mempool_tx")
+            .with_status(200)
+            .expect_at_most(0)
+            .create();
+
+        let mut event_dispatcher = EventDispatcher::new();
+        let config = EventObserverConfig {
+            endpoint: server.url().strip_prefix("http://").unwrap().to_string(),
+            events_keys: vec![EventKeyType::BlockProposal],
+            timeout_ms: 1000,
+        };
+        event_dispatcher.register_observer(&config, working_dir);
+
+        let sig = SinglesigSpendingCondition {
+            hash_mode: SinglesigHashMode::P2WPKH,
+            signer: Hash160([0u8; 20]),
+            nonce: 0,
+            tx_fee: 0,
+            key_encoding: TransactionPublicKeyEncoding::Compressed,
+            signature: MessageSignature([0u8; 65]),
+        };
+
+        let tx = StacksTransaction::new(
+            TransactionVersion::Testnet,
+            TransactionAuth::Standard(TransactionSpendingCondition::Singlesig(sig)),
+            TransactionPayload::new_smart_contract("test", "test", Some(ClarityVersion::Clarity3))
+                .unwrap(),
+        );
+        event_dispatcher.process_new_mempool_txs(vec![tx]);
+
+        _m.assert();
+    }
+
+    #[test]
+    fn test_event_dispatcher_nakamoto_block_filtering() {
+        let dir = tempdir().unwrap();
+        let working_dir = dir.path().to_path_buf();
+
+        // Create a mock server
+        let mut server = mockito::Server::new();
+        let _m = server
+            .mock("POST", "/new_block")
+            .with_status(200)
+            .expect_at_most(1)
+            .create();
+
+        let mut event_dispatcher = EventDispatcher::new();
+        let config = EventObserverConfig {
+            endpoint: server.url().strip_prefix("http://").unwrap().to_string(),
+            events_keys: vec![EventKeyType::BlockProposal],
+            timeout_ms: 1000,
+        };
+        event_dispatcher.register_observer(&config, working_dir);
+
+        let nakamoto_block = NakamotoBlock {
+            header: NakamotoBlockHeader::empty(),
+            txs: vec![],
+        };
+        event_dispatcher.process_mined_nakamoto_block_event(
+            0,
+            &nakamoto_block,
+            0,
+            &ExecutionCost::max_value(),
+            vec![],
+        );
+
+        _m.assert();
+    }
+
+    #[test]
+    fn test_event_dispatcher_nakamoto_block_filtering_empty() {
+        let dir = tempdir().unwrap();
+        let working_dir = dir.path().to_path_buf();
+
+        // Create a mock server
+        let mut server = mockito::Server::new();
+        let _m = server
+            .mock("POST", "/new_mempool_tx")
+            .with_status(200)
+            .expect_at_most(0)
+            .create();
+
+        let mut event_dispatcher = EventDispatcher::new();
+        let config = EventObserverConfig {
+            endpoint: server.url().strip_prefix("http://").unwrap().to_string(),
+            events_keys: vec![],
+            timeout_ms: 1000,
+        };
+        event_dispatcher.register_observer(&config, working_dir);
+
+        let nakamoto_block = NakamotoBlock {
+            header: NakamotoBlockHeader::empty(),
+            txs: vec![],
+        };
+        event_dispatcher.process_mined_nakamoto_block_event(
+            0,
+            &nakamoto_block,
+            0,
+            &ExecutionCost::max_value(),
+            vec![],
+        );
+
+        _m.assert();
     }
 }
