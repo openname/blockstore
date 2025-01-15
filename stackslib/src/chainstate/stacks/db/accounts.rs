@@ -79,9 +79,8 @@ impl FromRow<MinerPaymentSchedule> for MinerPaymentSchedule {
         let stacks_block_height = u64::from_column(row, "stacks_block_height")?;
         let vtxindex: u32 = row.get_unwrap("vtxindex");
 
-        let schedule_type: HeaderTypeNames = row
-            .get("schedule_type")
-            .unwrap_or_else(|_e| HeaderTypeNames::Epoch2);
+        let schedule_type: HeaderTypeNames =
+            row.get("schedule_type").unwrap_or(HeaderTypeNames::Epoch2);
 
         let coinbase = coinbase_text
             .parse::<u128>()
