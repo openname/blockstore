@@ -16,6 +16,7 @@
 
 #[cfg(feature = "monitoring_prom")]
 use ::prometheus::HistogramTimer;
+use blockstack_lib::chainstate::nakamoto::NakamotoBlock;
 #[cfg(feature = "monitoring_prom")]
 use slog::slog_error;
 #[cfg(not(feature = "monitoring_prom"))]
@@ -123,16 +124,44 @@ pub fn new_rpc_call_timer(_full_path: &str, _origin: &str) -> NoOpTimer {
     NoOpTimer
 }
 
+/// Record the time taken to issue a block response for
+/// a given block. The block's timestamp is used to calculate the latency.
+///
+/// Call this right after broadcasting a BlockResponse
+pub fn record_block_response_latency(block: &NakamotoBlock) {
+    #[cfg(not(feature = "monitoring_prom"))]
+    let _ = block;
+    #[cfg(feature = "monitoring_prom")]
+    {
+        use clarity::util::get_epoch_time_ms;
+
+        let diff =
+            get_epoch_time_ms().saturating_sub(block.header.timestamp.saturating_mul(1000).into());
+        prometheus::SIGNER_BLOCK_RESPONSE_LATENCIES_HISTOGRAM
+            .with_label_values(&[])
+            .observe(diff as f64 / 1000.0);
+    }
+}
+
+/// Record the time taken to validate a block, as reported by the Stacks node.
+pub fn record_block_validation_latency(latency_ms: u64) {
+    #[cfg(not(feature = "monitoring_prom"))]
+    let _ = latency_ms;
+    #[cfg(feature = "monitoring_prom")]
+    prometheus::SIGNER_BLOCK_VALIDATION_LATENCIES_HISTOGRAM
+        .with_label_values(&[])
+        .observe(latency_ms as f64 / 1000.0);
+}
+
 /// Start serving monitoring metrics.
 /// This will only serve the metrics if the `monitoring_prom` feature is enabled.
-#[allow(unused_variables)]
 pub fn start_serving_monitoring_metrics(config: GlobalConfig) -> Result<(), String> {
     #[cfg(feature = "monitoring_prom")]
     {
         if config.metrics_endpoint.is_none() {
             return Ok(());
         }
-        let thread = std::thread::Builder::new()
+        let _ = std::thread::Builder::new()
             .name("signer_metrics".to_string())
             .spawn(move || {
                 if let Err(monitoring_err) = server::MonitoringServer::start(&config) {
