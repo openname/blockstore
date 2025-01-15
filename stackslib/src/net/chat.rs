@@ -3154,8 +3154,8 @@ mod test {
         )
         .unwrap();
 
-        let mut tx = peerdb.tx_begin().unwrap();
-        PeerDB::set_local_services(&mut tx, services).unwrap();
+        let tx = peerdb.tx_begin().unwrap();
+        PeerDB::set_local_services(&tx, services).unwrap();
         tx.commit().unwrap();
 
         let stackerdb = StackerDBs::connect(&stackerdb_path, true).unwrap();
@@ -3237,9 +3237,9 @@ mod test {
     ) -> PeerNetwork {
         let test_path = format!("/tmp/stacks-test-databases-{}", test_name);
         {
-            let mut tx = peerdb.tx_begin().unwrap();
+            let tx = peerdb.tx_begin().unwrap();
             PeerDB::set_local_ipaddr(
-                &mut tx,
+                &tx,
                 &PeerAddress::from_socketaddr(socketaddr),
                 socketaddr.port(),
             )
@@ -5061,8 +5061,8 @@ mod test {
             // regenerate keys and expiries in peer 1
             let new_privkey = Secp256k1PrivateKey::new();
             {
-                let mut tx = peerdb_1.tx_begin().unwrap();
-                PeerDB::set_local_private_key(&mut tx, &new_privkey, (12350 + i) as u64).unwrap();
+                let tx = peerdb_1.tx_begin().unwrap();
+                PeerDB::set_local_private_key(&tx, &new_privkey, (12350 + i) as u64).unwrap();
                 tx.commit().unwrap();
             }
         }

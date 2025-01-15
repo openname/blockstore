@@ -2931,10 +2931,10 @@ pub mod test {
             .unwrap();
             {
                 // bootstrap nodes *always* allowed
-                let mut tx = peerdb.tx_begin().unwrap();
+                let tx = peerdb.tx_begin().unwrap();
                 for initial_neighbor in config.initial_neighbors.iter() {
                     PeerDB::set_allow_peer(
-                        &mut tx,
+                        &tx,
                         initial_neighbor.addr.network_id,
                         &initial_neighbor.addr.addrbytes,
                         initial_neighbor.addr.port,
@@ -2942,7 +2942,7 @@ pub mod test {
                     )
                     .unwrap();
                 }
-                PeerDB::set_local_services(&mut tx, config.services).unwrap();
+                PeerDB::set_local_services(&tx, config.services).unwrap();
                 tx.commit().unwrap();
             }
 
@@ -3083,9 +3083,9 @@ pub mod test {
                 SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), config.http_port);
 
             {
-                let mut tx = peerdb.tx_begin().unwrap();
+                let tx = peerdb.tx_begin().unwrap();
                 PeerDB::set_local_ipaddr(
-                    &mut tx,
+                    &tx,
                     &PeerAddress::from_socketaddr(&SocketAddr::new(
                         IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
                         config.server_port,
@@ -3093,12 +3093,8 @@ pub mod test {
                     config.server_port,
                 )
                 .unwrap();
-                PeerDB::set_local_private_key(
-                    &mut tx,
-                    &config.private_key,
-                    config.private_key_expire,
-                )
-                .unwrap();
+                PeerDB::set_local_private_key(&tx, &config.private_key, config.private_key_expire)
+                    .unwrap();
 
                 tx.commit().unwrap();
             }
@@ -3244,8 +3240,8 @@ pub mod test {
             stacker_dbs: Option<&[QualifiedContractIdentifier]>,
             bootstrap: bool,
         ) {
-            let mut tx = self.network.peerdb.tx_begin().unwrap();
-            n.save(&mut tx, stacker_dbs).unwrap();
+            let tx = self.network.peerdb.tx_begin().unwrap();
+            n.save(&tx, stacker_dbs).unwrap();
             if bootstrap {
                 PeerDB::set_initial_peer(
                     &tx,
@@ -3313,7 +3309,7 @@ pub mod test {
             ibd: bool,
             dns_client: Option<&mut DNSClient>,
         ) -> Result<NetworkResult, net_error> {
-            let mut sortdb = self.sortdb.take().unwrap();
+            let sortdb = self.sortdb.take().unwrap();
             let mut stacks_node = self.stacks_node.take().unwrap();
             let mut mempool = self.mempool.take().unwrap();
             let indexer = self.indexer.take().unwrap();
@@ -3322,7 +3318,7 @@ pub mod test {
 
             let ret = self.network.run(
                 &indexer,
-                &mut sortdb,
+                &sortdb,
                 &mut stacks_node.chainstate,
                 &mut mempool,
                 dns_client,
@@ -3376,7 +3372,7 @@ pub mod test {
         }
 
         pub fn step_dns(&mut self, dns_client: &mut DNSClient) -> Result<NetworkResult, net_error> {
-            let mut sortdb = self.sortdb.take().unwrap();
+            let sortdb = self.sortdb.take().unwrap();
             let mut stacks_node = self.stacks_node.take().unwrap();
             let mut mempool = self.mempool.take().unwrap();
             let indexer = BitcoinIndexer::new_unit_test(&self.config.burnchain.working_dir);
@@ -3402,7 +3398,7 @@ pub mod test {
 
             let ret = self.network.run(
                 &indexer,
-                &mut sortdb,
+                &sortdb,
                 &mut stacks_node.chainstate,
                 &mut mempool,
                 Some(dns_client),
@@ -4308,7 +4304,7 @@ pub mod test {
             );
 
             let mut block_commit_op = stacks_node.make_tenure_commitment(
-                &mut sortdb,
+                &sortdb,
                 &mut burn_block,
                 &mut self.miner,
                 &stacks_block,
@@ -4395,7 +4391,7 @@ pub mod test {
             StacksBlock,
             Vec<StacksMicroblock>,
         ) {
-            let mut sortdb = self.sortdb.take().unwrap();
+            let sortdb = self.sortdb.take().unwrap();
             let mut burn_block = {
                 let sn = SortitionDB::get_canonical_burn_chain_tip(sortdb.conn()).unwrap();
                 TestBurnchainBlock::new(&sn, 0)
@@ -4413,7 +4409,7 @@ pub mod test {
             let burn_block_height = burn_block.block_height;
 
             let (stacks_block, microblocks, block_commit_op) = stacks_node.mine_stacks_block(
-                &mut sortdb,
+                &sortdb,
                 &mut self.miner,
                 &mut burn_block,
                 &last_key,

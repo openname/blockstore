@@ -864,7 +864,7 @@ pub fn get_reward_cycle_info<U: RewardSetProvider>(
 
         let mut tx = sort_db.tx_begin()?;
         let preprocessed_reward_set =
-            SortitionDB::get_preprocessed_reward_set(&mut tx, &first_prepare_sn.sortition_id)?;
+            SortitionDB::get_preprocessed_reward_set(&tx, &first_prepare_sn.sortition_id)?;
 
         // It's possible that we haven't processed the PoX anchor block at the time we have
         // processed the burnchain block which commits to it.  In this case, the PoX anchor block
@@ -2313,9 +2313,9 @@ impl<
                 canonical_snapshot.canonical_stacks_tip_height,
             );
 
-            let mut tx = self.sortition_db.tx_begin()?;
+            let tx = self.sortition_db.tx_begin()?;
             SortitionDB::revalidate_snapshot_with_block(
-                &mut tx,
+                &tx,
                 &new_sortition_id,
                 &canonical_snapshot.canonical_stacks_tip_consensus_hash,
                 &canonical_snapshot.canonical_stacks_tip_hash,

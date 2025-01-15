@@ -227,7 +227,7 @@ fn get_blocks_inventory(peer: &mut TestPeer, start_height: u64, end_height: u64)
         ic.get_stacks_header_hashes(
             num_headers + 1,
             &ancestor.consensus_hash,
-            &mut BlockHeaderCache::new(),
+            &BlockHeaderCache::new(),
         )
         .unwrap()
     };

@@ -874,7 +874,7 @@ impl NakamotoDownloadStateMachine {
         self.tenure_downloads.make_tenure_downloaders(
             &mut self.tenure_download_schedule,
             &mut self.available_tenures,
-            &mut self.tenure_block_ids,
+            &self.tenure_block_ids,
             count,
             current_reward_sets,
         )

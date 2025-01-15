@@ -440,7 +440,7 @@ impl NakamotoBlockProposal {
                 })?;
 
         let burn_dbconn: SortitionHandleConn = sortdb.index_handle(&sort_tip.sortition_id);
-        let mut db_handle = sortdb.index_handle(&sort_tip.sortition_id);
+        let db_handle = sortdb.index_handle(&sort_tip.sortition_id);
 
         // (For the signer)
         // Verify that the block's tenure is on the canonical sortition history
@@ -454,7 +454,7 @@ impl NakamotoBlockProposal {
         // there must be a block-commit for this), or otherwise this block doesn't correspond to
         // any burnchain chainstate.
         let expected_burn_opt =
-            NakamotoChainState::get_expected_burns(&mut db_handle, chainstate.db(), &self.block)?;
+            NakamotoChainState::get_expected_burns(&db_handle, chainstate.db(), &self.block)?;
         if expected_burn_opt.is_none() {
             warn!(
                 "Rejected block proposal";
