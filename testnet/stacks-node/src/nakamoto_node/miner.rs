@@ -1113,14 +1113,13 @@ impl BlockMinerThread {
             Some(&self.event_dispatcher),
             signer_bitvec_len.unwrap_or(0),
         )
-        .map_err(|e| {
+        .inspect_err(|e| {
             if !matches!(
                 e,
                 ChainstateError::MinerAborted | ChainstateError::NoTransactionsToMine
             ) {
                 error!("Relayer: Failure mining anchored block: {e}");
             }
-            e
         })?;
 
         if block.txs.is_empty() {

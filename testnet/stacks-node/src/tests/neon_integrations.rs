@@ -38,7 +38,7 @@ use stacks::chainstate::stacks::{
     StacksPublicKey, StacksTransaction, TransactionContractCall, TransactionPayload,
 };
 use stacks::clarity_cli::vm_execute as execute;
-use stacks::cli;
+use stacks::cli::{self, StacksInspectOpts};
 use stacks::codec::StacksMessageCodec;
 use stacks::config::{EventKeyType, EventObserverConfig, FeeEstimatorName, InitialBalance};
 use stacks::core::mempool::MemPoolWalkTxTypes;
@@ -12694,10 +12694,11 @@ fn mock_miner_replay() {
     // Run `mock_miner_replay()`
     let blocks_dir = blocks_dir.into_os_string().into_string().unwrap();
     let db_path = format!("{}/neon", conf.node.working_dir);
-    let args: Vec<String> = vec!["replay-mock-mining".into(), db_path, blocks_dir];
 
     info!("Replaying mock mined blocks...");
-    cli::command_replay_mock_mining(&args, Some(&conf));
+    let argv: Vec<String> = vec!["replay-mock-mining".into(), db_path, blocks_dir];
+    let opts = StacksInspectOpts::new_with_config(conf);
+    cli::command_replay_mock_mining(&argv, &opts);
 
     // ---------- Test finished, clean up ----------
 
