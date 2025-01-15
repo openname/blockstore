@@ -845,9 +845,8 @@ impl BlockMinerThread {
             })?;
 
         let stacks_tip_block_id = StacksBlockId::new(&stacks_tip_ch, &stacks_tip_bh);
-        let tenure_tip_opt = NakamotoChainState::get_highest_block_header_in_tenure(
+        let tenure_tip_opt = NakamotoChainState::get_highest_known_block_header_in_tenure(
             &mut chain_state.index_conn(),
-            &stacks_tip_block_id,
             &self.burn_election_block.consensus_hash,
         )
         .map_err(|e| {
