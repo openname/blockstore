@@ -309,7 +309,7 @@ fn main() {
         process::exit(1);
     }
 
-    let common_opts = cli::drain_common_opts(&mut argv, 1);
+    let opts = cli::drain_stacks_inspect_opts(&mut argv, 1);
 
     if argv[1] == "--version" {
         println!(
@@ -798,7 +798,7 @@ check if the associated microblocks can be downloaded
     }
 
     if argv[1] == "try-mine" {
-        cli::command_try_mine(&argv[1..], common_opts.config.as_ref());
+        cli::command_try_mine(argv[1..].to_vec(), &opts);
         process::exit(0);
     }
 
@@ -1600,17 +1600,17 @@ check if the associated microblocks can be downloaded
     }
 
     if argv[1] == "replay-block" {
-        cli::command_replay_block(&argv[1..], common_opts.config.as_ref());
+        cli::command_replay_block(&argv[1..], &opts);
         process::exit(0);
     }
 
     if argv[1] == "replay-naka-block" {
-        cli::command_replay_block_nakamoto(&argv[1..], common_opts.config.as_ref());
+        cli::command_replay_block_nakamoto(&argv[1..], &opts);
         process::exit(0);
     }
 
     if argv[1] == "replay-mock-mining" {
-        cli::command_replay_mock_mining(&argv[1..], common_opts.config.as_ref());
+        cli::command_replay_mock_mining(&argv[1..], &opts);
         process::exit(0);
     }
 
