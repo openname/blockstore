@@ -1100,8 +1100,10 @@ impl BurnchainIndexer for BitcoinIndexer {
         start_height: u64,
         end_height: Option<u64>,
     ) -> Result<u64, burnchain_error> {
-        if end_height.is_some() && end_height <= Some(start_height) {
-            return Ok(end_height.unwrap());
+        if let Some(end_height) = end_height {
+            if end_height <= start_height {
+                return Ok(end_height);
+            }
         }
 
         let new_height = self
