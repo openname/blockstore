@@ -1240,14 +1240,13 @@ impl BlockMinerThread {
                 let index_block_hash =
                     StacksBlockId::new(&tip.consensus_hash, &tip.anchored_block_hash);
 
-                if !considered.contains(&index_block_hash) {
+                if considered.insert(index_block_hash) {
                     let burn_height = burn_db
                         .get_consensus_hash_height(&tip.consensus_hash)
                         .expect("FATAL: could not query burnchain block height")
                         .expect("FATAL: no burnchain block height for Stacks tip");
                     let candidate = TipCandidate::new(tip, burn_height);
                     candidates.push(candidate);
-                    considered.insert(index_block_hash);
                 }
             }
         }
