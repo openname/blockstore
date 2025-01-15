@@ -286,7 +286,7 @@ impl RelayerStats {
                     let mut to_remove = vec![];
                     for (ts, old_addr) in self.relay_updates.iter() {
                         self.relay_stats.remove(old_addr);
-                        if self.relay_stats.len() <= MAX_RELAYER_STATS - 1 {
+                        if self.relay_stats.len() < MAX_RELAYER_STATS {
                             break;
                         }
                         to_remove.push(*ts);
@@ -342,7 +342,7 @@ impl RelayerStats {
                 let mut to_remove = vec![];
                 for (ts, old_nk) in self.recent_updates.iter() {
                     self.recent_messages.remove(old_nk);
-                    if self.recent_messages.len() <= MAX_RELAYER_STATS - 1 {
+                    if self.recent_messages.len() < MAX_RELAYER_STATS {
                         break;
                     }
                     to_remove.push(*ts);

@@ -2327,7 +2327,7 @@ fn test_build_anchored_blocks_invalid() {
 
                 eprintln!("\n\nat resume parent tenure:\nlast_parent: {:?}\nlast_parent_tip: {:?}\n\n", &last_parent, &last_parent_tip);
             }
-            else if tenure_id >= bad_block_tenure + 1 {
+            else if tenure_id > bad_block_tenure {
                 last_parent = None;
                 last_parent_tip = None;
             }

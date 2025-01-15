@@ -632,8 +632,8 @@ impl NakamotoBlockBuilder {
             ))
         })?;
 
-        if naka_tip_header.anchored_header.height() + 1
-            <= naka_tip_tenure_start_header.anchored_header.height()
+        if naka_tip_header.anchored_header.height()
+            < naka_tip_tenure_start_header.anchored_header.height()
         {
             return Err(Error::InvalidStacksBlock(
                 "Nakamoto tip is lower than its tenure-start block".into(),
