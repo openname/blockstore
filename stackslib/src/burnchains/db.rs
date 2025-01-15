@@ -1245,8 +1245,8 @@ impl BurnchainDB {
 
         ops.extend(
             pre_stx_ops
-                .into_iter()
-                .map(|(_, op)| BlockstackOperationType::PreStx(op)),
+                .into_values()
+                .map(BlockstackOperationType::PreStx),
         );
 
         ops.sort_by_key(|op| op.vtxindex());

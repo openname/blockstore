@@ -280,11 +280,7 @@ where
 
     make_topology(&mut peer_configs);
 
-    let mut peers = vec![];
-    for conf in peer_configs.drain(..) {
-        let peer = TestPeer::new(conf);
-        peers.push(peer);
-    }
+    let mut peers: Vec<_> = peer_configs.into_iter().map(TestPeer::new).collect();
 
     let mut num_blocks = 10;
     let first_stacks_block_height = {
@@ -511,7 +507,7 @@ where
     }
 
     drop(dns_clients);
-    for handle in dns_threads.drain(..) {
+    for handle in dns_threads.into_iter() {
         handle.join().unwrap();
     }
 
@@ -904,7 +900,7 @@ pub fn test_get_blocks_and_microblocks_5_peers_star() {
                     peer_configs[i].add_neighbor(&peer_0);
                 }
 
-                for n in neighbors.drain(..) {
+                for n in neighbors.into_iter() {
                     peer_configs[0].add_neighbor(&n);
                 }
             },
@@ -1060,7 +1056,7 @@ pub fn test_get_blocks_and_microblocks_overwhelmed_connections() {
                     peer_configs[i].connection_opts.max_http_clients = 1;
                 }
 
-                for n in neighbors.drain(..) {
+                for n in neighbors.into_iter() {
                     peer_configs[0].add_neighbor(&n);
                 }
             },
@@ -1139,7 +1135,7 @@ pub fn test_get_blocks_and_microblocks_overwhelmed_sockets() {
                     peer_configs[i].connection_opts.max_sockets = 10;
                 }
 
-                for n in neighbors.drain(..) {
+                for n in neighbors.into_iter() {
                     peer_configs[0].add_neighbor(&n);
                 }
             },
@@ -1175,12 +1171,9 @@ pub fn test_get_blocks_and_microblocks_overwhelmed_sockets() {
             |peer| {
                 // check peer health
                 // nothing should break
-                match peer.network.block_downloader {
-                    Some(ref dl) => {
-                        assert_eq!(dl.broken_peers.len(), 0);
-                        assert_eq!(dl.dead_peers.len(), 0);
-                    }
-                    None => {}
+                if let Some(ref dl) = peer.network.block_downloader {
+                    assert_eq!(dl.broken_peers.len(), 0);
+                    assert_eq!(dl.dead_peers.len(), 0);
                 }
                 true
             },

@@ -1580,8 +1580,8 @@ impl NetworkResult {
 
         let pushed_blocks: HashSet<_> = self
             .pushed_blocks
-            .iter()
-            .flat_map(|(_, block_list)| {
+            .values()
+            .flat_map(|block_list| {
                 block_list.iter().flat_map(|block_data| {
                     block_data
                         .blocks
@@ -1620,8 +1620,8 @@ impl NetworkResult {
 
         let pushed_microblocks: HashSet<_> = self
             .pushed_microblocks
-            .iter()
-            .flat_map(|(_, mblock_list)| {
+            .values()
+            .flat_map(|mblock_list| {
                 mblock_list.iter().flat_map(|(_, mblock_data)| {
                     mblock_data
                         .microblocks
@@ -1646,14 +1646,14 @@ impl NetworkResult {
     fn all_nakamoto_block_ids(&self) -> HashSet<StacksBlockId> {
         let mut naka_block_ids: HashSet<_> = self
             .nakamoto_blocks
-            .iter()
-            .map(|(_, nblk)| nblk.block_id())
+            .values()
+            .map(|nblk| nblk.block_id())
             .collect();
 
         let pushed_nakamoto_blocks: HashSet<_> = self
             .pushed_nakamoto_blocks
-            .iter()
-            .map(|(_, naka_blocks_list)| {
+            .values()
+            .map(|naka_blocks_list| {
                 naka_blocks_list
                     .iter()
                     .map(|(_, naka_blocks)| {
@@ -1694,8 +1694,8 @@ impl NetworkResult {
             .collect();
         let pushed_txids: HashSet<_> = self
             .pushed_transactions
-            .iter()
-            .map(|(_, tx_list)| {
+            .values()
+            .map(|tx_list| {
                 tx_list
                     .iter()
                     .map(|(_, tx)| tx.txid())
@@ -1723,8 +1723,8 @@ impl NetworkResult {
     /// This is unique per message.
     fn all_msg_sigs(&self) -> HashSet<MessageSignature> {
         self.unhandled_messages
-            .iter()
-            .map(|(_, msgs)| {
+            .values()
+            .map(|msgs| {
                 msgs.iter()
                     .map(|msg| msg.preamble.signature.clone())
                     .collect::<HashSet<_>>()
@@ -2093,8 +2093,8 @@ impl NetworkResult {
         self.pushed_transactions
             .values()
             .flat_map(|pushed_txs| pushed_txs.iter().map(|(_, tx)| tx.clone()))
-            .chain(self.uploaded_transactions.iter().map(|x| x.clone()))
-            .chain(self.synced_transactions.iter().map(|x| x.clone()))
+            .chain(self.uploaded_transactions.iter().cloned())
+            .chain(self.synced_transactions.iter().cloned())
             .collect()
     }
 
@@ -2542,7 +2542,7 @@ pub mod test {
                 parent: parent.clone(),
                 winner_txid,
                 matured_rewards: matured_rewards.to_owned(),
-                matured_rewards_info: matured_rewards_info.map(|info| info.clone()),
+                matured_rewards_info: matured_rewards_info.cloned(),
                 reward_set_data: reward_set_data.clone(),
             })
         }
@@ -3137,8 +3137,7 @@ pub mod test {
             let stacker_db_syncs =
                 Self::init_stackerdb_syncs(&test_path, &peerdb, &mut stackerdb_configs);
 
-            let stackerdb_contracts: Vec<_> =
-                stacker_db_syncs.keys().map(|cid| cid.clone()).collect();
+            let stackerdb_contracts: Vec<_> = stacker_db_syncs.keys().cloned().collect();
 
             let burnchain_db = config.burnchain.open_burnchain_db(false).unwrap();
 

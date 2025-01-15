@@ -520,7 +520,7 @@ impl MemPoolWalkTxTypes {
     }
 
     pub fn only(selected: &[MemPoolWalkTxTypes]) -> HashSet<MemPoolWalkTxTypes> {
-        selected.iter().map(|x| x.clone()).collect()
+        selected.iter().copied().collect()
     }
 }
 

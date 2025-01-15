@@ -96,7 +96,7 @@ fn test_try_make_response() {
 
     let test_rpc = TestRPC::setup(function_name!());
     let mempool_txids = test_rpc.mempool_txids.clone();
-    let mempool_txids: HashSet<_> = mempool_txids.iter().map(|txid| txid.clone()).collect();
+    let mempool_txids: HashSet<_> = mempool_txids.iter().copied().collect();
 
     let sync_data = test_rpc
         .peer_1

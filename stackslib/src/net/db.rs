@@ -1447,8 +1447,7 @@ impl PeerDB {
         let cur_dbs_set: HashSet<_> = PeerDB::static_get_peer_stacker_dbs(tx, neighbor)?
             .into_iter()
             .collect();
-        let new_dbs_set: HashSet<QualifiedContractIdentifier> =
-            dbs.iter().map(|cid| cid.clone()).collect();
+        let new_dbs_set: HashSet<QualifiedContractIdentifier> = dbs.iter().cloned().collect();
         let to_insert: Vec<_> = new_dbs_set.difference(&cur_dbs_set).collect();
         let to_delete: Vec<_> = cur_dbs_set.difference(&new_dbs_set).collect();
 

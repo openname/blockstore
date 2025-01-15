@@ -901,16 +901,9 @@ fn test_nakamoto_inv_sync_state_machine() {
         let _ = peer.step_with_ibd(false);
         let _ = other_peer.step_with_ibd(false);
 
-        let event_ids: Vec<usize> = peer
-            .network
-            .iter_peer_event_ids()
-            .map(|e_id| *e_id)
-            .collect();
-        let other_event_ids: Vec<usize> = other_peer
-            .network
-            .iter_peer_event_ids()
-            .map(|e_id| *e_id)
-            .collect();
+        let event_ids: Vec<usize> = peer.network.iter_peer_event_ids().copied().collect();
+        let other_event_ids: Vec<usize> =
+            other_peer.network.iter_peer_event_ids().copied().collect();
 
         if !event_ids.is_empty() && !other_event_ids.is_empty() {
             break;
@@ -1032,16 +1025,9 @@ fn test_nakamoto_inv_sync_across_epoch_change() {
         let _ = peer.step_with_ibd(false);
         let _ = other_peer.step_with_ibd(false);
 
-        let event_ids: Vec<usize> = peer
-            .network
-            .iter_peer_event_ids()
-            .map(|e_id| *e_id)
-            .collect();
-        let other_event_ids: Vec<usize> = other_peer
-            .network
-            .iter_peer_event_ids()
-            .map(|e_id| *e_id)
-            .collect();
+        let event_ids: Vec<usize> = peer.network.iter_peer_event_ids().copied().collect();
+        let other_event_ids: Vec<usize> =
+            other_peer.network.iter_peer_event_ids().copied().collect();
 
         if !event_ids.is_empty() && !other_event_ids.is_empty() {
             break;

@@ -67,7 +67,7 @@ fn c32_encode(input_bytes: &[u8]) -> String {
         }
     }
 
-    let result: Vec<u8> = result.drain(..).rev().collect();
+    let result: Vec<u8> = result.into_iter().rev().collect();
     String::from_utf8(result).unwrap()
 }
 

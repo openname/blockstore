@@ -1861,7 +1861,7 @@ impl PeerNetwork {
 
     /// Get the event ID associated with a neighbor key
     pub fn get_event_id(&self, neighbor_key: &NeighborKey) -> Option<usize> {
-        self.events.get(neighbor_key).map(|eid| *eid)
+        self.events.get(neighbor_key).copied()
     }
 
     /// Get a ref to a conversation given a neighbor key
@@ -3255,7 +3255,7 @@ impl PeerNetwork {
         let neighbor_keys: Vec<NeighborKey> = self
             .inv_state
             .as_ref()
-            .map(|inv_state| inv_state.block_stats.keys().map(|nk| nk.clone()).collect())
+            .map(|inv_state| inv_state.block_stats.keys().cloned().collect())
             .unwrap_or(vec![]);
 
         if self.antientropy_start_reward_cycle == 0 {

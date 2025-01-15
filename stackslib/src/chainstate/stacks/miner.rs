@@ -262,11 +262,7 @@ pub struct MinerEpochInfo<'a> {
 
 impl From<&UnconfirmedState> for MicroblockMinerRuntime {
     fn from(unconfirmed: &UnconfirmedState) -> MicroblockMinerRuntime {
-        let considered = unconfirmed
-            .mined_txs
-            .iter()
-            .map(|(txid, _)| txid.clone())
-            .collect();
+        let considered = unconfirmed.mined_txs.keys().cloned().collect();
         MicroblockMinerRuntime {
             bytes_so_far: unconfirmed.bytes_so_far,
             prev_microblock_header: unconfirmed.last_mblock.clone(),

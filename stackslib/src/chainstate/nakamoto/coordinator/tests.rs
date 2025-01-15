@@ -3234,54 +3234,53 @@ fn test_stacks_on_burnchain_ops() {
         let (mut burn_ops, mut tenure_change, miner_key) =
             peer.begin_nakamoto_tenure(TenureChangeCause::BlockFound);
 
-        let mut new_burn_ops = vec![];
-        new_burn_ops.push(BlockstackOperationType::DelegateStx(DelegateStxOp {
-            sender: addr.clone(),
-            delegate_to: recipient_addr.clone(),
-            reward_addr: None,
-            delegated_ustx: 1,
-            until_burn_height: None,
+        let mut new_burn_ops = vec![
+            BlockstackOperationType::DelegateStx(DelegateStxOp {
+                sender: addr.clone(),
+                delegate_to: recipient_addr.clone(),
+                reward_addr: None,
+                delegated_ustx: 1,
+                until_burn_height: None,
 
-            // mocked
-            txid: Txid([i; 32]),
-            vtxindex: 11,
-            block_height: block_height + 1,
-            burn_header_hash: BurnchainHeaderHash([0x00; 32]),
-        }));
-        new_burn_ops.push(BlockstackOperationType::StackStx(StackStxOp {
-            sender: addr.clone(),
-            reward_addr: PoxAddress::Standard(
-                recipient_addr.clone(),
-                Some(AddressHashMode::SerializeP2PKH),
-            ),
-            stacked_ustx: 1,
-            num_cycles: 1,
-            signer_key: Some(StacksPublicKeyBuffer::from_public_key(
-                &StacksPublicKey::from_private(&recipient_private_key),
-            )),
-            max_amount: Some(1),
-            auth_id: Some(i as u32),
+                // mocked
+                txid: Txid([i; 32]),
+                vtxindex: 11,
+                block_height: block_height + 1,
+                burn_header_hash: BurnchainHeaderHash([0x00; 32]),
+            }),
+            BlockstackOperationType::StackStx(StackStxOp {
+                sender: addr.clone(),
+                reward_addr: PoxAddress::Standard(
+                    recipient_addr.clone(),
+                    Some(AddressHashMode::SerializeP2PKH),
+                ),
+                stacked_ustx: 1,
+                num_cycles: 1,
+                signer_key: Some(StacksPublicKeyBuffer::from_public_key(
+                    &StacksPublicKey::from_private(&recipient_private_key),
+                )),
+                max_amount: Some(1),
+                auth_id: Some(i as u32),
 
-            // mocked
-            txid: Txid([i | 0x80; 32]),
-            vtxindex: 12,
-            block_height: block_height + 1,
-            burn_header_hash: BurnchainHeaderHash([0x00; 32]),
-        }));
-        new_burn_ops.push(BlockstackOperationType::TransferStx(TransferStxOp {
-            sender: addr.clone(),
-            recipient: recipient_addr.clone(),
-            transfered_ustx: 1,
-            memo: vec![0x2],
+                // mocked
+                txid: Txid([i | 0x80; 32]),
+                vtxindex: 12,
+                block_height: block_height + 1,
+                burn_header_hash: BurnchainHeaderHash([0x00; 32]),
+            }),
+            BlockstackOperationType::TransferStx(TransferStxOp {
+                sender: addr.clone(),
+                recipient: recipient_addr.clone(),
+                transfered_ustx: 1,
+                memo: vec![0x2],
 
-            // mocked
-            txid: Txid([i | 0x40; 32]),
-            vtxindex: 13,
-            block_height: block_height + 1,
-            burn_header_hash: BurnchainHeaderHash([0x00; 32]),
-        }));
-        new_burn_ops.push(BlockstackOperationType::VoteForAggregateKey(
-            VoteForAggregateKeyOp {
+                // mocked
+                txid: Txid([i | 0x40; 32]),
+                vtxindex: 13,
+                block_height: block_height + 1,
+                burn_header_hash: BurnchainHeaderHash([0x00; 32]),
+            }),
+            BlockstackOperationType::VoteForAggregateKey(VoteForAggregateKeyOp {
                 sender: addr.clone(),
                 aggregate_key: StacksPublicKeyBuffer::from_public_key(
                     &StacksPublicKey::from_private(&agg_private_key),
@@ -3298,8 +3297,8 @@ fn test_stacks_on_burnchain_ops() {
                 vtxindex: 14,
                 block_height: block_height + 1,
                 burn_header_hash: BurnchainHeaderHash([0x00; 32]),
-            },
-        ));
+            }),
+        ];
 
         extra_burn_ops.push(new_burn_ops.clone());
         burn_ops.append(&mut new_burn_ops);

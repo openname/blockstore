@@ -295,11 +295,8 @@ fn test_stream_getheaders() {
     let block_expected_headers: Vec<StacksBlockHeader> =
         blocks.iter().rev().map(|blk| blk.header.clone()).collect();
 
-    let block_expected_index_hashes: Vec<StacksBlockId> = blocks_index_hashes
-        .iter()
-        .rev()
-        .map(|idx| idx.clone())
-        .collect();
+    let block_expected_index_hashes: Vec<StacksBlockId> =
+        blocks_index_hashes.iter().rev().copied().collect();
 
     let block_fork_expected_headers: Vec<StacksBlockHeader> = blocks_fork
         .iter()
@@ -307,11 +304,8 @@ fn test_stream_getheaders() {
         .map(|blk| blk.header.clone())
         .collect();
 
-    let block_fork_expected_index_hashes: Vec<StacksBlockId> = blocks_fork_index_hashes
-        .iter()
-        .rev()
-        .map(|idx| idx.clone())
-        .collect();
+    let block_fork_expected_index_hashes: Vec<StacksBlockId> =
+        blocks_fork_index_hashes.iter().rev().copied().collect();
 
     // get them all -- ask for more than there is
     let mut stream =

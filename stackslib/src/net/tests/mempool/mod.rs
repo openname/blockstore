@@ -1133,16 +1133,8 @@ fn test_mempool_sync_2_peers_nakamoto_paginated() {
         let _ = peer_1.step_with_ibd(false);
         let _ = peer_2.step_with_ibd(false);
 
-        let event_ids: Vec<usize> = peer_1
-            .network
-            .iter_peer_event_ids()
-            .map(|e_id| *e_id)
-            .collect();
-        let other_event_ids: Vec<usize> = peer_2
-            .network
-            .iter_peer_event_ids()
-            .map(|e_id| *e_id)
-            .collect();
+        let event_ids: Vec<usize> = peer_1.network.iter_peer_event_ids().copied().collect();
+        let other_event_ids: Vec<usize> = peer_2.network.iter_peer_event_ids().copied().collect();
 
         if !event_ids.is_empty() && !other_event_ids.is_empty() {
             break;

@@ -753,7 +753,7 @@ mod test {
             client_requests.push(request);
         }
 
-        for (i, request) in client_requests.drain(..).enumerate() {
+        for (i, request) in client_requests.into_iter().enumerate() {
             let (client_sx, client_rx) = sync_channel(1);
             let client = thread::spawn(move || {
                 let mut sock = TcpStream::connect(
@@ -799,7 +799,7 @@ mod test {
             client_handles.push(client_rx);
         }
 
-        for (i, client_thread) in client_threads.drain(..).enumerate() {
+        for (i, client_thread) in client_threads.into_iter().enumerate() {
             test_debug!("Client join {}", i);
             client_thread.join().unwrap();
             let resp = client_handles[i].recv().unwrap();

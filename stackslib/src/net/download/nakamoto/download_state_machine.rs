@@ -1144,7 +1144,7 @@ impl NakamotoDownloadStateMachine {
     ) {
         debug!("Run unconfirmed tenure downloaders");
 
-        let addrs: Vec<_> = downloaders.keys().map(|addr| addr.clone()).collect();
+        let addrs: Vec<_> = downloaders.keys().cloned().collect();
         let mut finished = vec![];
         let mut unconfirmed_blocks = HashMap::new();
         let mut highest_completed_tenure_downloaders = HashMap::new();
@@ -1402,8 +1402,7 @@ impl NakamotoDownloadStateMachine {
         let tenure_blocks = coalesced_blocks
             .into_iter()
             .map(|(consensus_hash, block_map)| {
-                let mut block_list: Vec<_> =
-                    block_map.into_iter().map(|(_, block)| block).collect();
+                let mut block_list: Vec<_> = block_map.into_values().collect();
                 block_list.sort_unstable_by_key(|blk| blk.header.chain_length);
                 (consensus_hash, block_list)
             })

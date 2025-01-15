@@ -679,7 +679,7 @@ pub fn read_parent_block_commits<B: BurnchainHeaderReader>(
             }
         }
     }
-    let mut parent_list: Vec<_> = parents.into_iter().map(|(_, cmt)| cmt).collect();
+    let mut parent_list: Vec<_> = parents.into_values().collect();
     parent_list.sort_by(|a, b| {
         if a.block_height != b.block_height {
             a.block_height.cmp(&b.block_height)

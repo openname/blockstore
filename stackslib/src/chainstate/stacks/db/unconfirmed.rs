@@ -443,7 +443,7 @@ impl UnconfirmedState {
         &self,
         txid: &Txid,
     ) -> Option<(StacksTransaction, BlockHeaderHash, u16)> {
-        self.mined_txs.get(txid).map(|x| x.clone())
+        self.mined_txs.get(txid).cloned()
     }
 
     pub fn num_microblocks(&self) -> u64 {

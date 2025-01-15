@@ -750,8 +750,8 @@ impl<NC: NeighborComms> NakamotoInvStateMachine<NC> {
     /// Highest reward cycle learned
     pub fn highest_reward_cycle(&self) -> u64 {
         self.inventories
-            .iter()
-            .map(|(_, inv)| inv.highest_reward_cycle())
+            .values()
+            .map(|inv| inv.highest_reward_cycle())
             .max()
             .unwrap_or(0)
     }
@@ -856,7 +856,7 @@ impl<NC: NeighborComms> NakamotoInvStateMachine<NC> {
 
         // we're updating inventories, so preserve the state we have
         let mut new_inventories = HashMap::new();
-        let event_ids: Vec<usize> = network.iter_peer_event_ids().map(|e_id| *e_id).collect();
+        let event_ids: Vec<usize> = network.iter_peer_event_ids().copied().collect();
 
         debug!(
             "Send GetNakamotoInv to up to {} peers (ibd={})",

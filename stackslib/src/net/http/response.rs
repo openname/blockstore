@@ -259,7 +259,7 @@ impl HttpResponsePreamble {
         keep_alive: bool,
         content_length: Option<u32>,
         content_type: HttpContentType,
-        mut keys: Vec<String>,
+        keys: Vec<String>,
         values: Vec<String>,
     ) -> HttpResponsePreamble {
         assert_eq!(keys.len(), values.len());
@@ -272,7 +272,7 @@ impl HttpResponsePreamble {
             keep_alive,
         );
 
-        for (k, v) in keys.drain(..).zip(values) {
+        for (k, v) in keys.into_iter().zip(values) {
             res.add_header(k, v);
         }
         res

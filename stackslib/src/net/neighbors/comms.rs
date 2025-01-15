@@ -515,9 +515,7 @@ impl NeighborComms for PeerNetworkComms {
     }
 
     fn get_connecting<NK: ToNeighborKey>(&self, network: &PeerNetwork, nk: &NK) -> Option<usize> {
-        self.connecting
-            .get(&nk.to_neighbor_key(network))
-            .map(|event_ref| *event_ref)
+        self.connecting.get(&nk.to_neighbor_key(network)).copied()
     }
 
     /// Remove a connecting neighbor because it connected

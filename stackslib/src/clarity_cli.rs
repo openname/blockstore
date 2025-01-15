@@ -1002,7 +1002,7 @@ pub fn invoke_command(invoked_by: &str, args: &[String]) -> (i32, Option<serde_j
 
     match args[0].as_ref() {
         "initialize" => {
-            let mut argv: Vec<String> = args.into_iter().map(|x| x.clone()).collect();
+            let mut argv: Vec<String> = args.into_iter().cloned().collect();
 
             let mainnet = if let Ok(Some(_)) = consume_arg(&mut argv, &["--testnet"], false) {
                 false
@@ -1127,7 +1127,7 @@ pub fn invoke_command(invoked_by: &str, args: &[String]) -> (i32, Option<serde_j
                 panic_test!();
             }
 
-            let mut argv: Vec<String> = args.into_iter().map(|x| x.clone()).collect();
+            let mut argv: Vec<String> = args.into_iter().cloned().collect();
             let contract_id = if let Ok(optarg) = consume_arg(&mut argv, &["--contract_id"], true) {
                 optarg
                     .map(|optarg_str| {
@@ -1253,7 +1253,7 @@ pub fn invoke_command(invoked_by: &str, args: &[String]) -> (i32, Option<serde_j
             (0, Some(result))
         }
         "repl" => {
-            let mut argv: Vec<String> = args.into_iter().map(|x| x.clone()).collect();
+            let mut argv: Vec<String> = args.into_iter().cloned().collect();
             let mainnet = if let Ok(Some(_)) = consume_arg(&mut argv, &["--testnet"], false) {
                 false
             } else {
@@ -1385,7 +1385,7 @@ pub fn invoke_command(invoked_by: &str, args: &[String]) -> (i32, Option<serde_j
             }
         }
         "eval" => {
-            let mut argv: Vec<String> = args.into_iter().map(|x| x.clone()).collect();
+            let mut argv: Vec<String> = args.into_iter().cloned().collect();
 
             let costs = if let Ok(Some(_)) = consume_arg(&mut argv, &["--costs"], false) {
                 true
@@ -1448,7 +1448,7 @@ pub fn invoke_command(invoked_by: &str, args: &[String]) -> (i32, Option<serde_j
             }
         }
         "eval_at_chaintip" => {
-            let mut argv: Vec<String> = args.into_iter().map(|x| x.clone()).collect();
+            let mut argv: Vec<String> = args.into_iter().cloned().collect();
 
             let costs = if let Ok(Some(_)) = consume_arg(&mut argv, &["--costs"], false) {
                 true
@@ -1530,7 +1530,7 @@ pub fn invoke_command(invoked_by: &str, args: &[String]) -> (i32, Option<serde_j
             }
         }
         "eval_at_block" => {
-            let mut argv: Vec<String> = args.into_iter().map(|x| x.clone()).collect();
+            let mut argv: Vec<String> = args.into_iter().cloned().collect();
 
             let costs = if let Ok(Some(_)) = consume_arg(&mut argv, &["--costs"], false) {
                 true
@@ -1612,7 +1612,7 @@ pub fn invoke_command(invoked_by: &str, args: &[String]) -> (i32, Option<serde_j
             }
         }
         "launch" => {
-            let mut argv: Vec<String> = args.into_iter().map(|x| x.clone()).collect();
+            let mut argv: Vec<String> = args.into_iter().cloned().collect();
             let coverage_folder = if let Ok(covarg) = consume_arg(&mut argv, &["--c"], true) {
                 covarg
             } else {
@@ -1767,7 +1767,7 @@ pub fn invoke_command(invoked_by: &str, args: &[String]) -> (i32, Option<serde_j
             }
         }
         "execute" => {
-            let mut argv: Vec<String> = args.into_iter().map(|x| x.clone()).collect();
+            let mut argv: Vec<String> = args.into_iter().cloned().collect();
             let coverage_folder = if let Ok(covarg) = consume_arg(&mut argv, &["--c"], true) {
                 covarg
             } else {

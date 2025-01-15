@@ -373,7 +373,7 @@ impl AttachmentsBatchStateContext {
     }
 
     pub fn get_peers_urls(&self) -> Vec<UrlString> {
-        self.peers.keys().map(|e| e.clone()).collect()
+        self.peers.keys().cloned().collect()
     }
 
     pub fn get_prioritized_attachments_inventory_requests(
@@ -531,11 +531,7 @@ impl AttachmentsBatchStateContext {
                 report.bump_failed_requests();
             }
         }
-        let mut events_ids = results
-            .faulty_peers
-            .iter()
-            .map(|(k, _)| *k)
-            .collect::<Vec<usize>>();
+        let mut events_ids = results.faulty_peers.keys().copied().collect::<Vec<usize>>();
         self.events_to_deregister.append(&mut events_ids);
 
         self
@@ -565,11 +561,7 @@ impl AttachmentsBatchStateContext {
                 report.bump_failed_requests();
             }
         }
-        let mut events_ids = results
-            .faulty_peers
-            .iter()
-            .map(|(k, _)| *k)
-            .collect::<Vec<usize>>();
+        let mut events_ids = results.faulty_peers.keys().copied().collect::<Vec<usize>>();
         self.events_to_deregister.append(&mut events_ids);
 
         self

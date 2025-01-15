@@ -178,19 +178,12 @@ fn handle_req_accepted() {
         |_| true,
     );
     let next_block_id = next_block.block_id();
-    let mut requests = vec![];
-
-    // post the block
-    requests.push(StacksHttpRequest::new_post_block_v3(
-        addr.into(),
-        &next_block,
-    ));
-
-    // idempotent
-    requests.push(StacksHttpRequest::new_post_block_v3(
-        addr.into(),
-        &next_block,
-    ));
+    let requests = vec![
+        // post the block
+        StacksHttpRequest::new_post_block_v3(addr.into(), &next_block),
+        // idempotent
+        StacksHttpRequest::new_post_block_v3(addr.into(), &next_block),
+    ];
 
     let mut responses = rpc_test.run(requests);
 
@@ -229,10 +222,8 @@ fn handle_req_without_trailing_accepted() {
         |_| true,
     );
     let next_block_id = next_block.block_id();
-    let mut requests = vec![];
-
-    // post the block
-    requests.push(
+    let requests = vec![
+        // post the block
         StacksHttpRequest::new_for_peer(
             addr.into(),
             "POST".into(),
@@ -240,10 +231,7 @@ fn handle_req_without_trailing_accepted() {
             HttpRequestContents::new().payload_stacks(&next_block),
         )
         .unwrap(),
-    );
-
-    // idempotent
-    requests.push(
+        // idempotent
         StacksHttpRequest::new_for_peer(
             addr.into(),
             "POST".into(),
@@ -251,7 +239,7 @@ fn handle_req_without_trailing_accepted() {
             HttpRequestContents::new().payload_stacks(&next_block),
         )
         .unwrap(),
-    );
+    ];
     let mut responses = rpc_test.run(requests);
 
     let response = responses.remove(0);

@@ -642,7 +642,7 @@ fn bad_define_maps() {
         "(define-map lists { name: int } contents 5)",
         "(define-map lists { name: int } { contents: (list 5 0 int) })",
     ];
-    let mut expected: Vec<Error> = vec![
+    let expected: Vec<Error> = vec![
         CheckErrors::BadSyntaxExpectedListOfPairs.into(),
         CheckErrors::UnknownTypeName("contents".to_string()).into(),
         CheckErrors::ExpectedName.into(),
@@ -650,7 +650,7 @@ fn bad_define_maps() {
         CheckErrors::InvalidTypeDescription.into(),
     ];
 
-    for (test, expected_err) in tests.iter().zip(expected.drain(..)) {
+    for (test, expected_err) in tests.iter().zip(expected.into_iter()) {
         let outcome = execute(test).unwrap_err();
         assert_eq!(outcome, expected_err);
     }
@@ -666,7 +666,7 @@ fn bad_tuples() {
         "(get name five (tuple (name 1)))",
         "(get 1234 (tuple (name 1)))",
     ];
-    let mut expected = vec![
+    let expected = vec![
         CheckErrors::NameAlreadyUsed("name".into()),
         CheckErrors::BadSyntaxBinding,
         CheckErrors::BadSyntaxBinding,
@@ -678,7 +678,7 @@ fn bad_tuples() {
         CheckErrors::ExpectedName,
     ];
 
-    for (test, expected_err) in tests.iter().zip(expected.drain(..)) {
+    for (test, expected_err) in tests.iter().zip(expected.into_iter()) {
         let outcome = execute(test).unwrap_err();
         assert_eq!(outcome, expected_err.into());
     }

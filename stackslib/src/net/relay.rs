@@ -2607,21 +2607,18 @@ impl Relayer {
         new_microblocks: Vec<(Vec<RelayData>, MicroblocksData)>,
     ) {
         // have the p2p thread tell our neighbors about newly-discovered blocks
-        let new_block_chs = new_blocks.iter().map(|(ch, _)| ch.clone()).collect();
+        let new_block_chs = new_blocks.keys().cloned().collect();
         let available = Relayer::load_blocks_available_data(sortdb, new_block_chs)
             .unwrap_or(BlocksAvailableMap::new());
         if !available.is_empty() {
             debug!("{:?}: Blocks available: {}", &_local_peer, available.len());
             if let Err(e) = self.p2p.advertize_blocks(available, new_blocks) {
-                warn!("Failed to advertize new blocks: {:?}", &e);
+                warn!("Failed to advertize new blocks: {e:?}");
             }
         }
 
         // have the p2p thread tell our neighbors about newly-discovered confirmed microblock streams
-        let new_mblock_chs = new_confirmed_microblocks
-            .iter()
-            .map(|(ch, _)| ch.clone())
-            .collect();
+        let new_mblock_chs = new_confirmed_microblocks.keys().cloned().collect();
         let mblocks_available = Relayer::load_blocks_available_data(sortdb, new_mblock_chs)
             .unwrap_or(BlocksAvailableMap::new());
         if !mblocks_available.is_empty() {
@@ -2634,7 +2631,7 @@ impl Relayer {
                 .p2p
                 .advertize_microblocks(mblocks_available, new_confirmed_microblocks)
             {
-                warn!("Failed to advertize new confirmed microblocks: {:?}", &e);
+                warn!("Failed to advertize new confirmed microblocks: {e:?}");
             }
         }
 
