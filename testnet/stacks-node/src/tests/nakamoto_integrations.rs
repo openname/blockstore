@@ -457,7 +457,9 @@ pub fn get_latest_block_proposal(
         info!("Consider block"; "signer_sighash" => %b.header.signer_signature_hash(), "is_latest_sortition" => is_latest, "chain_height" => b.header.chain_length);
     }
 
-    let (proposed_block, miner_addr, _) = proposed_blocks.pop().unwrap();
+    let Some((proposed_block, miner_addr, _)) = proposed_blocks.pop() else {
+        return Err("No block proposals found".into());
+    };
 
     let pubkey = StacksPublicKey::recover_to_pubkey(
         proposed_block.header.miner_signature_hash().as_bytes(),
