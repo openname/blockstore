@@ -467,9 +467,7 @@ impl LeaderBlockCommitOp {
     pub fn all_outputs_burn(&self) -> bool {
         self.commit_outs
             .iter()
-            .fold(true, |previous_is_burn, output_addr| {
-                previous_is_burn && output_addr.is_burn()
-            })
+            .all(|output_addr| output_addr.is_burn())
     }
 
     pub fn spent_txid(&self) -> &Txid {
