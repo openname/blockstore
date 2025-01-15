@@ -979,19 +979,19 @@ impl StacksTransaction {
     /// Get the origin account's address
     pub fn origin_address(&self) -> StacksAddress {
         match (&self.version, &self.auth) {
-            (&TransactionVersion::Mainnet, &TransactionAuth::Standard(ref origin_condition)) => {
+            (TransactionVersion::Mainnet, TransactionAuth::Standard(origin_condition)) => {
                 origin_condition.address_mainnet()
             }
-            (&TransactionVersion::Testnet, &TransactionAuth::Standard(ref origin_condition)) => {
+            (TransactionVersion::Testnet, TransactionAuth::Standard(origin_condition)) => {
                 origin_condition.address_testnet()
             }
             (
-                &TransactionVersion::Mainnet,
-                &TransactionAuth::Sponsored(ref origin_condition, ref _unused),
+                TransactionVersion::Mainnet,
+                TransactionAuth::Sponsored(origin_condition, _unused),
             ) => origin_condition.address_mainnet(),
             (
-                &TransactionVersion::Testnet,
-                &TransactionAuth::Sponsored(ref origin_condition, ref _unused),
+                TransactionVersion::Testnet,
+                TransactionAuth::Sponsored(origin_condition, _unused),
             ) => origin_condition.address_testnet(),
         }
     }
@@ -999,15 +999,15 @@ impl StacksTransaction {
     /// Get the sponsor account's address, if this transaction is sponsored
     pub fn sponsor_address(&self) -> Option<StacksAddress> {
         match (&self.version, &self.auth) {
-            (&TransactionVersion::Mainnet, &TransactionAuth::Standard(ref _unused)) => None,
-            (&TransactionVersion::Testnet, &TransactionAuth::Standard(ref _unused)) => None,
+            (TransactionVersion::Mainnet, TransactionAuth::Standard(_unused)) => None,
+            (TransactionVersion::Testnet, TransactionAuth::Standard(_unused)) => None,
             (
-                &TransactionVersion::Mainnet,
-                &TransactionAuth::Sponsored(ref _unused, ref sponsor_condition),
+                TransactionVersion::Mainnet,
+                TransactionAuth::Sponsored(_unused, sponsor_condition),
             ) => Some(sponsor_condition.address_mainnet()),
             (
-                &TransactionVersion::Testnet,
-                &TransactionAuth::Sponsored(ref _unused, ref sponsor_condition),
+                TransactionVersion::Testnet,
+                TransactionAuth::Sponsored(_unused, sponsor_condition),
             ) => Some(sponsor_condition.address_testnet()),
         }
     }
