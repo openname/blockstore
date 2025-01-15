@@ -2058,6 +2058,12 @@ mod test {
 
         let url = &format!("{}/api", &server.url());
 
+        // Ensure retrying is enabled on the test (as other tests will run in parallel)
+        TEST_EVENT_OBSERVER_SKIP_RETRY
+            .lock()
+            .unwrap()
+            .replace(false);
+
         // Insert payload
         EventObserver::insert_payload(&conn, url, &payload, timeout)
             .expect("Failed to insert payload");
@@ -2128,6 +2134,12 @@ mod test {
         let timeout = Duration::from_secs(5);
 
         let observer = EventObserver::new(Some(working_dir.clone()), endpoint, timeout);
+
+        // Ensure retrying is enabled on the test (as other tests will run in parallel)
+        TEST_EVENT_OBSERVER_SKIP_RETRY
+            .lock()
+            .unwrap()
+            .replace(false);
 
         // Call send_payload
         observer.send_payload(&payload, "/test");
