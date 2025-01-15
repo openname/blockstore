@@ -42,7 +42,6 @@ use crate::net::httpcore::{
 };
 use crate::net::p2p::PeerNetwork;
 use crate::net::{Error as NetError, HttpServerError, StacksNodeState};
-use crate::version_string;
 
 pub(crate) const SINGLESIG_TX_TRANSFER_LEN: u64 = 180;
 

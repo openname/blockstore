@@ -316,7 +316,7 @@ fn main() {
             "{}",
             &blockstack_lib::version_string(
                 option_env!("CARGO_PKG_NAME").unwrap_or(&argv[0]),
-                option_env!("CARGO_PKG_VERSION").unwrap_or("0.0.0.0")
+                option_env!("STACKS_NODE_VERSION")
             )
         );
         process::exit(0);

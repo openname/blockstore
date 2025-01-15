@@ -99,6 +99,10 @@ pub mod consts {
     pub const MICROSTACKS_PER_STACKS: u32 = 1_000_000;
 }
 
+pub mod versions {
+    include!(concat!(env!("OUT_DIR"), "/versions.rs"));
+}
+
 /// This test asserts that the constant above doesn't change.
 /// This exists because the constant above is used by Epoch 2.5 instantiation code.
 ///

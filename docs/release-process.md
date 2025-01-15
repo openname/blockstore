@@ -64,10 +64,11 @@ The timing of the next Stacking cycle can be found [here](https://stx.eco/dao/to
    - Add cherry-picked commits to the `feat/X.Y.Z.A.n-pr_number` branch
    - Merge `feat/X.Y.Z.A.n-pr_number` into `release/X.Y.Z.A.n`.
 
-4. Open a PR to update the [CHANGELOG](../CHANGELOG.md) file in the `release/X.Y.Z.A.n` branch.
+4. Open a PR to update the [CHANGELOG](../CHANGELOG.md) in the `release/X.Y.Z.A.n` branch.
 
    - Create a chore branch from `release/X.Y.Z.A.n`, ex: `chore/X.Y.Z.A.n-changelog`.
    - Add summaries of all Pull Requests to the `Added`, `Changed` and `Fixed` sections.
+   - Update the `stacks_node_version` string in [versions.toml](../versions.toml) to match this release.
 
      - Pull requests merged into `develop` can be found [here](https://github.com/stacks-network/stacks-core/pulls?q=is%3Apr+is%3Aclosed+base%3Adevelop+sort%3Aupdated-desc).
 

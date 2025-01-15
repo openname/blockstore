@@ -2213,12 +2213,7 @@ impl BlockMinerThread {
     /// Only used in mock signing to generate a peer info view
     fn generate_peer_info(&self) -> PeerInfo {
         // Create a peer info view of the current state
-        let server_version = version_string(
-            "stacks-node",
-            option_env!("STACKS_NODE_VERSION")
-                .or(option_env!("CARGO_PKG_VERSION"))
-                .unwrap_or("0.0.0.0"),
-        );
+        let server_version = version_string("stacks-node", option_env!("STACKS_NODE_VERSION"));
         let stacks_tip_height = self.burn_block.canonical_stacks_tip_height;
         let stacks_tip = self.burn_block.canonical_stacks_tip_hash;
         let stacks_tip_consensus_hash = self.burn_block.canonical_stacks_tip_consensus_hash;

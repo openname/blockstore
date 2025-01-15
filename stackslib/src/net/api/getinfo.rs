@@ -111,12 +111,7 @@ impl RPCPeerInfoData {
         coinbase_height: u64,
         ibd: bool,
     ) -> RPCPeerInfoData {
-        let server_version = version_string(
-            "stacks-node",
-            option_env!("STACKS_NODE_VERSION")
-                .or(option_env!("CARGO_PKG_VERSION"))
-                .unwrap_or("0.0.0.0"),
-        );
+        let server_version = version_string("stacks-node", option_env!("STACKS_NODE_VERSION"));
         let (unconfirmed_tip, unconfirmed_seq) = match chainstate.unconfirmed_state {
             Some(ref unconfirmed) => {
                 if unconfirmed.num_mined_txs() > 0 {
