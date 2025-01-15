@@ -393,7 +393,7 @@ impl BurnchainDBTransaction<'_> {
         let args = params![u64_to_sql(target_reward_cycle)?];
         self.sql_tx
             .execute(sql, args)
-            .map_err(|e| DBError::SqliteError(e))?;
+            .map_err(DBError::SqliteError)?;
 
         let sql = "UPDATE block_commit_metadata SET anchor_block = ?1 WHERE burn_block_hash = ?2 AND txid = ?3";
         let args = params![
@@ -424,7 +424,7 @@ impl BurnchainDBTransaction<'_> {
         self.sql_tx
             .execute(sql, args)
             .map(|_| ())
-            .map_err(|e| DBError::SqliteError(e))
+            .map_err(DBError::SqliteError)
     }
 
     /// Calculate a burnchain block's block-commits' descendancy information.

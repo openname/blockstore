@@ -1202,7 +1202,7 @@ impl StacksChainState {
         test_debug!("Open MARF index at {}", marf_path);
         let mut open_opts = MARFOpenOpts::default();
         open_opts.external_blobs = true;
-        let marf = MARF::from_path(marf_path, open_opts).map_err(|e| db_error::IndexError(e))?;
+        let marf = MARF::from_path(marf_path, open_opts).map_err(db_error::IndexError)?;
         Ok(marf)
     }
 

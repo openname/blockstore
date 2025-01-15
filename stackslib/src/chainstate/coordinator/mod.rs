@@ -743,7 +743,7 @@ pub fn get_next_recipients<U: RewardSetProvider>(
     )?;
     sort_db
         .get_next_block_recipients(burnchain, sortition_tip, reward_cycle_info.as_ref())
-        .map_err(|e| Error::from(e))
+        .map_err(Error::from)
 }
 
 /// returns None if this burnchain block is _not_ the start of a reward cycle
@@ -2100,9 +2100,7 @@ impl<
             // by holding this lock as long as we do, we ensure that the sortition DB's
             // view of the canonical stacks chain tip can't get changed (since no
             // Stacks blocks can be processed).
-            chainstate_db_tx
-                .commit()
-                .map_err(|e| DBError::SqliteError(e))?;
+            chainstate_db_tx.commit().map_err(DBError::SqliteError)?;
 
             let highest_valid_snapshot = SortitionDB::get_block_snapshot(
                 &self.sortition_db.conn(),
@@ -2790,9 +2788,7 @@ impl<
                         invalidation_height,
                     )?;
                 }
-                chainstate_db_tx
-                    .commit()
-                    .map_err(|e| DBError::SqliteError(e))?;
+                chainstate_db_tx.commit().map_err(DBError::SqliteError)?;
             }
 
             let sortition_id = next_snapshot.sortition_id;

@@ -158,11 +158,11 @@ impl AttachmentsDownloader {
                     let attachments_instances = network
                         .atlasdb
                         .find_all_attachment_instances(&attachment.hash())
-                        .map_err(|e| net_error::DBError(e))?;
+                        .map_err(net_error::DBError)?;
                     network
                         .atlasdb
                         .insert_instantiated_attachment(&attachment)
-                        .map_err(|e| net_error::DBError(e))?;
+                        .map_err(net_error::DBError)?;
                     for attachment_instance in attachments_instances.into_iter() {
                         resolved_attachments.push((attachment_instance, attachment.clone()));
                     }

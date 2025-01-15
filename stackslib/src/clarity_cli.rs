@@ -163,7 +163,7 @@ fn parse(
         DEFAULT_CLI_EPOCH,
         ASTRules::PrecheckSize,
     )
-    .map_err(|e| RuntimeErrorType::ASTError(e))?;
+    .map_err(RuntimeErrorType::ASTError)?;
     Ok(ast.expressions)
 }
 

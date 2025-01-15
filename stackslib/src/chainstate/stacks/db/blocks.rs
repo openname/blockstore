@@ -917,7 +917,7 @@ impl StacksChainState {
         // gather
         let mut blobs = vec![];
 
-        while let Some(row) = rows.next().map_err(|e| db_error::SqliteError(e))? {
+        while let Some(row) = rows.next().map_err(db_error::SqliteError)? {
             let next_blob: Vec<u8> = row.get_unwrap(0);
             blobs.push(next_blob);
         }
@@ -1734,7 +1734,7 @@ impl StacksChainState {
 
         // gather
         let mut row_data: Vec<i64> = vec![];
-        while let Some(row) = rows.next().map_err(|e| db_error::SqliteError(e))? {
+        while let Some(row) = rows.next().map_err(db_error::SqliteError)? {
             let val_opt: Option<i64> = row.get_unwrap(0);
             if let Some(val) = val_opt {
                 row_data.push(val);
@@ -3863,7 +3863,7 @@ impl StacksChainState {
                 .query(NO_PARAMS)
                 .map_err(|e| Error::DBError(db_error::SqliteError(e)))?;
 
-            while let Some(row) = rows.next().map_err(|e| db_error::SqliteError(e))? {
+            while let Some(row) = rows.next().map_err(db_error::SqliteError)? {
                 let mut candidate = StagingBlock::from_row(&row).map_err(Error::DBError)?;
 
                 // block must correspond to a valid PoX snapshot
@@ -6695,7 +6695,7 @@ impl StacksChainState {
         let epoch = clarity_connection.get_epoch().clone();
 
         StacksChainState::process_transaction_precheck(&chainstate_config, &tx, epoch)
-            .map_err(|e| MemPoolRejection::FailedToValidate(e))?;
+            .map_err(MemPoolRejection::FailedToValidate)?;
 
         // 3: it must pay a tx fee
         let fee = tx.get_tx_fee();
@@ -6887,7 +6887,7 @@ impl StacksChainState {
                             epoch,
                             clarity_version,
                         )
-                        .map_err(|e| MemPoolRejection::BadFunctionArgument(e))
+                        .map_err(MemPoolRejection::BadFunctionArgument)
                 })?;
             }
             TransactionPayload::SmartContract(

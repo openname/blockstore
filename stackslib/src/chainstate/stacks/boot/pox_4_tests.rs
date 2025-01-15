@@ -5179,8 +5179,8 @@ fn balances_from_keys(
     keys: &[Secp256k1PrivateKey],
 ) -> Vec<STXBalance> {
     keys.iter()
-        .map(|key| key_to_stacks_addr(key))
-        .map(|addr| PrincipalData::from(addr))
+        .map(key_to_stacks_addr)
+        .map(PrincipalData::from)
         .map(|principal| get_stx_account_at(peer, tip, &principal))
         .collect()
 }
@@ -6766,7 +6766,7 @@ pub fn pox_4_scenario_test_setup_nakamoto<'a>(
 
     let private_key = StacksPrivateKey::from_seed(&[2]);
     let test_signers = TestSigners::new(test_keys.clone());
-    let addrs: Vec<StacksAddress> = test_keys.iter().map(|pk| key_to_stacks_addr(pk)).collect();
+    let addrs: Vec<StacksAddress> = test_keys.iter().map(key_to_stacks_addr).collect();
     let initial_stacker_balance = initial_balances
         .get(0)
         .expect("Expected at least 1 initial balance")
@@ -8843,7 +8843,7 @@ pub fn prepare_pox4_test<'a>(
             .with_test_signers(test_signers.clone())
             .with_private_key(private_key);
         boot_plan.add_default_balance = false;
-        let addrs: Vec<StacksAddress> = keys.iter().map(|pk| key_to_stacks_addr(pk)).collect();
+        let addrs: Vec<StacksAddress> = keys.iter().map(key_to_stacks_addr).collect();
 
         let balances: Vec<(PrincipalData, u64)> = addrs
             .clone()

@@ -518,7 +518,7 @@ where
 
         marf_walk_cow_test(
             |s| make_node_path(s, node_id.to_u8(), &path_segments, [31u8; 40].to_vec()),
-            |x, y| path_gen(x, y),
+            &path_gen,
         );
     }
 }

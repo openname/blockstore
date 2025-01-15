@@ -71,7 +71,7 @@ impl GetTenureStartId for StacksDBConn<'_> {
                 &nakamoto_keys::tenure_start_block_id(tenure_id_consensus_hash),
             )?
             .and_then(|id_str| nakamoto_keys::parse_block_id(&id_str))
-            .map(|block_id| TenureBlockId::from(block_id)))
+            .map(TenureBlockId::from))
     }
 
     fn get_tenure_block_id_at_cb_height(
@@ -105,7 +105,7 @@ impl GetTenureStartId for StacksDBTx<'_> {
                 &nakamoto_keys::tenure_start_block_id(tenure_id_consensus_hash),
             )?
             .and_then(|id_str| nakamoto_keys::parse_block_id(&id_str))
-            .map(|block_id| TenureBlockId::from(block_id)))
+            .map(TenureBlockId::from))
     }
 
     fn get_tenure_block_id_at_cb_height(

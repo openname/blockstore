@@ -1675,7 +1675,7 @@ pub mod test {
             .unwrap(),
         ];
 
-        let addrs: Vec<StacksAddress> = keys.iter().map(|pk| key_to_stacks_addr(pk)).collect();
+        let addrs: Vec<StacksAddress> = keys.iter().map(key_to_stacks_addr).collect();
 
         let balances: Vec<(PrincipalData, u64)> = addrs
             .clone()
@@ -2341,7 +2341,7 @@ pub mod test {
         let addr_tuple = Value::Tuple(pox_addr.as_clarity_tuple().unwrap());
         let signature = signature_opt
             .map(|sig| Value::some(Value::buff_from(sig).unwrap()).unwrap())
-            .unwrap_or_else(|| Value::none());
+            .unwrap_or_else(Value::none);
         let payload = TransactionPayload::new_contract_call(
             boot_code_test_addr(),
             POX_4_NAME,
@@ -2372,7 +2372,7 @@ pub mod test {
     ) -> StacksTransaction {
         let signature = signature_opt
             .map(|sig| Value::some(Value::buff_from(sig).unwrap()).unwrap())
-            .unwrap_or_else(|| Value::none());
+            .unwrap_or_else(Value::none);
         let payload = TransactionPayload::new_contract_call(
             boot_code_test_addr(),
             POX_4_NAME,

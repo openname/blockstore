@@ -1144,10 +1144,8 @@ fn db_get_nonce(conn: &DBConn, address: &StacksAddress) -> Result<Option<u64>, d
 #[cfg(test)]
 pub fn db_get_all_nonces(conn: &DBConn) -> Result<Vec<(StacksAddress, u64)>, db_error> {
     let sql = "SELECT * FROM nonces";
-    let mut stmt = conn.prepare(&sql).map_err(|e| db_error::SqliteError(e))?;
-    let mut iter = stmt
-        .query(NO_PARAMS)
-        .map_err(|e| db_error::SqliteError(e))?;
+    let mut stmt = conn.prepare(&sql).map_err(db_error::SqliteError)?;
+    let mut iter = stmt.query(NO_PARAMS).map_err(db_error::SqliteError)?;
     let mut ret = vec![];
     while let Ok(Some(row)) = iter.next() {
         let addr = StacksAddress::from_column(row, "address")?;
@@ -1670,13 +1668,10 @@ impl MemPoolDB {
              FROM mempool
              WHERE fee_rate IS NULL
              ";
-        let mut query_stmt_null = self
-            .db
-            .prepare(&sql)
-            .map_err(|err| Error::SqliteError(err))?;
+        let mut query_stmt_null = self.db.prepare(&sql).map_err(Error::SqliteError)?;
         let mut null_iterator = query_stmt_null
             .query(NO_PARAMS)
-            .map_err(|err| Error::SqliteError(err))?;
+            .map_err(Error::SqliteError)?;
 
         let sql = "
             SELECT txid, origin_nonce, origin_address, sponsor_nonce, sponsor_address, fee_rate
@@ -1684,13 +1679,10 @@ impl MemPoolDB {
             WHERE fee_rate IS NOT NULL
             ORDER BY fee_rate DESC
             ";
-        let mut query_stmt_fee = self
-            .db
-            .prepare(&sql)
-            .map_err(|err| Error::SqliteError(err))?;
+        let mut query_stmt_fee = self.db.prepare(&sql).map_err(Error::SqliteError)?;
         let mut fee_iterator = query_stmt_fee
             .query(NO_PARAMS)
-            .map_err(|err| Error::SqliteError(err))?;
+            .map_err(Error::SqliteError)?;
 
         let stop_reason = loop {
             if start_time.elapsed().as_millis() > settings.max_walk_time_ms as u128 {
@@ -1713,22 +1705,18 @@ impl MemPoolDB {
                     // randomly selecting from either the null fee-rate transactions
                     // or those with fee-rate estimates.
                     let opt_tx = if start_with_no_estimate {
-                        null_iterator
-                            .next()
-                            .map_err(|err| Error::SqliteError(err))?
+                        null_iterator.next().map_err(Error::SqliteError)?
                     } else {
-                        fee_iterator.next().map_err(|err| Error::SqliteError(err))?
+                        fee_iterator.next().map_err(Error::SqliteError)?
                     };
                     match opt_tx {
                         Some(row) => (MemPoolTxInfoPartial::from_row(row)?, start_with_no_estimate),
                         None => {
                             // If the selected iterator is empty, check the other
                             match if start_with_no_estimate {
-                                fee_iterator.next().map_err(|err| Error::SqliteError(err))?
+                                fee_iterator.next().map_err(Error::SqliteError)?
                             } else {
-                                null_iterator
-                                    .next()
-                                    .map_err(|err| Error::SqliteError(err))?
+                                null_iterator.next().map_err(Error::SqliteError)?
                             } {
                                 Some(row) => (
                                     MemPoolTxInfoPartial::from_row(row)?,
@@ -2120,7 +2108,7 @@ impl MemPoolDB {
                 &StacksBlockId::new(tip_consensus_hash, tip_block_header_hash),
                 tip_consensus_hash,
             )
-            .map_err(|e| MemPoolRejection::FailedToValidate(e))?
+            .map_err(MemPoolRejection::FailedToValidate)?
             .ok_or(MemPoolRejection::NoSuchChainTip(
                 tip_consensus_hash.clone(),
                 tip_block_header_hash.clone(),

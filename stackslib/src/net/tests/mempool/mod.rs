@@ -54,7 +54,7 @@ fn test_mempool_sync_2_peers() {
 
     let num_txs = 10;
     let pks: Vec<_> = (0..num_txs).map(|_| StacksPrivateKey::new()).collect();
-    let addrs: Vec<_> = pks.iter().map(|pk| to_addr(pk)).collect();
+    let addrs: Vec<_> = pks.iter().map(to_addr).collect();
     let initial_balances: Vec<_> = addrs
         .iter()
         .map(|a| (a.to_account_principal(), 1000000000))
@@ -322,7 +322,7 @@ fn test_mempool_sync_2_peers_paginated() {
 
     let num_txs = 1024;
     let pks: Vec<_> = (0..num_txs).map(|_| StacksPrivateKey::new()).collect();
-    let addrs: Vec<_> = pks.iter().map(|pk| to_addr(pk)).collect();
+    let addrs: Vec<_> = pks.iter().map(to_addr).collect();
     let initial_balances: Vec<_> = addrs
         .iter()
         .map(|a| (a.to_account_principal(), 1000000000))
@@ -513,7 +513,7 @@ fn test_mempool_sync_2_peers_blacklisted() {
 
     let num_txs = 1024;
     let pks: Vec<_> = (0..num_txs).map(|_| StacksPrivateKey::new()).collect();
-    let addrs: Vec<_> = pks.iter().map(|pk| to_addr(pk)).collect();
+    let addrs: Vec<_> = pks.iter().map(to_addr).collect();
     let initial_balances: Vec<_> = addrs
         .iter()
         .map(|a| (a.to_account_principal(), 1000000000))
@@ -724,7 +724,7 @@ fn test_mempool_sync_2_peers_problematic() {
 
     let num_txs = 128;
     let pks: Vec<_> = (0..num_txs).map(|_| StacksPrivateKey::new()).collect();
-    let addrs: Vec<_> = pks.iter().map(|pk| to_addr(pk)).collect();
+    let addrs: Vec<_> = pks.iter().map(to_addr).collect();
     let initial_balances: Vec<_> = addrs
         .iter()
         .map(|a| (a.to_account_principal(), 1000000000))
@@ -1098,7 +1098,7 @@ fn test_mempool_sync_2_peers_nakamoto_paginated() {
     ];
     let num_txs = 1024;
     let pks: Vec<_> = (0..num_txs).map(|_| StacksPrivateKey::new()).collect();
-    let addrs: Vec<_> = pks.iter().map(|pk| to_addr(pk)).collect();
+    let addrs: Vec<_> = pks.iter().map(to_addr).collect();
     let initial_balances: Vec<_> = addrs
         .iter()
         .map(|a| (a.to_account_principal(), 1000000000))

@@ -117,8 +117,7 @@ impl FromRow<MissedBlockCommit> for MissedBlockCommit {
     fn from_row(row: &Row) -> Result<MissedBlockCommit, db_error> {
         let intended_sortition = SortitionId::from_column(row, "intended_sortition_id")?;
         let input_json: String = row.get_unwrap("input");
-        let input =
-            serde_json::from_str(&input_json).map_err(|e| db_error::SerializationError(e))?;
+        let input = serde_json::from_str(&input_json).map_err(db_error::SerializationError)?;
         let txid = Txid::from_column(row, "txid")?;
 
         Ok(MissedBlockCommit {
@@ -264,11 +263,10 @@ impl FromRow<LeaderBlockCommitOp> for LeaderBlockCommitOp {
 
         let memo = memo_bytes.to_vec();
 
-        let input =
-            serde_json::from_str(&input_json).map_err(|e| db_error::SerializationError(e))?;
+        let input = serde_json::from_str(&input_json).map_err(db_error::SerializationError)?;
 
-        let apparent_sender = serde_json::from_str(&apparent_sender_json)
-            .map_err(|e| db_error::SerializationError(e))?;
+        let apparent_sender =
+            serde_json::from_str(&apparent_sender_json).map_err(db_error::SerializationError)?;
 
         let burn_fee = burn_fee_str
             .parse::<u64>()
@@ -285,8 +283,8 @@ impl FromRow<LeaderBlockCommitOp> for LeaderBlockCommitOp {
             .as_deref()
             .map(serde_json::from_str)
             .transpose()
-            .map_err(|e| db_error::SerializationError(e))?
-            .unwrap_or_else(|| vec![]);
+            .map_err(db_error::SerializationError)?
+            .unwrap_or_default();
 
         let block_commit = LeaderBlockCommitOp {
             block_header_hash,
@@ -4444,7 +4442,7 @@ impl SortitionDB {
         sortition_id: &SortitionId,
     ) -> Result<u64, BurnchainError> {
         let db_handle = self.index_handle(sortition_id);
-        SortitionDB::get_max_arrival_index(&db_handle).map_err(|e| BurnchainError::from(e))
+        SortitionDB::get_max_arrival_index(&db_handle).map_err(BurnchainError::from)
     }
 
     /// Get a burn blockchain snapshot, given a burnchain configuration struct.
@@ -5759,12 +5757,12 @@ impl SortitionHandleTx<'_> {
         assert!(block_commit.block_height < BLOCK_HEIGHT_MAX);
 
         // serialize tx input to JSON
-        let tx_input_str = serde_json::to_string(&block_commit.input)
-            .map_err(|e| db_error::SerializationError(e))?;
+        let tx_input_str =
+            serde_json::to_string(&block_commit.input).map_err(db_error::SerializationError)?;
 
         // serialize apparent sender to JSON
         let apparent_sender_str = serde_json::to_string(&block_commit.apparent_sender)
-            .map_err(|e| db_error::SerializationError(e))?;
+            .map_err(db_error::SerializationError)?;
 
         // find parent block commit's snapshot's sortition ID.
         // If the parent_block_ptr doesn't point to a valid snapshot, then store an empty
@@ -5831,7 +5829,7 @@ impl SortitionHandleTx<'_> {
     fn insert_missed_block_commit(&mut self, op: &MissedBlockCommit) -> Result<(), db_error> {
         // serialize tx input to JSON
         let tx_input_str =
-            serde_json::to_string(&op.input).map_err(|e| db_error::SerializationError(e))?;
+            serde_json::to_string(&op.input).map_err(db_error::SerializationError)?;
 
         let args = params![op.txid, op.intended_sortition, tx_input_str];
 
@@ -6913,7 +6911,7 @@ pub mod tests {
             sender: &BurnchainSigner,
         ) -> Result<Option<LeaderBlockCommitOp>, db_error> {
             let apparent_sender_str =
-                serde_json::to_string(sender).map_err(|e| db_error::SerializationError(e))?;
+                serde_json::to_string(sender).map_err(db_error::SerializationError)?;
             let sql = "SELECT * FROM block_commits WHERE apparent_sender = ?1 ORDER BY block_height DESC LIMIT 1";
             let args = params![apparent_sender_str];
             query_row(conn, sql, args)
