@@ -4174,17 +4174,15 @@ impl NakamotoChainState {
                         "Bitvec does not match the block commit's PoX handling".into(),
                     ));
                 }
-            } else if all_0 {
-                if treated_addr.is_reward() {
-                    warn!(
-                        "Invalid Nakamoto block: rewarded PoX address when bitvec contained 0s for the address";
-                        "reward_address" => %treated_addr.deref(),
-                        "bitvec_values" => ?bitvec_values,
-                    );
-                    return Err(ChainstateError::InvalidStacksBlock(
-                        "Bitvec does not match the block commit's PoX handling".into(),
-                    ));
-                }
+            } else if all_0 && treated_addr.is_reward() {
+                warn!(
+                    "Invalid Nakamoto block: rewarded PoX address when bitvec contained 0s for the address";
+                    "reward_address" => %treated_addr.deref(),
+                    "bitvec_values" => ?bitvec_values,
+                );
+                return Err(ChainstateError::InvalidStacksBlock(
+                    "Bitvec does not match the block commit's PoX handling".into(),
+                ));
             }
         }
 
@@ -4426,13 +4424,11 @@ impl NakamotoChainState {
                     "Could not advance tenure, even though tenure changed".into(),
                 ));
             }
-        } else {
-            if coinbase_height != parent_coinbase_height {
-                // this should be unreachable
-                return Err(ChainstateError::InvalidStacksBlock(
-                    "Advanced tenure even though a new tenure did not happen".into(),
-                ));
-            }
+        } else if coinbase_height != parent_coinbase_height {
+            // this should be unreachable
+            return Err(ChainstateError::InvalidStacksBlock(
+                "Advanced tenure even though a new tenure did not happen".into(),
+            ));
         }
 
         // begin processing this block

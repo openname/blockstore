@@ -887,12 +887,10 @@ impl StacksChainState {
 
     /// Closure for defaulting to an empty microblock stream if a microblock stream file is not found
     fn empty_stream(e: Error) -> Result<Option<Vec<StacksMicroblock>>, Error> {
-        match e {
-            Error::DBError(ref dbe) => match dbe {
-                db_error::NotFoundError => Ok(Some(vec![])),
-                _ => Err(e),
-            },
-            _ => Err(e),
+        if matches!(e, Error::DBError(db_error::NotFoundError)) {
+            Ok(Some(vec![]))
+        } else {
+            Err(e)
         }
     }
 
@@ -1213,17 +1211,17 @@ impl StacksChainState {
                     }
                 };
 
-            if processed_only {
-                if !StacksChainState::has_processed_microblocks_indexed(
+            if processed_only
+                && !StacksChainState::has_processed_microblocks_indexed(
                     blocks_conn,
                     &StacksBlockHeader::make_index_block_hash(
                         parent_consensus_hash,
                         &microblock.block_hash(),
                     ),
-                )? {
-                    debug!("Microblock {} is not processed", &microblock.block_hash());
-                    return Ok(None);
-                }
+                )?
+            {
+                debug!("Microblock {} is not processed", &microblock.block_hash());
+                return Ok(None);
             }
 
             debug!(
@@ -3290,17 +3288,16 @@ impl StacksChainState {
             blocks_conn,
             &parent_stacks_chain_tip.consensus_hash,
             &parent_stacks_chain_tip.winning_stacks_block_hash,
-        )? {
-            if block.has_microblock_parent() {
-                warn!(
-                    "Invalid block {}/{}: its parent {}/{} crossed the epoch boundary but this block confirmed its microblocks",
-                    &consensus_hash,
-                    &block.block_hash(),
-                    &parent_stacks_chain_tip.consensus_hash,
-                    &parent_stacks_chain_tip.winning_stacks_block_hash
-                );
-                return Ok(None);
-            }
+        )? && block.has_microblock_parent()
+        {
+            warn!(
+                "Invalid block {}/{}: its parent {}/{} crossed the epoch boundary but this block confirmed its microblocks",
+                &consensus_hash,
+                &block.block_hash(),
+                &parent_stacks_chain_tip.consensus_hash,
+                &parent_stacks_chain_tip.winning_stacks_block_hash
+            );
+            return Ok(None);
         }
 
         let sortition_burns = SortitionDB::get_block_burn_amount(db_handle, &burn_chain_tip)
@@ -6118,34 +6115,33 @@ impl StacksChainState {
             SortitionDB::are_microblocks_disabled(sort_tx.tx(), u64::from(burn_header_height))?;
 
         // microblocks are not allowed after Epoch 2.5 starts
-        if microblocks_disabled_by_epoch_25 {
-            if next_staging_block.parent_microblock_seq != 0
-                || next_staging_block.parent_microblock_hash != BlockHeaderHash([0; 32])
-            {
-                let msg = format!(
-                    "Invalid stacks block {}/{} ({}). Confirms microblocks after Epoch 2.5 start.",
+        if microblocks_disabled_by_epoch_25
+            && (next_staging_block.parent_microblock_seq != 0
+                || next_staging_block.parent_microblock_hash != BlockHeaderHash([0; 32]))
+        {
+            let msg = format!(
+                "Invalid stacks block {}/{} ({}). Confirms microblocks after Epoch 2.5 start.",
+                &next_staging_block.consensus_hash,
+                &next_staging_block.anchored_block_hash,
+                &StacksBlockId::new(
                     &next_staging_block.consensus_hash,
-                    &next_staging_block.anchored_block_hash,
-                    &StacksBlockId::new(
-                        &next_staging_block.consensus_hash,
-                        &next_staging_block.anchored_block_hash
-                    ),
-                );
-                warn!("{msg}");
+                    &next_staging_block.anchored_block_hash
+                ),
+            );
+            warn!("{msg}");
 
-                // clear out
-                StacksChainState::set_block_processed(
-                    chainstate_tx.deref_mut(),
-                    None,
-                    &blocks_path,
-                    &next_staging_block.consensus_hash,
-                    &next_staging_block.anchored_block_hash,
-                    false,
-                )?;
-                chainstate_tx.commit().map_err(Error::DBError)?;
+            // clear out
+            StacksChainState::set_block_processed(
+                chainstate_tx.deref_mut(),
+                None,
+                &blocks_path,
+                &next_staging_block.consensus_hash,
+                &next_staging_block.anchored_block_hash,
+                false,
+            )?;
+            chainstate_tx.commit().map_err(Error::DBError)?;
 
-                return Err(Error::InvalidStacksBlock(msg));
-            }
+            return Err(Error::InvalidStacksBlock(msg));
         }
 
         debug!(
@@ -6835,24 +6831,24 @@ impl StacksChainState {
                 }
 
                 // if the payer for the tx is different from owner, check if they can afford fee
-                if origin != payer {
-                    if !payer.stx_balance.can_transfer_at_burn_block(
+                if origin != payer
+                    && !payer.stx_balance.can_transfer_at_burn_block(
                         u128::from(fee),
                         block_height,
                         v1_unlock_height,
                         v2_unlock_height,
                         v3_unlock_height,
-                    )? {
-                        return Err(MemPoolRejection::NotEnoughFunds(
-                            u128::from(fee),
-                            payer.stx_balance.get_available_balance_at_burn_block(
-                                block_height,
-                                v1_unlock_height,
-                                v2_unlock_height,
-                                v3_unlock_height,
-                            )?,
-                        ));
-                    }
+                    )?
+                {
+                    return Err(MemPoolRejection::NotEnoughFunds(
+                        u128::from(fee),
+                        payer.stx_balance.get_available_balance_at_burn_block(
+                            block_height,
+                            v1_unlock_height,
+                            v2_unlock_height,
+                            v3_unlock_height,
+                        )?,
+                    ));
                 }
             }
             TransactionPayload::ContractCall(TransactionContractCall {

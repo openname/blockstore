@@ -503,13 +503,11 @@ impl BitcoinIndexer {
         start_block: u64,
         remove_old: bool,
     ) -> Result<SpvClient, btc_error> {
-        if remove_old {
-            if PathBuf::from(&reorg_headers_path).exists() {
-                fs::remove_file(&reorg_headers_path).map_err(|e| {
-                    error!("Failed to remove {}", reorg_headers_path);
-                    btc_error::Io(e)
-                })?;
-            }
+        if remove_old && PathBuf::from(&reorg_headers_path).exists() {
+            fs::remove_file(&reorg_headers_path).map_err(|e| {
+                error!("Failed to remove {}", reorg_headers_path);
+                btc_error::Io(e)
+            })?;
         }
 
         // bootstrap reorg client

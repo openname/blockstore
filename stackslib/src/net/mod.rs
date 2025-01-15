@@ -3737,12 +3737,10 @@ pub mod test {
                     .handle_new_burnchain_block()
                     .unwrap()
                     .into_missing_block_hash()
+            } else if self.coord.handle_new_nakamoto_burnchain_block().unwrap() {
+                None
             } else {
-                if self.coord.handle_new_nakamoto_burnchain_block().unwrap() {
-                    None
-                } else {
-                    Some(BlockHeaderHash([0x00; 32]))
-                }
+                Some(BlockHeaderHash([0x00; 32]))
             };
 
             let pox_id = {

@@ -1223,12 +1223,10 @@ fn missed_block_commits_2_05() {
             // how many commit do we expect to see counted in the current window?
             let expected_window_commits = if ix >= (MINING_COMMITMENT_WINDOW as usize) {
                 (MINING_COMMITMENT_WINDOW - 1) as usize
+            } else if ix >= 3 {
+                ix
             } else {
-                if ix >= 3 {
-                    ix
-                } else {
-                    ix + 1
-                }
+                ix + 1
             };
             // there were 2 burn blocks before we started mining
             let expected_window_size = cmp::min(MINING_COMMITMENT_WINDOW as usize, ix + 3);
@@ -1552,12 +1550,10 @@ fn missed_block_commits_2_1() {
             // how many commits do we expect to see counted in the current window?
             let mut expected_window_commits = if ix >= (MINING_COMMITMENT_WINDOW as usize) {
                 (MINING_COMMITMENT_WINDOW - 1) as usize
+            } else if ix >= 3 {
+                ix
             } else {
-                if ix >= 3 {
-                    ix
-                } else {
-                    ix + 1
-                }
+                ix + 1
             };
             // there were 2 burn blocks before we started mining
             let expected_window_size = cmp::min(MINING_COMMITMENT_WINDOW as usize, ix + 3);
@@ -1895,12 +1891,10 @@ fn late_block_commits_2_1() {
             // how many commit do we expect to see counted in the current window?
             let mut expected_window_commits = if ix >= (MINING_COMMITMENT_WINDOW as usize) {
                 (MINING_COMMITMENT_WINDOW - 1) as usize
+            } else if ix >= 3 {
+                ix
             } else {
-                if ix >= 3 {
-                    ix
-                } else {
-                    ix + 1
-                }
+                ix + 1
             };
             // there were 2 burn blocks before we started mining
             let expected_window_size = cmp::min(MINING_COMMITMENT_WINDOW as usize, ix + 3);

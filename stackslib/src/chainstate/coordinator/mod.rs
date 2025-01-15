@@ -374,11 +374,11 @@ impl<T: BlockEventDispatcher> RewardSetProvider for OnChainRewardSetProvider<'_,
             cur_epoch,
         )?;
 
-        if is_nakamoto_reward_set {
-            if reward_set.signers.is_none() || reward_set.signers == Some(vec![]) {
-                error!("FATAL: Signer sets are empty in a reward set that will be used in nakamoto"; "reward_set" => ?reward_set);
-                return Err(Error::PoXAnchorBlockRequired);
-            }
+        if is_nakamoto_reward_set
+            && (reward_set.signers.is_none() || reward_set.signers == Some(vec![]))
+        {
+            error!("FATAL: Signer sets are empty in a reward set that will be used in nakamoto"; "reward_set" => ?reward_set);
+            return Err(Error::PoXAnchorBlockRequired);
         }
 
         Ok(reward_set)
@@ -918,12 +918,10 @@ pub fn calculate_paid_rewards(ops: &[BlockstackOperationType]) -> PaidRewards {
             for addr in commit.commit_outs.iter() {
                 if addr.is_burn() {
                     burn_amt += amt_per_address;
+                } else if let Some(prior_amt) = reward_recipients.get_mut(addr) {
+                    *prior_amt += amt_per_address;
                 } else {
-                    if let Some(prior_amt) = reward_recipients.get_mut(addr) {
-                        *prior_amt += amt_per_address;
-                    } else {
-                        reward_recipients.insert(addr.clone(), amt_per_address);
-                    }
+                    reward_recipients.insert(addr.clone(), amt_per_address);
                 }
             }
         }
@@ -1402,21 +1400,20 @@ impl<
             }
         };
 
-        if sortition_changed_reward_cycle_opt.is_none() {
-            if sortition_tip_affirmation_map.len() >= heaviest_am.len()
-                && sortition_tip_affirmation_map.len() <= canonical_affirmation_map.len()
+        if sortition_changed_reward_cycle_opt.is_none()
+            && sortition_tip_affirmation_map.len() >= heaviest_am.len()
+            && sortition_tip_affirmation_map.len() <= canonical_affirmation_map.len()
+        {
+            if let Some(divergence_rc) =
+                canonical_affirmation_map.find_divergence(&sortition_tip_affirmation_map)
             {
-                if let Some(divergence_rc) =
-                    canonical_affirmation_map.find_divergence(&sortition_tip_affirmation_map)
-                {
-                    if divergence_rc + 1 >= (heaviest_am.len() as u64) {
-                        // this can arise if there are unaffirmed PoX anchor blocks that are not
-                        // reflected in the sortiiton affirmation map
-                        debug!("Update sortition-changed reward cycle to {} from canonical affirmation map `{}` (sortition AM is `{}`)",
-                            divergence_rc, &canonical_affirmation_map, &sortition_tip_affirmation_map);
+                if divergence_rc + 1 >= (heaviest_am.len() as u64) {
+                    // this can arise if there are unaffirmed PoX anchor blocks that are not
+                    // reflected in the sortiiton affirmation map
+                    debug!("Update sortition-changed reward cycle to {} from canonical affirmation map `{}` (sortition AM is `{}`)",
+                        divergence_rc, &canonical_affirmation_map, &sortition_tip_affirmation_map);
 
-                        sortition_changed_reward_cycle_opt = Some(divergence_rc);
-                    }
+                    sortition_changed_reward_cycle_opt = Some(divergence_rc);
                 }
             }
         }

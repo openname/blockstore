@@ -351,29 +351,27 @@ pub fn make_reward_cycle_with_vote(
                 let append = if !burnchain.is_in_prepare_phase(block_commit.block_height) {
                     // non-prepare-phase commits always confirm their parent
                     true
+                } else if confirm_anchor_block {
+                    // all block-commits confirm anchor block
+                    true
                 } else {
-                    if confirm_anchor_block {
-                        // all block-commits confirm anchor block
+                    // fewer than anchor_threshold commits confirm anchor block
+                    let next_rc_start = burnchain.reward_cycle_to_block_height(
+                        burnchain
+                            .block_height_to_reward_cycle(block_commit.block_height)
+                            .unwrap()
+                            + 1,
+                    );
+                    if block_commit.block_height
+                        + (burnchain.pox_constants.anchor_threshold as u64)
+                        + 1
+                        < next_rc_start
+                    {
+                        // in first half of prepare phase, so confirm
                         true
                     } else {
-                        // fewer than anchor_threshold commits confirm anchor block
-                        let next_rc_start = burnchain.reward_cycle_to_block_height(
-                            burnchain
-                                .block_height_to_reward_cycle(block_commit.block_height)
-                                .unwrap()
-                                + 1,
-                        );
-                        if block_commit.block_height
-                            + (burnchain.pox_constants.anchor_threshold as u64)
-                            + 1
-                            < next_rc_start
-                        {
-                            // in first half of prepare phase, so confirm
-                            true
-                        } else {
-                            // in second half of prepare phase, so don't confirm
-                            false
-                        }
+                        // in second half of prepare phase, so don't confirm
+                        false
                     }
                 };
 

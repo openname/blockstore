@@ -1170,13 +1170,14 @@ impl AttachmentsBatch {
             self.stacks_block_height = attachment.stacks_block_height.clone();
             self.index_block_hash = attachment.index_block_hash.clone();
             self.canonical_stacks_tip_height = attachment.canonical_stacks_tip_height;
-        } else {
-            if self.stacks_block_height != attachment.stacks_block_height
-                || self.index_block_hash != attachment.index_block_hash
-            {
-                warn!("Atlas: attempt to add unrelated AttachmentInstance ({}, {}) to AttachmentsBatch", attachment.attachment_index, attachment.index_block_hash);
-                return;
-            }
+        } else if self.stacks_block_height != attachment.stacks_block_height
+            || self.index_block_hash != attachment.index_block_hash
+        {
+            warn!(
+                "Atlas: attempt to add unrelated AttachmentInstance ({}, {}) to AttachmentsBatch",
+                attachment.attachment_index, attachment.index_block_hash
+            );
+            return;
         }
 
         let inner_key = attachment.attachment_index;

@@ -479,13 +479,11 @@ impl StackerDBs {
                 fs::create_dir_all(&pparent_path).map_err(|e| db_error::IOError(e))?;
 
                 OpenFlags::SQLITE_OPEN_READ_WRITE | OpenFlags::SQLITE_OPEN_CREATE
-            } else {
+            } else if readwrite {
                 // can just open
-                if readwrite {
-                    OpenFlags::SQLITE_OPEN_READ_WRITE
-                } else {
-                    OpenFlags::SQLITE_OPEN_READ_ONLY
-                }
+                OpenFlags::SQLITE_OPEN_READ_WRITE
+            } else {
+                OpenFlags::SQLITE_OPEN_READ_ONLY
             }
         } else {
             create_flag = true;
