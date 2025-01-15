@@ -968,7 +968,7 @@ fn pox_lock_unlock() {
                 &signer_key,
                 reward_cycle,
                 &Pox4SignatureTopic::StackStx,
-                lock_period.into(),
+                lock_period,
                 u128::MAX,
                 1,
             );
@@ -2887,7 +2887,7 @@ fn pox_4_revoke_delegate_stx_events() {
     peer.tenure_with_txs(&[alice_delegate_2], &mut coinbase_nonce);
 
     // produce blocks until delegation expired
-    while get_tip(peer.sortdb.as_ref()).block_height <= u64::from(target_height) {
+    while get_tip(peer.sortdb.as_ref()).block_height <= target_height {
         peer.tenure_with_txs(&[], &mut coinbase_nonce);
     }
 
@@ -5767,7 +5767,7 @@ fn test_set_signer_key_auth(use_nakamoto: bool) {
         &pox_addr,
         current_reward_cycle.clone() as u64,
         &Pox4SignatureTopic::StackStx,
-        lock_period.try_into().unwrap(),
+        lock_period,
         &signer_public_key,
         u128::MAX,
         1,
@@ -5804,7 +5804,7 @@ fn test_set_signer_key_auth(use_nakamoto: bool) {
         &pox_addr,
         current_reward_cycle.clone() as u64,
         &Pox4SignatureTopic::StackStx,
-        lock_period.try_into().unwrap(),
+        lock_period,
         &signer_public_key,
         u128::MAX,
         1,
@@ -5841,7 +5841,7 @@ fn test_set_signer_key_auth(use_nakamoto: bool) {
         &pox_addr,
         current_reward_cycle.clone() as u64,
         &Pox4SignatureTopic::StackStx,
-        lock_period.try_into().unwrap(),
+        lock_period,
         &signer_public_key,
         u128::MAX,
         1,
@@ -6158,7 +6158,7 @@ fn delegate_stack_stx_extend_signer_key(use_nakamoto: bool) {
         alice_stacker_key,
         alice_nonce,
         min_ustx + 1,
-        bob_delegate_principal.clone().into(),
+        bob_delegate_principal.clone(),
         None,
         Some(pox_addr.clone()),
     );
@@ -6614,10 +6614,7 @@ fn delegate_stack_increase(use_nakamoto: bool) {
 
     let expected_result = Value::okay(Value::Tuple(
         TupleData::from_data(vec![
-            (
-                "stacker".into(),
-                Value::Principal(PrincipalData::from(alice_address.clone())),
-            ),
+            ("stacker".into(), Value::Principal(alice_address.clone())),
             ("total-locked".into(), Value::UInt(min_ustx * 2)),
         ])
         .unwrap(),
@@ -8637,7 +8634,7 @@ pub fn make_signer_key_authorization_lookup_key(
             "topic".into(),
             Value::string_ascii_from_bytes(topic.get_name_str().into()).unwrap(),
         ),
-        ("period".into(), Value::UInt(period.into())),
+        ("period".into(), Value::UInt(period)),
         (
             "signer-key".into(),
             Value::buff_from(signer_key.to_bytes_compressed()).unwrap(),

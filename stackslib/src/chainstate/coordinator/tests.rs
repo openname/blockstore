@@ -4742,7 +4742,7 @@ fn atlas_stop_start() {
                     TransactionVersion::Testnet,
                     TransactionAuth::from_p2pkh(&signer_sk).unwrap(),
                     TransactionPayload::ContractCall(TransactionContractCall {
-                        address: signer_pk.clone().into(),
+                        address: signer_pk.clone(),
                         contract_name: atlas_name.clone(),
                         function_name: "make-attach".into(),
                         function_args: vec![Value::buff_from(vec![ix; 20]).unwrap()],

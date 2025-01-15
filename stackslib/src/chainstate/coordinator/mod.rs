@@ -1240,8 +1240,8 @@ impl<
                             continue;
                         }
                         Err(e) => {
-                            error!("Failed to query affirmation map: {:?}", &e);
-                            return Err(e.into());
+                            error!("Failed to query affirmation map: {e:?}");
+                            return Err(e);
                         }
                     };
 

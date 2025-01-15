@@ -908,7 +908,7 @@ impl StacksChainState {
     ) -> u128 {
         // set the lower limit on reward scaling at 25% of liquid_ustx
         //   (i.e., liquid_ustx / POX_MAXIMAL_SCALING)
-        let scale_by = cmp::max(participation, liquid_ustx / u128::from(POX_MAXIMAL_SCALING));
+        let scale_by = cmp::max(participation, liquid_ustx / POX_MAXIMAL_SCALING);
         let threshold_precise = scale_by / reward_slots;
         // compute the threshold as nearest 10k > threshold_precise
         let ceil_amount = match threshold_precise % POX_THRESHOLD_STEPS_USTX {
@@ -935,7 +935,7 @@ impl StacksChainState {
 
         // set the lower limit on reward scaling at 25% of liquid_ustx
         //   (i.e., liquid_ustx / POX_MAXIMAL_SCALING)
-        let scale_by = cmp::max(participation, liquid_ustx / u128::from(POX_MAXIMAL_SCALING));
+        let scale_by = cmp::max(participation, liquid_ustx / POX_MAXIMAL_SCALING);
 
         let reward_slots = u128::try_from(pox_settings.reward_slots())
             .expect("FATAL: unreachable: more than 2^128 reward slots");
@@ -2911,7 +2911,7 @@ pub mod test {
         let alice = StacksAddress::from_string("STVK1K405H6SK9NKJAP32GHYHDJ98MMNP8Y6Z9N0").unwrap();
         let bob = StacksAddress::from_string("ST76D2FMXZ7D2719PNE4N71KPSX84XCCNCMYC940").unwrap();
         peer_config.initial_lockups = vec![
-            ChainstateAccountLockup::new(alice.into(), 1000, 1),
+            ChainstateAccountLockup::new(alice, 1000, 1),
             ChainstateAccountLockup::new(bob, 1000, 1),
             ChainstateAccountLockup::new(alice, 1000, 2),
             ChainstateAccountLockup::new(bob, 1000, 3),
@@ -5498,7 +5498,7 @@ pub mod test {
                 // alice did _NOT_ spend
                 assert!(get_contract(
                     &mut peer,
-                    &make_contract_id(&key_to_stacks_addr(&alice), "alice-try-spend").into(),
+                    &make_contract_id(&key_to_stacks_addr(&alice), "alice-try-spend"),
                 )
                 .is_none());
             }

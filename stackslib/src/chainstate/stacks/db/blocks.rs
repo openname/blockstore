@@ -4034,7 +4034,7 @@ impl StacksChainState {
                 tx_receipt.tx_index = u32::try_from(tx_index).expect("more than 2^32 items");
                 fees = fees.checked_add(u128::from(tx_fee)).expect("Fee overflow");
                 burns = burns
-                    .checked_add(u128::from(tx_receipt.stx_burned))
+                    .checked_add(tx_receipt.stx_burned)
                     .expect("Burns overflow");
                 receipts.push(tx_receipt);
             }
@@ -4588,7 +4588,7 @@ impl StacksChainState {
             fees = fees.checked_add(u128::from(tx_fee)).expect("Fee overflow");
             tx_receipt.tx_index = tx_index;
             burns = burns
-                .checked_add(u128::from(tx_receipt.stx_burned))
+                .checked_add(tx_receipt.stx_burned)
                 .expect("Burns overflow");
             receipts.push(tx_receipt);
             tx_index += 1;
@@ -5659,7 +5659,7 @@ impl StacksChainState {
                     }
                 };
 
-            tx_receipts.extend(txs_receipts.into_iter());
+            tx_receipts.extend(txs_receipts);
 
             let block_cost = clarity_tx.cost_so_far();
 
@@ -5787,7 +5787,7 @@ impl StacksChainState {
             )
             .expect("FATAL: parsed and processed a block without a coinbase");
 
-            tx_receipts.extend(microblock_txs_receipts.into_iter());
+            tx_receipts.extend(microblock_txs_receipts);
 
             (
                 scheduled_miner_reward,
@@ -10297,7 +10297,7 @@ pub mod test {
                     let mut mempool =
                         MemPoolDB::open_test(false, 0x80000000, &chainstate_path).unwrap();
                     let coinbase_tx =
-                        make_coinbase_with_nonce(miner, tenure_id as usize, tenure_id.into(), None);
+                        make_coinbase_with_nonce(miner, tenure_id as usize, tenure_id, None);
 
                     let microblock_privkey = StacksPrivateKey::new();
                     let microblock_pubkeyhash = Hash160::from_node_public_key(

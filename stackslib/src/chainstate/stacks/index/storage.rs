@@ -2053,12 +2053,8 @@ impl<T: MarfTrieId> TrieStorageConnection<'_, T> {
     #[cfg(test)]
     fn inner_read_persisted_root_to_blocks(&mut self) -> Result<HashMap<TrieHash, T>, Error> {
         let ret = match self.blobs.as_mut() {
-            Some(blobs) => {
-                HashMap::from_iter(blobs.read_all_block_hashes_and_roots(&self.db)?.into_iter())
-            }
-            None => {
-                HashMap::from_iter(trie_sql::read_all_block_hashes_and_roots(&self.db)?.into_iter())
-            }
+            Some(blobs) => HashMap::from_iter(blobs.read_all_block_hashes_and_roots(&self.db)?),
+            None => HashMap::from_iter(trie_sql::read_all_block_hashes_and_roots(&self.db)?),
         };
         Ok(ret)
     }

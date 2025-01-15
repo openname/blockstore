@@ -395,7 +395,7 @@ pub fn check_stacking_state_invariants(
 
             let entry_key = Value::from(
                 TupleData::from_data(vec![
-                    ("reward-cycle".into(), Value::UInt(cycle_checked.into())),
+                    ("reward-cycle".into(), Value::UInt(cycle_checked)),
                     ("index".into(), Value::UInt(reward_index)),
                 ])
                 .unwrap(),
@@ -574,9 +574,9 @@ pub fn check_stacker_link_invariants(peer: &mut TestPeer, tip: &StacksBlockId, c
     }
     let expected_total = get_reward_cycle_total(peer, tip, cycle_number);
     assert_eq!(
-        u128::try_from(checked_total).unwrap(),
+        checked_total,
         expected_total,
-        "{}", format!("Invariant violated at cycle {}: total reward cycle amount does not equal sum of reward set", cycle_number)
+        "Invariant violated at cycle {cycle_number}: total reward cycle amount does not equal sum of reward set"
     );
 }
 

@@ -1605,8 +1605,8 @@ impl NetworkResult {
             })
             .collect();
 
-        blocks.extend(pushed_blocks.into_iter());
-        blocks.extend(uploaded_blocks.into_iter());
+        blocks.extend(pushed_blocks);
+        blocks.extend(uploaded_blocks);
         blocks
     }
 
@@ -1637,8 +1637,8 @@ impl NetworkResult {
             .flat_map(|mblk_data| mblk_data.microblocks.iter().map(|mblk| mblk.block_hash()))
             .collect();
 
-        mblocks.extend(pushed_microblocks.into_iter());
-        mblocks.extend(uploaded_microblocks.into_iter());
+        mblocks.extend(pushed_microblocks);
+        mblocks.extend(uploaded_microblocks);
         mblocks
     }
 
@@ -1668,9 +1668,8 @@ impl NetworkResult {
             .collect::<Vec<Vec<HashSet<_>>>>()
             .into_iter()
             .flatten()
-            .into_iter()
             .fold(HashSet::new(), |mut acc, next| {
-                acc.extend(next.into_iter());
+                acc.extend(next);
                 acc
             });
 
@@ -1680,8 +1679,8 @@ impl NetworkResult {
             .map(|nblk| nblk.block_id())
             .collect();
 
-        naka_block_ids.extend(pushed_nakamoto_blocks.into_iter());
-        naka_block_ids.extend(uploaded_nakamoto_blocks.into_iter());
+        naka_block_ids.extend(pushed_nakamoto_blocks);
+        naka_block_ids.extend(uploaded_nakamoto_blocks);
         naka_block_ids
     }
 
@@ -1704,7 +1703,7 @@ impl NetworkResult {
             .collect::<Vec<HashSet<_>>>()
             .into_iter()
             .fold(HashSet::new(), |mut acc, next| {
-                acc.extend(next.into_iter());
+                acc.extend(next);
                 acc
             });
 
@@ -1714,8 +1713,8 @@ impl NetworkResult {
             .map(|tx| tx.txid())
             .collect();
 
-        txids.extend(pushed_txids.into_iter());
-        txids.extend(synced_txids.into_iter());
+        txids.extend(pushed_txids);
+        txids.extend(synced_txids);
         txids
     }
 
@@ -1729,9 +1728,8 @@ impl NetworkResult {
                     .map(|msg| msg.preamble.signature.clone())
                     .collect::<HashSet<_>>()
             })
-            .into_iter()
             .fold(HashSet::new(), |mut acc, next| {
-                acc.extend(next.into_iter());
+                acc.extend(next);
                 acc
             })
     }

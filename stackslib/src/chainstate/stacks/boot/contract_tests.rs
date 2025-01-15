@@ -1789,7 +1789,6 @@ fn test_deploy_smart_contract(
 // test that the maximum stackerdb list size will fit in a value
 fn max_stackerdb_list() {
     let signers_list: Vec<_> = (0..SIGNERS_MAX_LIST_SIZE)
-        .into_iter()
         .map(|signer_ix| {
             let signer_address = StacksAddress {
                 version: 0,

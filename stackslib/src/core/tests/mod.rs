@@ -2130,9 +2130,7 @@ fn test_make_mempool_sync_data() {
                     }
 
                     // all recent transactions should be present
-                    assert!(
-                        present_count >= cmp::min(MAX_BLOOM_COUNTER_TXS.into(), txids.len() as u32)
-                    );
+                    assert!(present_count >= cmp::min(MAX_BLOOM_COUNTER_TXS, txids.len() as u32));
                 }
                 MemPoolSyncData::TxTags(ref seed, ref tags) => {
                     eprintln!("txtags({}); txids.len() == {}", block_height, txids.len());
