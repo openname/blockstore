@@ -27,7 +27,6 @@
 use std::mem::size_of;
 use std::{error, fmt};
 
-use serde;
 use sha2::{Digest, Sha256};
 
 use crate::deps_common::bitcoin::blockdata::opcodes;

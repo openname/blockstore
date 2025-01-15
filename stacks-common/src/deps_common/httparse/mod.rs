@@ -30,7 +30,7 @@
 //! Originally written by Sean McArthur.
 //!
 //! Modified by Jude Nelson to remove all unsafe code.
-use std::{error, fmt, mem, result, str};
+use std::{fmt, mem, result, str};
 
 macro_rules! next {
     ($bytes:ident) => {{
@@ -1282,8 +1282,6 @@ mod tests {
 
     #[test]
     fn test_std_error() {
-        use std::error::Error as StdError;
-
         use super::Error;
         let err = Error::HeaderName;
         assert_eq!(err.to_string(), err.description_str());

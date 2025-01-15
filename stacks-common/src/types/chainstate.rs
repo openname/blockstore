@@ -1,20 +1,15 @@
-use std::fmt::{self, Display};
+use std::fmt;
 use std::io::{Read, Write};
 use std::str::FromStr;
 
-use curve25519_dalek::digest::Digest;
-use rand::{Rng, SeedableRng};
-use serde::de::{Deserialize, Error as de_Error};
-use serde::ser::Error as ser_Error;
 use serde::Serialize;
-use sha2::{Digest as Sha2Digest, Sha256, Sha512_256};
+use sha2::{Digest as Sha2Digest, Sha512_256};
 
 use crate::codec::{read_next, write_next, Error as CodecError, StacksMessageCodec};
 use crate::consts::{FIRST_BURNCHAIN_CONSENSUS_HASH, FIRST_STACKS_BLOCK_HASH};
 use crate::deps_common::bitcoin::util::hash::Sha256dHash;
-use crate::util::hash::{to_hex, DoubleSha256, Hash160, Sha512Trunc256Sum, HASH160_ENCODED_SIZE};
+use crate::util::hash::{Hash160, Sha512Trunc256Sum, HASH160_ENCODED_SIZE};
 use crate::util::secp256k1::{MessageSignature, Secp256k1PrivateKey, Secp256k1PublicKey};
-use crate::util::uint::Uint256;
 use crate::util::vrf::{VRFProof, VRF_PROOF_ENCODED_SIZE};
 
 pub type StacksPublicKey = Secp256k1PublicKey;
@@ -452,6 +447,8 @@ impl BurnchainHeaderHash {
         index_root: &TrieHash,
         noise: u64,
     ) -> BurnchainHeaderHash {
+        use crate::util::hash::DoubleSha256;
+
         let mut bytes = vec![];
         bytes.extend_from_slice(&block_height.to_be_bytes());
         bytes.extend_from_slice(index_root.as_bytes());

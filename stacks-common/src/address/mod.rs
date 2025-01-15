@@ -19,7 +19,7 @@ use std::{error, fmt};
 use sha2::{Digest, Sha256};
 
 use crate::deps_common::bitcoin::blockdata::opcodes::All as btc_opcodes;
-use crate::deps_common::bitcoin::blockdata::script::{Builder, Instruction, Script};
+use crate::deps_common::bitcoin::blockdata::script::Builder;
 use crate::types::PublicKey;
 use crate::util::hash::Hash160;
 
@@ -220,7 +220,6 @@ pub fn public_keys_to_address_hash<K: PublicKey>(
 mod test {
     use super::*;
     use crate::util::hash::*;
-    use crate::util::log;
     use crate::util::secp256k1::Secp256k1PublicKey as PubKey;
 
     struct PubkeyFixture {

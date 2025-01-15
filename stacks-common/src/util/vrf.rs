@@ -22,16 +22,11 @@ use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 /// This codebase is based on routines defined in the IETF draft for verifiable random functions
 /// over elliptic curves (https://tools.ietf.org/id/draft-irtf-cfrg-vrf-02.html).
-use std::ops::Deref;
-use std::ops::DerefMut;
 use std::{error, fmt};
 
 use curve25519_dalek::constants::ED25519_BASEPOINT_POINT;
 use curve25519_dalek::edwards::{CompressedEdwardsY, EdwardsPoint};
 use curve25519_dalek::scalar::Scalar as ed25519_Scalar;
-use ed25519_dalek::{
-    SecretKey as EdDalekSecretKeyBytes, SigningKey as EdPrivateKey, VerifyingKey as EdPublicKey,
-};
 use rand;
 use sha2::{Digest, Sha512};
 
@@ -535,10 +530,8 @@ impl VRF {
 
 #[cfg(test)]
 mod tests {
-    use curve25519_dalek::scalar::Scalar as ed25519_Scalar;
     use rand;
     use rand::RngCore;
-    use sha2::Sha512;
 
     use super::*;
     use crate::util::hash::hex_bytes;

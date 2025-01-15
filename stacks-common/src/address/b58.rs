@@ -14,7 +14,7 @@
 
 //! Base58 encoder and decoder
 
-use std::{error, fmt, str};
+use std::{fmt, str};
 
 use crate::address::Error;
 use crate::util::hash::DoubleSha256;

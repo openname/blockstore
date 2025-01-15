@@ -15,13 +15,12 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use std::io::Write;
-use std::sync::Mutex;
 use std::time::{Duration, SystemTime};
 use std::{env, io, thread};
 
 use chrono::prelude::*;
 use lazy_static::lazy_static;
-use slog::{BorrowedKV, Drain, FnValue, Level, Logger, OwnedKVList, Record, KV};
+use slog::{Drain, Level, Logger, OwnedKVList, Record, KV};
 use slog_term::{CountingWriter, Decorator, RecordDecorator, Serializer};
 
 lazy_static! {
@@ -191,6 +190,10 @@ impl<D: Decorator> TermFormat<D> {
 
 #[cfg(feature = "slog_json")]
 fn make_json_logger() -> Logger {
+    use std::sync::Mutex;
+
+    use slog::FnValue;
+
     let def_keys = o!("file" => FnValue(move |info| {
                           info.file()
                       }),

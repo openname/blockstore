@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-use rand::{thread_rng, RngCore};
+use rand::RngCore;
 use secp256k1;
 use secp256k1::ecdsa::{
     RecoverableSignature as LibSecp256k1RecoverableSignature, RecoveryId as LibSecp256k1RecoveryID,
@@ -24,11 +24,9 @@ use secp256k1::{
     PublicKey as LibSecp256k1PublicKey, Secp256k1, SecretKey as LibSecp256k1PrivateKey,
 };
 use serde::de::{Deserialize, Error as de_Error};
-use serde::ser::Error as ser_Error;
 use serde::Serialize;
 
 use super::hash::Sha256Sum;
-use crate::impl_byte_array_message_codec;
 use crate::types::{PrivateKey, PublicKey};
 use crate::util::hash::{hex_bytes, to_hex};
 
@@ -442,8 +440,8 @@ mod tests {
     use secp256k1::{PublicKey as LibSecp256k1PublicKey, Secp256k1};
 
     use super::*;
+    use crate::util::get_epoch_time_ms;
     use crate::util::hash::hex_bytes;
-    use crate::util::{get_epoch_time_ms, log};
 
     struct KeyFixture<I, R> {
         input: I,

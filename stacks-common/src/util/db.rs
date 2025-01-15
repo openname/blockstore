@@ -17,7 +17,7 @@
 use std::backtrace::Backtrace;
 use std::sync::{LazyLock, Mutex};
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use hashbrown::HashMap;
 use rand::{thread_rng, Rng};

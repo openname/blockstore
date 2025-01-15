@@ -34,7 +34,6 @@ use crate::deps_common::bitcoin::network::serialize::{
     self, serialize, BitcoinHash, SimpleDecoder, SimpleEncoder,
 };
 use crate::deps_common::bitcoin::util::hash::Sha256dHash;
-use crate::util::hash::to_hex;
 
 /// A reference to a transaction output
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
@@ -675,7 +674,7 @@ impl SigHashType {
 
 #[cfg(test)]
 mod tests {
-    use super::{SigHashType, Transaction, TxIn};
+    use super::{Transaction, TxIn};
     use crate::deps_common;
     use crate::deps_common::bitcoin::blockdata::script::Script;
     use crate::deps_common::bitcoin::network::serialize::{deserialize, BitcoinHash};
@@ -690,7 +689,6 @@ mod tests {
 
     #[test]
     fn test_is_coinbase() {
-        use crate::deps_common::bitcoin::blockdata::constants;
         use crate::deps_common::bitcoin::network::constants::Network;
 
         let genesis = deps_common::bitcoin::blockdata::constants::genesis_block(Network::Bitcoin);

@@ -260,7 +260,6 @@ mod test {
 
     use super::BitVec;
     use crate::codec::StacksMessageCodec;
-    use crate::util::hash::to_hex;
 
     fn check_set_get(mut input: BitVec<{ u16::MAX }>) {
         let original_input = input.clone();

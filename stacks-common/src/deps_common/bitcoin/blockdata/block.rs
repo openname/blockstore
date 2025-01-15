@@ -25,7 +25,6 @@ use crate::deps_common::bitcoin::blockdata::transaction::Transaction;
 use crate::deps_common::bitcoin::network::constants::Network;
 use crate::deps_common::bitcoin::network::encodable::VarInt;
 use crate::deps_common::bitcoin::network::serialize::BitcoinHash;
-use crate::deps_common::bitcoin::util;
 use crate::deps_common::bitcoin::util::hash::Sha256dHash;
 use crate::deps_common::bitcoin::util::Error;
 use crate::deps_common::bitcoin::util::Error::{SpvBadProofOfWork, SpvBadTarget};

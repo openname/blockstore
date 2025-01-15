@@ -21,8 +21,6 @@ use std::io;
 use std::io::{Read, Write};
 use std::sync::mpsc::{sync_channel, Receiver, SyncSender, TryRecvError, TrySendError};
 
-use crate::util::log;
-
 /// Inter-thread pipe for streaming messages, built on channels.
 /// Used mainly in conjunction with networking.
 ///
@@ -316,7 +314,6 @@ impl Write for PipeWrite {
 
 #[cfg(test)]
 mod test {
-    use std::io::prelude::*;
     use std::io::{Read, Write};
     use std::{io, thread};
 
@@ -324,7 +321,6 @@ mod test {
     use rand::RngCore;
 
     use super::*;
-    use crate::util::*;
 
     #[test]
     fn test_connection_pipe_oneshot() {

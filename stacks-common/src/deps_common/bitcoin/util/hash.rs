@@ -18,7 +18,7 @@
 use std::char::from_digit;
 use std::cmp::min;
 use std::io::{Cursor, Write};
-use std::{error, fmt, mem};
+use std::{fmt, mem};
 
 use ripemd::Ripemd160;
 #[cfg(feature = "serde")]

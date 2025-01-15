@@ -445,9 +445,10 @@ impl<W: Write> Write for HttpChunkedTransferWriter<'_, '_, W> {
     }
 }
 
+#[cfg(test)]
 mod test {
     use std::io;
-    use std::io::{Read, Write};
+    use std::io::Read;
 
     use rand::RngCore;
 

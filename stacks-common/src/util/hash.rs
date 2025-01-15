@@ -20,7 +20,6 @@ use std::{fmt, mem};
 
 use ripemd::Ripemd160;
 use serde::de::{Deserialize, Error as de_Error};
-use serde::ser::Error as ser_Error;
 use serde::Serialize;
 use sha2::{Digest, Sha256, Sha512, Sha512_256};
 use sha3::Keccak256;
@@ -29,7 +28,7 @@ use crate::types::StacksPublicKeyBuffer;
 use crate::util::pair::*;
 use crate::util::secp256k1::Secp256k1PublicKey;
 use crate::util::uint::Uint256;
-use crate::util::{log, HexError};
+use crate::util::HexError;
 
 // hash function for Merkle trees
 pub trait MerkleHashFunc {
@@ -659,9 +658,7 @@ pub fn bytes_to_hex(s: &[u8]) -> String {
 
 #[cfg(test)]
 mod test {
-    use super::{
-        bin_bytes, hex_bytes, to_bin, DoubleSha256, MerkleHashFunc, MerklePath, MerkleTree,
-    };
+    use super::{bin_bytes, hex_bytes, to_bin, DoubleSha256, MerkleHashFunc, MerkleTree};
 
     struct MerkleTreeFixture {
         data: Vec<Vec<u8>>,

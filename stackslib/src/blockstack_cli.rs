@@ -48,7 +48,6 @@ use clarity::vm::{ClarityName, ClarityVersion, ContractName, Value};
 use stacks_common::address::{b58, AddressHashMode};
 use stacks_common::codec::{Error as CodecError, StacksMessageCodec};
 use stacks_common::types::chainstate::StacksAddress;
-use stacks_common::util::cargo_workspace;
 use stacks_common::util::hash::{hex_bytes, to_hex};
 use stacks_common::util::retry::LogReader;
 
@@ -897,6 +896,8 @@ fn main_handler(mut argv: Vec<String>) -> Result<String, CliError> {
 
 #[cfg(test)]
 mod test {
+    use stacks_common::util::cargo_workspace;
+
     use super::*;
 
     #[test]
